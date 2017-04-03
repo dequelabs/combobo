@@ -3,19 +3,36 @@
   <head>
     <meta charset="utf-8">
     <title>combination-box fixture</title>
+    <link href="https://fonts.googleapis.com/css?family=Pontano+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
-    <div class="combobox"></div>
-    <div class="listbox">
-      <div class="option">a</div>
-      <div class="option">b</div>
-      <div class="option">c</div>
-      <div class="option">d</div>
+    <h1>Combination Box</h1>
+    <div><label for="combobox">Choose Band</label></div>
+    <div class="combo-wrap">
+      <input type="text" class="combobox" id="combobox">
+      <i aria-hidden="true" class="fa fa-caret-down"></i>
+      <div class="listbox">
+        <div class="option">Ween</div>
+        <div class="option">Keller Williams</div>
+        <div class="option">Frank Zappa</div>
+        <div class="option">Snarky Puppy</div>
+        <div class="option">Umphrey's McGee</div>
+        <div class="option">Greensky Bluegrass</div>
+        <div class="option">Leftover Salmon</div>
+        <div class="option">Moe.</div>
+        <div class="option">Family Groove Company</div>
+        <div class="option">Mac Demarco</div>
+        <div class="option">Lettuce</div>
+      </div>
     </div>
     <script src="../dist/combination-box.js" charset="utf-8"></script>
     <script>
       (function () {
-        var combobox = new Combobox();
+        var combobox = new Combobox({
+          activeClass: 'selected'
+        });
       }());
     </script>
   </body>

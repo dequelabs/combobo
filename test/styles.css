@@ -1,0 +1,52 @@
+
+body, input {
+  font-family: 'Pontano Sans', sans-serif;
+}
+
+.combo-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.combobox {
+  width: 250px;
+  padding: 10px 35px 10px 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  position: relative;
+  font-size: 14px;
+}
+
+.fa-caret-down {
+  position: absolute;
+  font-size: 19px;
+  line-height: 40px;
+  top: 0;
+  right: 0;
+  padding: 0 10px;
+  background: #000;
+  color: #fff;
+}
+
+.listbox {
+  display: none;
+  position: absolute;
+  box-shadow: 0 2px 4px #000;
+  top: 40px; /* the height of the input */
+  left: 0;
+  width: 250px;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.listbox.open {
+  display: block;
+}
+
+.listbox .option {
+  padding: 4px 6px;
+}
+
+.listbox .option.selected {
+  background: #eee;
+}

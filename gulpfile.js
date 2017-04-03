@@ -9,7 +9,9 @@ gulp.task('default', ['build']);
 gulp.task('build', ['babelify']);
 
 gulp.task('browserify', () => {
-  return browserify('./index.js')
+  return browserify('./index.js', {
+    standalone: 'Combobox'
+  })
     .bundle()
     .pipe(source('combination-box.js'))
     .pipe(gulp.dest('dist'));
