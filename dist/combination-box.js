@@ -41,20 +41,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var Classlist = require('classlist');
       var extend = require('extend-shallow');
       var Emitter = require('component-emitter');
+      var LiveRegion = require('live-region');
 
       var rndid = require('./lib/rndid');
       var select = require('./lib/select');
+      var filters = require('./lib/filters');
       var keyvent = require('./lib/keyvent');
       var isWithin = require('./lib/is-within');
       var elHandler = require('./lib/element-handler');
-      var liveRegion = require('./lib/live-region');
       var defaults = {
         input: '.combobox',
         list: '.listbox',
         options: '.listbox .option',
         openClass: 'open',
         activeClass: null,
-        useLiveRegion: true
+        useLiveRegion: true,
+        filter: 'contains' // 'starts-with', 'equal', or funk
       };
 
       module.exports = function () {
@@ -67,6 +69,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.list = elHandler(config.list || defaults.list);
           this.cachedOpts = this.currentOpts = elHandler(config.options || defaults.options, true);
           this.isOpen = false;
+          this.liveRegion = false;
           this.optIndex = null;
 
           this.initAttrs();
@@ -88,8 +91,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.setOptionAttrs();
 
             if (this.config.useLiveRegion) {
-              this.liveRegion = liveRegion();
-              document.body.appendChild(this.liveRegion);
+              this.liveRegion = new LiveRegion();
             }
           }
         }, {
@@ -104,6 +106,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               _this.emit('input:click');
             });
 
+            this.input.addEventListener('blur', function () {
+              return _this.closeList();
+            });
+
             // listen for clicks outside of combobox
             document.addEventListener('click', function (e) {
               var target = e.target;
@@ -112,8 +118,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 _this.closeList();
               }
             });
-
-            // TODO: clicks on trigger arrowy thing?
 
             this.optionEvents();
             this.initKeys();
@@ -172,12 +176,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // keydown listener
             keyvent.down(this.input, [{
               keys: ['up', 'down'],
-              callback: function callback(_, k) {
+              callback: function callback(e, k) {
                 if (_this3.isOpen) {
                   return _this3.goTo(k === 'down' ? 'next' : 'prev');
                 }
-                _this3.openList();
-                _this3.goTo(0);
+                _this3.openList().goTo(_this3.optIndex || 0);
               },
               preventDefault: true
             }, {
@@ -191,13 +194,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return _this3.closeList();
               }
             }]);
+
+            // filter keypress listener
+            keyvent.up(this.input, function (e) {
+              var filter = _this3.config.filter;
+              if (e.which === 9 || !filter) {
+                return;
+              }
+              _this3.openList();
+              _this3.currentOpts = typeof filter === 'function' ? filter(_this3.input.value, _this3.cachedOpts) : filters[filter](_this3.input.value, _this3.cachedOpts);
+              _this3.updateOpts();
+            });
+          }
+        }, {
+          key: "updateOpts",
+          value: function updateOpts() {
+            var _this4 = this;
+
+            this.cachedOpts.forEach(function (opt) {
+              opt.style.display = _this4.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+            });
           }
         }, {
           key: "select",
           value: function select() {
-            // TODO: Support for data-value
-            var val = this.currentOpts[this.optIndex].innerText;
-            this.input.value = val;
+            var value = this.currentOpts[this.optIndex].innerText;
+            this.input.value = value;
             this.closeList();
           }
         }, {
@@ -223,7 +245,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           value: function pseudoFocus() {
             var option = this.currentOpts[this.optIndex];
             var activeClass = this.config.activeClass;
-            var prevId = this.input.getAttribute('aria-activedescendant');
+            var prevId = this.input.getAttribute('data-active-option');
             var prev = prevId && document.getElementById(prevId);
 
             // clean up
@@ -232,34 +254,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             if (option) {
-              this.input.setAttribute('aria-activedescendant', option.id);
-              if (this.liveRegion) {
-                this.announce();
-              }
+              this.input.setAttribute('data-active-option', option.id);
               if (activeClass) {
                 Classlist(option).add(activeClass);
               }
+
+              if (this.liveRegion) {
+                this.liveRegion.announce(this.currentOpts[this.optIndex].innerText);
+              } else {
+                this.input.setAttribute('aria-activedescendant', option.id);
+              }
             }
-          }
-        }, {
-          key: "announce",
-          value: function announce() {
-            var _this4 = this;
-
-            var msg = document.createElement('div');
-            msg.innerHTML = this.currentOpts[this.optIndex].innerText;
-            this.liveRegion.appendChild(msg);
-
-            setTimeout(function () {
-              // expire msg after 7 seconds
-              _this4.liveRegion.removeChild(msg);
-            }, 7e3);
           }
         }]);
 
         return Combobox;
       }();
-    }, { "./lib/element-handler": 2, "./lib/is-within": 3, "./lib/keyvent": 5, "./lib/live-region": 6, "./lib/rndid": 7, "./lib/select": 8, "classlist": 12, "component-emitter": 13, "extend-shallow": 15 }], 2: [function (require, module, exports) {
+    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-within": 4, "./lib/keyvent": 6, "./lib/rndid": 7, "./lib/select": 8, "classlist": 13, "component-emitter": 14, "extend-shallow": 16, "live-region": 19 }], 2: [function (require, module, exports) {
       'use strict';
 
       var select = require('./select');
@@ -272,6 +283,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return l;
       };
     }, { "./select": 8 }], 3: [function (require, module, exports) {
+      'use strict';
+
+      var val = require('./value');
+
+      module.exports = {
+        'contains': function contains(text, opts) {
+          return opts.filter(function (o) {
+            return val(o).toLowerCase().indexOf(text.toLowerCase()) > -1;
+          });
+        },
+        'equals': function equals(text, opts) {
+          return opts.filter(function (o) {
+            return val(o).toLowerCase() === text.toLowerCase();
+          });
+        },
+        'starts-with': function startsWith(text, opts) {
+          return opts.filter(function (o) {
+            return val(o).toLowerCase().indexOf(text.toLowerCase()) === 0;
+          });
+        }
+      };
+    }, { "./value": 9 }], 4: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (target, els, checkSelf) {
@@ -291,18 +324,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return false;
       };
-    }, {}], 4: [function (require, module, exports) {
+    }, {}], 5: [function (require, module, exports) {
       'use strict';
 
       module.exports = {
-        space: 32,
-        enter: 13,
-        escape: 27,
-        up: 38,
-        down: 40,
-        tab: 9
+        9: 'tab',
+        13: 'enter',
+        27: 'escape',
+        32: 'space',
+        37: 'left',
+        38: 'up',
+        39: 'right',
+        40: 'down'
       };
-    }, {}], 5: [function (require, module, exports) {
+    }, {}], 6: [function (require, module, exports) {
       'use strict';
 
       var keymap = require('./keymap');
@@ -314,23 +349,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        * @param  {Object} config    An array of keys / callbacks
        */
       exports.attach = function (eventType, target, config) {
+        if (typeof config === 'function') {
+          return target.addEventListener(eventType, config);
+        }
         if (!config || !config.length) {
           return;
         }
         target.addEventListener(eventType, function (e) {
           var which = e.which;
+          var keyName = keymap[e.which];
 
           config.forEach(function (c) {
-            c.keys.forEach(function (k) {
-              var thisWhich = keymap[k];
-              if (thisWhich !== which) {
-                return;
-              }
+            if (c.keys.indexOf(keyName) > -1) {
               if (c.preventDefault) {
                 e.preventDefault();
               }
-              c.callback(e, k);
-            });
+              c.callback(e, keyName);
+            }
           });
         });
       };
@@ -355,27 +390,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.press = function (el, config) {
         return exports.attach('keypress', el, config);
       };
-    }, { "./keymap": 4 }], 6: [function (require, module, exports) {
-      'use strict';
-
-      module.exports = function () {
-        var div = document.createElement('div');
-
-        div.setAttribute('aria-live', 'polite');
-        div.setAttribute('role', 'log');
-        div.setAttribute('aria-relevant', 'additions');
-        div.setAttribute('aria-atomic', 'false');
-
-        // offscreen it
-        div.style.position = 'absolute';
-        div.style.width = '1px';
-        div.style.height = '1px';
-        div.style.marginTop = '-1px';
-        div.style.clip = 'rect(1px, 1px, 1px, 1px)';
-
-        return div;
-      };
-    }, {}], 7: [function (require, module, exports) {
+    }, { "./keymap": 5 }], 7: [function (require, module, exports) {
       'use strict';
 
       var rndm = require('rndm');
@@ -391,7 +406,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return id;
       }
-    }, { "rndm": 19 }], 8: [function (require, module, exports) {
+    }, { "rndm": 21 }], 8: [function (require, module, exports) {
       'use strict';
 
       exports = module.exports = function (selector, context) {
@@ -404,6 +419,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return Array.prototype.slice.call(context.querySelectorAll(selector));
       };
     }, {}], 9: [function (require, module, exports) {
+      'use strict';
+
+      module.exports = function (el) {
+        return el.getAttribute('data-value') || el.innerText;
+      };
+    }, {}], 10: [function (require, module, exports) {
       (function (global) {
         'use strict';
 
@@ -875,7 +896,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return keys;
         };
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "util/": 23 }], 10: [function (require, module, exports) {
+    }, { "util/": 25 }], 11: [function (require, module, exports) {
       'use strict';
 
       exports.byteLength = byteLength;
@@ -990,7 +1011,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return parts.join('');
       }
-    }, {}], 11: [function (require, module, exports) {
+    }, {}], 12: [function (require, module, exports) {
       /*!
        * The buffer module from node.js, for the browser.
        *
@@ -2649,7 +2670,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function isnan(val) {
         return val !== val; // eslint-disable-line no-self-compare
       }
-    }, { "base64-js": 10, "ieee754": 16 }], 12: [function (require, module, exports) {
+    }, { "base64-js": 11, "ieee754": 17 }], 13: [function (require, module, exports) {
       'use strict';
 
       module.exports = ClassList;
@@ -2762,7 +2783,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       ClassList.prototype.toString = function () {
         return arr.join.call(this, ' ');
       };
-    }, { "component-indexof": 14, "trim": 20 }], 13: [function (require, module, exports) {
+    }, { "component-indexof": 15, "trim": 22 }], 14: [function (require, module, exports) {
 
       /**
        * Expose `Emitter`.
@@ -2921,7 +2942,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       Emitter.prototype.hasListeners = function (event) {
         return !!this.listeners(event).length;
       };
-    }, {}], 14: [function (require, module, exports) {
+    }, {}], 15: [function (require, module, exports) {
       module.exports = function (arr, obj) {
         if (arr.indexOf) return arr.indexOf(obj);
         for (var i = 0; i < arr.length; ++i) {
@@ -2929,7 +2950,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         return -1;
       };
-    }, {}], 15: [function (require, module, exports) {
+    }, {}], 16: [function (require, module, exports) {
       'use strict';
 
       var isObject = require('is-extendable');
@@ -2965,7 +2986,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function hasOwn(obj, key) {
         return Object.prototype.hasOwnProperty.call(obj, key);
       }
-    }, { "is-extendable": 17 }], 16: [function (require, module, exports) {
+    }, { "is-extendable": 18 }], 17: [function (require, module, exports) {
       exports.read = function (buffer, offset, isLE, mLen, nBytes) {
         var e, m;
         var eLen = nBytes * 8 - mLen - 1;
@@ -3050,7 +3071,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         buffer[offset + i - d] |= s * 128;
       };
-    }, {}], 17: [function (require, module, exports) {
+    }, {}], 18: [function (require, module, exports) {
       /*!
        * is-extendable <https://github.com/jonschlinkert/is-extendable>
        *
@@ -3063,7 +3084,81 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       module.exports = function isExtendable(val) {
         return typeof val !== 'undefined' && val !== null && ((typeof val === "undefined" ? "undefined" : _typeof(val)) === 'object' || typeof val === 'function');
       };
-    }, {}], 18: [function (require, module, exports) {
+    }, {}], 19: [function (require, module, exports) {
+      'use strict';
+
+      /**
+       * Creates the region
+       * @param {Object} options The following configuration options:
+       * @option {String} `ariaLive`: "polite" or "assertive" (defaults to "polite")
+       * @option {String} `role`: "status", "alert", or "log" (defaults to "log")
+       * @option {String} `ariaRelevant`: "additions", "removals", "text", "all",
+       *         or "additions text" (defaults to "additions")
+       * @option {String} `ariaAtomic`: "true" or "false" (defaults to "false")
+       */
+
+      function LiveRegion(options) {
+        this.region = document.createElement('div');
+        this.options = options || {};
+        // set attrs / styles
+        this.configure();
+        // append it
+        document.body.appendChild(this.region);
+      }
+
+      /**
+       * configure
+       * Sets attributes and offscreens the region
+       */
+
+      LiveRegion.prototype.configure = function () {
+        var opts = this.options;
+        var region = this.region;
+        // set attributes
+        region.setAttribute('aria-live', opts.ariaLive || 'polite');
+        region.setAttribute('role', opts.role || 'log');
+        region.setAttribute('aria-relevant', opts.ariaRelevant || 'additions');
+        region.setAttribute('aria-atomic', opts.ariaAtomic || 'false');
+
+        // offscreen it
+        this.region.style.position = 'absolute';
+        this.region.style.width = '1px';
+        this.region.style.height = '1px';
+        this.region.style.marginTop = '-1px';
+        this.region.style.clip = 'rect(1px, 1px, 1px, 1px)';
+        this.region.style.overflow = 'hidden';
+      };
+
+      /**
+       * announce
+       * Creates a live region announcement
+       * @param {String} msg The message to announce
+       * @param {Number} `expire`: The number of ms before removing the announcement
+       * node from the live region. This prevents the region from getting full useless
+       * nodes (defaults to 7000)
+       */
+
+      LiveRegion.prototype.announce = function (msg, expire) {
+        var announcement = document.createElement('div');
+        announcement.innerHTML = msg;
+        // add it to the offscreen region
+        this.region.appendChild(announcement);
+
+        if (expire || typeof expire === 'undefined') {
+          setTimeout(function () {
+            this.region.removeChild(announcement);
+          }.bind(this), expire || 7e3); // defaults to 7 seconds
+        }
+      };
+
+      /**
+       * Expose LiveRegion
+       */
+
+      if (typeof module !== 'undefined') {
+        module.exports = LiveRegion;
+      }
+    }, {}], 20: [function (require, module, exports) {
       // shim for using process in browser
       var process = module.exports = {};
 
@@ -3243,7 +3338,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.umask = function () {
         return 0;
       };
-    }, {}], 19: [function (require, module, exports) {
+    }, {}], 21: [function (require, module, exports) {
       (function (Buffer) {
 
         var assert = require('assert');
@@ -3272,7 +3367,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         }
       }).call(this, require("buffer").Buffer);
-    }, { "assert": 9, "buffer": 11 }], 20: [function (require, module, exports) {
+    }, { "assert": 10, "buffer": 12 }], 22: [function (require, module, exports) {
 
       exports = module.exports = trim;
 
@@ -3287,7 +3382,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.right = function (str) {
         return str.replace(/\s*$/, '');
       };
-    }, {}], 21: [function (require, module, exports) {
+    }, {}], 23: [function (require, module, exports) {
       if (typeof Object.create === 'function') {
         // implementation from standard node.js 'util' module
         module.exports = function inherits(ctor, superCtor) {
@@ -3311,11 +3406,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctor.prototype.constructor = ctor;
         };
       }
-    }, {}], 22: [function (require, module, exports) {
+    }, {}], 24: [function (require, module, exports) {
       module.exports = function isBuffer(arg) {
         return arg && (typeof arg === "undefined" ? "undefined" : _typeof(arg)) === 'object' && typeof arg.copy === 'function' && typeof arg.fill === 'function' && typeof arg.readUInt8 === 'function';
       };
-    }, {}], 23: [function (require, module, exports) {
+    }, {}], 25: [function (require, module, exports) {
       (function (process, global) {
         // Copyright Joyent, Inc. and other Node contributors.
         //
@@ -3862,5 +3957,5 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return Object.prototype.hasOwnProperty.call(obj, prop);
         }
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "./support/isBuffer": 22, "_process": 18, "inherits": 21 }] }, {}, [1])(1);
+    }, { "./support/isBuffer": 24, "_process": 20, "inherits": 23 }] }, {}, [1])(1);
 });

@@ -3,20 +3,22 @@
 const Classlist = require('classlist');
 const extend = require('extend-shallow');
 const Emitter = require('component-emitter');
+const LiveRegion = require('live-region');
 
 const rndid = require('./lib/rndid');
 const select = require('./lib/select');
+const filters = require('./lib/filters');
 const keyvent = require('./lib/keyvent');
 const isWithin = require('./lib/is-within');
 const elHandler = require('./lib/element-handler');
-const liveRegion = require('./lib/live-region');
 const defaults = {
   input: '.combobox',
   list: '.listbox',
   options: '.listbox .option',
   openClass: 'open',
   activeClass: null,
-  useLiveRegion: true
+  useLiveRegion: true,
+  filter: 'contains' // 'starts-with', 'equal', or funk
 };
 
 module.exports = class Combobox {
@@ -27,6 +29,7 @@ module.exports = class Combobox {
     this.list = elHandler(config.list || defaults.list);
     this.cachedOpts = this.currentOpts = elHandler((config.options || defaults.options), true);
     this.isOpen = false;
+    this.liveRegion = false;
     this.optIndex = null;
 
     this.initAttrs();
@@ -46,8 +49,7 @@ module.exports = class Combobox {
     this.setOptionAttrs();
 
     if (this.config.useLiveRegion) {
-      this.liveRegion = liveRegion();
-      document.body.appendChild(this.liveRegion);
+      this.liveRegion = new LiveRegion();
     }
   }
 
@@ -59,14 +61,14 @@ module.exports = class Combobox {
       this.emit('input:click');
     });
 
+    this.input.addEventListener('blur', () => this.closeList());
+
     // listen for clicks outside of combobox
     document.addEventListener('click', (e) => {
       const target = e.target;
       const isOrWithin = isWithin(e.target, [this.input, this.list], true);
       if (!isOrWithin && this.isOpen) { this.closeList(); }
     });
-
-    // TODO: clicks on trigger arrowy thing?
 
     this.optionEvents();
     this.initKeys();
@@ -115,12 +117,11 @@ module.exports = class Combobox {
     keyvent.down(this.input, [
       {
         keys: ['up', 'down'],
-        callback: (_, k) => {
+        callback: (e, k) => {
           if (this.isOpen) {
             return this.goTo(k === 'down' ? 'next' : 'prev');
           }
-          this.openList();
-          this.goTo(0);
+          this.openList().goTo(this.optIndex || 0);
         },
         preventDefault: true
       },
@@ -133,12 +134,28 @@ module.exports = class Combobox {
         callback: () => this.closeList()
       }
     ]);
+
+    // filter keypress listener
+    keyvent.up(this.input, (e) => {
+      const filter = this.config.filter;
+      if (e.which === 9 || !filter) { return; }
+      this.openList();
+      this.currentOpts = typeof filter === 'function' ?
+        filter(this.input.value, this.cachedOpts) :
+        filters[filter](this.input.value, this.cachedOpts);
+      this.updateOpts()
+    });
+  }
+
+  updateOpts() {
+    this.cachedOpts.forEach((opt) => {
+      opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+    });
   }
 
   select() {
-    // TODO: Support for data-value
-    const val = this.currentOpts[this.optIndex].innerText;
-    this.input.value = val;
+    const value = this.currentOpts[this.optIndex].innerText;
+    this.input.value = value;
     this.closeList();
   }
 
@@ -159,7 +176,7 @@ module.exports = class Combobox {
   pseudoFocus() {
     const option = this.currentOpts[this.optIndex];
     const activeClass = this.config.activeClass;
-    const prevId = this.input.getAttribute('aria-activedescendant');
+    const prevId = this.input.getAttribute('data-active-option');
     const prev = prevId && document.getElementById(prevId);
 
     // clean up
@@ -168,20 +185,14 @@ module.exports = class Combobox {
     }
 
     if (option) {
-      this.input.setAttribute('aria-activedescendant', option.id);
-      if (this.liveRegion) { this.announce(); }
+      this.input.setAttribute('data-active-option', option.id);
       if (activeClass) { Classlist(option).add(activeClass); }
+
+      if (this.liveRegion) {
+        this.liveRegion.announce(this.currentOpts[this.optIndex].innerText);
+      } else {
+        this.input.setAttribute('aria-activedescendant', option.id);
+      }
     }
-  }
-
-  announce() {
-    const msg = document.createElement('div');
-    msg.innerHTML = this.currentOpts[this.optIndex].innerText;
-    this.liveRegion.appendChild(msg);
-
-    setTimeout(() => {
-      // expire msg after 7 seconds
-      this.liveRegion.removeChild(msg);
-    }, 7e3);
   }
 };
