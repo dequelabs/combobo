@@ -28,9 +28,11 @@ module.exports = class Combobox {
     this.input = elHandler(config.input || defaults.input);
     this.list = elHandler(config.list || defaults.list);
     this.cachedOpts = this.currentOpts = elHandler((config.options || defaults.options), true);
+    // initial state
     this.isOpen = false;
     this.liveRegion = false;
     this.optIndex = null;
+    this.isHovering = false;
 
     this.initAttrs();
     this.initEvents();
@@ -61,7 +63,9 @@ module.exports = class Combobox {
       this.emit('input:click');
     });
 
-    this.input.addEventListener('blur', () => this.closeList());
+    this.input.addEventListener('blur', () => {
+      if (!this.isHovering) { this.closeList(); }
+    });
 
     // listen for clicks outside of combobox
     document.addEventListener('click', (e) => {
@@ -92,10 +96,12 @@ module.exports = class Combobox {
         const prev = this.currentOpts[this.optIndex];
         if (prev) { Classlist(prev).remove(this.config.activeClass); }
         Classlist(option).add(this.config.activeClass);
+        this.isHovering = true;
       });
 
       option.addEventListener('mouseout', () => {
         Classlist(option).remove(this.config.activeClass);
+        this.isHovering = false;
       });
     });
   }
@@ -106,9 +112,10 @@ module.exports = class Combobox {
     return this;
   }
 
-  closeList() {
+  closeList(focus) {
     Classlist(this.list).remove(this.config.openClass);
     this.isOpen = false;
+    if (focus) { this.input.focus(); }
     return this;
   }
 
@@ -131,18 +138,19 @@ module.exports = class Combobox {
       },
       {
         keys: ['escape'],
-        callback: () => this.closeList()
+        callback: () => this.closeList(true)
       }
     ]);
 
-    // filter keypress listener
+    const ignores = [9, 13, 27];
+    // filter keyup listener
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
-      if (e.which === 9 || !filter) { return; }
+      if (ignores.indexOf(e.which) > -1 || !filter) { return; }
       this.openList();
       this.currentOpts = typeof filter === 'function' ?
-        filter(this.input.value, this.cachedOpts) :
-        filters[filter](this.input.value, this.cachedOpts);
+        filter(this.input.value.trim(), this.cachedOpts) :
+        filters[filter](this.input.value.trim(), this.cachedOpts);
       this.updateOpts()
     });
   }
@@ -156,7 +164,7 @@ module.exports = class Combobox {
   select() {
     const value = this.currentOpts[this.optIndex].innerText;
     this.input.value = value;
-    this.closeList();
+    this.closeList(true);
   }
 
   goTo(option) {
@@ -165,7 +173,7 @@ module.exports = class Combobox {
     }
 
     // NOTE: This prevents circularity
-    if (!this.currentOpts[option]) { return; }
+    if (!this.currentOpts[option]) { return this; }
     // update current option index
     this.optIndex = option;
     // show pseudo focus styles

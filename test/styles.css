@@ -1,6 +1,62 @@
 
 body, input {
-  font-family: 'Pontano Sans', sans-serif;
+  font-family: 'Quicksand', sans-serif;
+  background: #212E59;
+  color: #0BD4B9;
+  text-align: center;
+  font-size: 18px;
+}
+
+h1 {
+  font-size: 4em;
+}
+
+section {
+  padding: 3em;
+  width: 600px;
+  box-sizing: border-box;
+  background: #0bd4b9;
+  color: #212E59;
+  margin: 0 auto;
+}
+
+label {
+  padding: 5px;
+  font-size: 18px;
+  font-weight: 500;
+  display: block;
+}
+
+button {
+  padding: 6px;
+  font-size: 18px;
+  background: #212E59;
+  color: #fff;
+  border: 0;
+  display: block;
+  margin: 0 auto;
+  margin-top: 15px;
+  width: 250px;
+  box-sizing: border-box;
+  box-shadow: 0 0 5px #000;
+  transition: all 750ms;
+}
+
+button:hover {
+  background-color: #3E57A8;
+  transition: all 750ms;
+  box-shadow: 0 0 12px #000;
+}
+
+button:active {
+  box-shadow: none;
+  transition: all 750ms;
+}
+
+.wrp {
+  width: 250px;
+  margin: 0 auto;
+  text-align: left;
 }
 
 .combo-wrap {
@@ -11,10 +67,14 @@ body, input {
 .combobox {
   width: 250px;
   padding: 10px 35px 10px 5px;
-  border: 1px solid #ccc;
+  border: 1px solid #fff;
   box-sizing: border-box;
   position: relative;
   font-size: 14px;
+  text-align: left;
+  background-color: #fff;
+  color: #212E59;
+  box-shadow: 0 0 5px #000;
 }
 
 .fa-caret-down {
@@ -24,19 +84,22 @@ body, input {
   top: 0;
   right: 0;
   padding: 0 10px;
-  background: #000;
   color: #fff;
+  background-color: #212E59;
 }
 
 .listbox {
   display: none;
   position: absolute;
-  box-shadow: 0 2px 4px #000;
   top: 40px; /* the height of the input */
   left: 0;
   width: 250px;
   box-sizing: border-box;
   padding: 0;
+  background: #fff;
+  z-index: 99;
+  text-align: left;
+  box-shadow: 0 3px 12px #000;
 }
 
 .listbox.open {
@@ -48,5 +111,6 @@ body, input {
 }
 
 .listbox .option.selected {
-  background: #eee;
+  color: #fff;
+  background-color: #212E59;
 }

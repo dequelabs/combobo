@@ -68,9 +68,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.input = elHandler(config.input || defaults.input);
           this.list = elHandler(config.list || defaults.list);
           this.cachedOpts = this.currentOpts = elHandler(config.options || defaults.options, true);
+          // initial state
           this.isOpen = false;
           this.liveRegion = false;
           this.optIndex = null;
+          this.isHovering = false;
 
           this.initAttrs();
           this.initEvents();
@@ -107,7 +109,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
 
             this.input.addEventListener('blur', function () {
-              return _this.closeList();
+              if (!_this.isHovering) {
+                _this.closeList();
+              }
             });
 
             // listen for clicks outside of combobox
@@ -147,10 +151,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                   Classlist(prev).remove(_this2.config.activeClass);
                 }
                 Classlist(option).add(_this2.config.activeClass);
+                _this2.isHovering = true;
               });
 
               option.addEventListener('mouseout', function () {
                 Classlist(option).remove(_this2.config.activeClass);
+                _this2.isHovering = false;
               });
             });
           }
@@ -163,9 +169,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         }, {
           key: "closeList",
-          value: function closeList() {
+          value: function closeList(focus) {
             Classlist(this.list).remove(this.config.openClass);
             this.isOpen = false;
+            if (focus) {
+              this.input.focus();
+            }
             return this;
           }
         }, {
@@ -191,18 +200,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }, {
               keys: ['escape'],
               callback: function callback() {
-                return _this3.closeList();
+                return _this3.closeList(true);
               }
             }]);
 
-            // filter keypress listener
+            var ignores = [9, 13, 27];
+            // filter keyup listener
             keyvent.up(this.input, function (e) {
               var filter = _this3.config.filter;
-              if (e.which === 9 || !filter) {
+              if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
               _this3.openList();
-              _this3.currentOpts = typeof filter === 'function' ? filter(_this3.input.value, _this3.cachedOpts) : filters[filter](_this3.input.value, _this3.cachedOpts);
+              _this3.currentOpts = typeof filter === 'function' ? filter(_this3.input.value.trim(), _this3.cachedOpts) : filters[filter](_this3.input.value.trim(), _this3.cachedOpts);
               _this3.updateOpts();
             });
           }
@@ -220,7 +230,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           value: function select() {
             var value = this.currentOpts[this.optIndex].innerText;
             this.input.value = value;
-            this.closeList();
+            this.closeList(true);
           }
         }, {
           key: "goTo",
@@ -232,7 +242,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             // NOTE: This prevents circularity
             if (!this.currentOpts[option]) {
-              return;
+              return this;
             }
             // update current option index
             this.optIndex = option;
