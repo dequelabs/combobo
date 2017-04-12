@@ -3,8 +3,11 @@ body, input {
   font-family: 'Quicksand', sans-serif;
   background: #212E59;
   color: #0BD4B9;
-  text-align: center;
   font-size: 18px;
+}
+
+#demo {
+  text-align: center;
 }
 
 h1 {

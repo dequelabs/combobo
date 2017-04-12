@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="./styles.css">
   </head>
-  <body>
+  <body id="demo">
     <h1>Combination Box</h1>
     <section>
       <div class="wrp">
@@ -38,6 +38,11 @@
         var combobox = new Combobox({
           activeClass: 'selected'
         });
+
+        combobox.on('change', () => {
+          console.log('change: ', combobox.currentOption);
+        });
+        console.log(combobox);
       }());
     </script>
   </body>

@@ -4,6 +4,7 @@ const gulp = require('gulp');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const babel = require('gulp-babel');
+const mochaPhantomJS = require('gulp-mocha-phantomjs');
 
 gulp.task('default', ['build']);
 gulp.task('build', ['babelify']);
@@ -27,4 +28,10 @@ gulp.task('babelify', ['browserify'], () => {
 
 gulp.task('watch', () => {
   gulp.watch(['./index.js', 'lib/**/*.js'], ['build']);
+});
+
+gulp.task('test', ['build'], () => {
+  return gulp
+    .src('./test/runner.html')
+    .pipe(mochaPhantomJS());
 });

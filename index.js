@@ -1,5 +1,14 @@
 'use strict';
 
+/**
+ * NOTE:
+ * - https://www.w3.org/TR/2016/WD-wai-aria-practices-1.1-20160317/#combobox
+ *    - "For each combobox pattern the button need not be in the tab order if there
+ *    is an appropriate keystroke associated with the input element such that when
+ *    focus is on the input, the keystroke triggers display of the associated drop
+ *    down list."
+ */
+
 const Classlist = require('classlist');
 const extend = require('extend-shallow');
 const Emitter = require('component-emitter');
@@ -18,20 +27,26 @@ const defaults = {
   openClass: 'open',
   activeClass: null,
   useLiveRegion: true,
-  filter: 'contains' // 'starts-with', 'equal', or funk
+  filter: 'contains' // 'starts-with', 'equals', or funk
 };
 
 module.exports = class Combobox {
   constructor(config) {
     config = config || {};
+
+    window.extend = extend;
+
+    // merge user config with default config
     this.config = extend(defaults, config);
-    this.input = elHandler(config.input || defaults.input);
-    this.list = elHandler(config.list || defaults.list);
-    this.cachedOpts = this.currentOpts = elHandler((config.options || defaults.options), true);
+    this.input = elHandler(this.config.input);
+    this.list = elHandler(this.config.list);
+    this.cachedOpts = this.currentOpts = elHandler((this.config.options), true);
+
     // initial state
     this.isOpen = false;
-    this.liveRegion = false;
+    this.liveRegion = null;
     this.optIndex = null;
+    this.currentOption = null;
     this.isHovering = false;
 
     this.initAttrs();
@@ -60,7 +75,6 @@ module.exports = class Combobox {
 
     this.input.addEventListener('click', () => {
       this.openList().goTo(this.optIndex || 0); // ensure its open
-      this.emit('input:click');
     });
 
     this.input.addEventListener('blur', () => {
@@ -108,14 +122,18 @@ module.exports = class Combobox {
 
   openList() {
     Classlist(this.list).add(this.config.openClass);
+    this.input.setAttribute('aria-expanded', 'true');
     this.isOpen = true;
+    this.emit('list:open');
     return this;
   }
 
   closeList(focus) {
     Classlist(this.list).remove(this.config.openClass);
+    this.input.setAttribute('aria-expanded', 'false');
     this.isOpen = false;
     if (focus) { this.input.focus(); }
+    this.emit('list:close');
     return this;
   }
 
@@ -151,7 +169,7 @@ module.exports = class Combobox {
       this.currentOpts = typeof filter === 'function' ?
         filter(this.input.value.trim(), this.cachedOpts) :
         filters[filter](this.input.value.trim(), this.cachedOpts);
-      this.updateOpts()
+      this.updateOpts();
     });
   }
 
@@ -171,7 +189,6 @@ module.exports = class Combobox {
     if (typeof option === 'string') { // 'prev' or 'next'
       return this.goTo(option === 'next' ? this.optIndex + 1 : this.optIndex - 1);
     }
-
     // NOTE: This prevents circularity
     if (!this.currentOpts[option]) { return this; }
     // update current option index
@@ -201,6 +218,8 @@ module.exports = class Combobox {
       } else {
         this.input.setAttribute('aria-activedescendant', option.id);
       }
+      this.currentOption = option;
+      this.emit('change');
     }
   }
 };

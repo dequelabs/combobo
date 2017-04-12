@@ -38,6 +38,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }({ 1: [function (require, module, exports) {
       'use strict';
 
+      /**
+       * NOTE:
+       * - https://www.w3.org/TR/2016/WD-wai-aria-practices-1.1-20160317/#combobox
+       *    - "For each combobox pattern the button need not be in the tab order if there
+       *    is an appropriate keystroke associated with the input element such that when
+       *    focus is on the input, the keystroke triggers display of the associated drop
+       *    down list."
+       */
+
       var Classlist = require('classlist');
       var extend = require('extend-shallow');
       var Emitter = require('component-emitter');
@@ -56,7 +65,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         openClass: 'open',
         activeClass: null,
         useLiveRegion: true,
-        filter: 'contains' // 'starts-with', 'equal', or funk
+        filter: 'contains' // 'starts-with', 'equals', or funk
       };
 
       module.exports = function () {
@@ -64,14 +73,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           _classCallCheck(this, Combobox);
 
           config = config || {};
+
+          window.extend = extend;
+
+          // merge user config with default config
           this.config = extend(defaults, config);
-          this.input = elHandler(config.input || defaults.input);
-          this.list = elHandler(config.list || defaults.list);
-          this.cachedOpts = this.currentOpts = elHandler(config.options || defaults.options, true);
+          this.input = elHandler(this.config.input);
+          this.list = elHandler(this.config.list);
+          this.cachedOpts = this.currentOpts = elHandler(this.config.options, true);
+
           // initial state
           this.isOpen = false;
-          this.liveRegion = false;
+          this.liveRegion = null;
           this.optIndex = null;
+          this.currentOption = null;
           this.isHovering = false;
 
           this.initAttrs();
@@ -105,7 +120,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this.input.addEventListener('click', function () {
               _this.openList().goTo(_this.optIndex || 0); // ensure its open
-              _this.emit('input:click');
             });
 
             this.input.addEventListener('blur', function () {
@@ -164,17 +178,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           key: "openList",
           value: function openList() {
             Classlist(this.list).add(this.config.openClass);
+            this.input.setAttribute('aria-expanded', 'true');
             this.isOpen = true;
+            this.emit('list:open');
             return this;
           }
         }, {
           key: "closeList",
           value: function closeList(focus) {
             Classlist(this.list).remove(this.config.openClass);
+            this.input.setAttribute('aria-expanded', 'false');
             this.isOpen = false;
             if (focus) {
               this.input.focus();
             }
+            this.emit('list:close');
             return this;
           }
         }, {
@@ -239,7 +257,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               // 'prev' or 'next'
               return this.goTo(option === 'next' ? this.optIndex + 1 : this.optIndex - 1);
             }
-
             // NOTE: This prevents circularity
             if (!this.currentOpts[option]) {
               return this;
@@ -274,6 +291,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               } else {
                 this.input.setAttribute('aria-activedescendant', option.id);
               }
+              this.currentOption = option;
+              this.emit('change');
             }
           }
         }]);
@@ -1269,8 +1288,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         if (obj) {
-          if (ArrayBuffer.isView(obj) || 'length' in obj) {
-            if (typeof obj.length !== 'number' || isnan(obj.length)) {
+          if (isArrayBufferView(obj) || 'length' in obj) {
+            if (typeof obj.length !== 'number' || numberIsNaN(obj.length)) {
               return createBuffer(0);
             }
             return fromArrayLike(obj);
@@ -1381,7 +1400,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (Buffer.isBuffer(string)) {
           return string.length;
         }
-        if (ArrayBuffer.isView(string) || string instanceof ArrayBuffer) {
+        if (isArrayBufferView(string) || string instanceof ArrayBuffer) {
           return string.byteLength;
         }
         if (typeof string !== 'string') {
@@ -1647,7 +1666,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           byteOffset = -0x80000000;
         }
         byteOffset = +byteOffset; // Coerce to Number.
-        if (isNaN(byteOffset)) {
+        if (numberIsNaN(byteOffset)) {
           // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
           byteOffset = dir ? 0 : buffer.length - 1;
         }
@@ -1775,7 +1794,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         for (var i = 0; i < length; ++i) {
           var parsed = parseInt(string.substr(i * 2, 2), 16);
-          if (isNaN(parsed)) return i;
+          if (numberIsNaN(parsed)) return i;
           buf[offset + i] = parsed;
         }
         return i;
@@ -2552,7 +2571,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       function base64clean(str) {
         // Node strips out invalid characters like \n and \t from the string, base64-js does not
-        str = stringtrim(str).replace(INVALID_BASE64_RE, '');
+        str = str.trim().replace(INVALID_BASE64_RE, '');
         // Node converts strings with length < 2 to ''
         if (str.length < 2) return '';
         // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
@@ -2560,11 +2579,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           str = str + '=';
         }
         return str;
-      }
-
-      function stringtrim(str) {
-        if (str.trim) return str.trim();
-        return str.replace(/^\s+|\s+$/g, '');
       }
 
       function toHex(n) {
@@ -2677,8 +2691,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return i;
       }
 
-      function isnan(val) {
-        return val !== val; // eslint-disable-line no-self-compare
+      // Node 0.10 supports `ArrayBuffer` but lacks `ArrayBuffer.isView`
+      function isArrayBufferView(obj) {
+        return typeof ArrayBuffer.isView === 'function' && ArrayBuffer.isView(obj);
+      }
+
+      function numberIsNaN(obj) {
+        return obj !== obj; // eslint-disable-line no-self-compare
       }
     }, { "base64-js": 11, "ieee754": 17 }], 13: [function (require, module, exports) {
       'use strict';
