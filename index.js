@@ -144,9 +144,14 @@ module.exports = class Combobox {
         keys: ['up', 'down'],
         callback: (e, k) => {
           if (this.isOpen) {
+            // if typing filtered out the pseudo-current option
+            if (this.currentOpts.indexOf(this.currentOption) === -1) {
+              return this.goTo(0);
+            }
             return this.goTo(k === 'down' ? 'next' : 'prev');
           }
-          this.openList().goTo(this.optIndex || 0);
+          console.log(this.currentOpts[this.optIndex])
+          this.openList().goTo(this.currentOpts[this.optIndex] && this.optIndex || 0);
         },
         preventDefault: true
       },

@@ -205,9 +205,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               keys: ['up', 'down'],
               callback: function callback(e, k) {
                 if (_this3.isOpen) {
+                  // if typing filtered out the pseudo-current option
+                  if (_this3.currentOpts.indexOf(_this3.currentOption) === -1) {
+                    return _this3.goTo(0);
+                  }
                   return _this3.goTo(k === 'down' ? 'next' : 'prev');
                 }
-                _this3.openList().goTo(_this3.optIndex || 0);
+                console.log(_this3.currentOpts[_this3.optIndex]);
+                _this3.openList().goTo(_this3.currentOpts[_this3.optIndex] && _this3.optIndex || 0);
               },
               preventDefault: true
             }, {
