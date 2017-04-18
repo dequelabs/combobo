@@ -56,7 +56,6 @@ describe('Combobox', function () {
 
   it('should set initial states', function () {
     assert.equal(combobox.isOpen, false);
-    assert.isFalse(!!combobox.optIndex);
     assert.isFalse(!!combobox.currentOption);
     assert.isFalse(combobox.isHovering);
   });
@@ -149,12 +148,16 @@ describe('Combobox', function () {
   describe('events', function () {
     describe('option events', function () {
       describe('click', function () {
-        it('should select the clicked option', function () {
+        it('should select the clicked option', function (done) {
           var options = combobox.currentOpts;
           assert.isFalse(!!combobox.currentOption);
+
+          combobox.on('selection', function () {
+            assert.equal(combobox.currentOption, options[1]);
+            done();
+          });
+
           simulant.fire(options[1], 'click');
-          assert.equal(combobox.currentOption, options[1]);
-          assert.equal(1, combobox.optIndex);
         });
       });
 
@@ -163,7 +166,7 @@ describe('Combobox', function () {
           var options = combobox.currentOpts;
           // trick the combobox into thinking the 3rd option is active
           options[2].classList.add('selected');
-          combobox.optIndex = 2;
+          combobox.goTo(2);
           // fire a mouseover on the 1st option
           simulant.fire(options[0], 'mouseover');
           assert.isFalse(options[2].classList.contains('selected'));
@@ -203,13 +206,13 @@ describe('Combobox', function () {
         });
 
         it('should go to the first option if none are selected initially', function () {
-          combobox.optIndex = null;
           combobox.input.click();
           assert.isTrue(combobox.currentOpts[0].classList.contains('selected'));
         });
 
         it('should go to the currently selected option if applicable', function () {
-          combobox.optIndex = 4;
+          combobox.goTo(4);
+          combobox.closeList();
           combobox.input.click();
           assert.isTrue(combobox.currentOpts[4].classList.contains('selected'));
         });
@@ -271,7 +274,6 @@ describe('Combobox', function () {
           it('should select the currently active option', function () {
             // fire down arrow
             simulant.fire(combobox.input, 'keydown', {which: 40});
-            assert.equal(combobox.optIndex, 0);
             assert.equal(combobox.currentOpts[0], combobox.currentOption);
             // fire enter
             simulant.fire(combobox.input, 'keydown', {which: 13});
@@ -362,7 +364,9 @@ describe('Combobox', function () {
               fixture.innerHTML = MARKUP;
               combobox = new Combobox({
                 activeClass: 'selected',
-                filter: (val, allOpts) => allOpts.filter(o => o.textContent === 'Frank Zappa')
+                filter: function (val, allOpts) {
+                  return allOpts.filter(function (o) { return o.textContent === 'Frank Zappa'});
+                }
               });
             });
 

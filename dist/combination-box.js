@@ -65,6 +65,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         openClass: 'open',
         activeClass: null,
         useLiveRegion: true,
+        announcement: function announcement(n) {
+          return n + " options available";
+        },
         filter: 'contains' // 'starts-with', 'equals', or funk
       };
 
@@ -73,8 +76,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           _classCallCheck(this, Combobox);
 
           config = config || {};
-
-          window.extend = extend;
 
           // merge user config with default config
           this.config = extend(defaults, config);
@@ -85,7 +86,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           // initial state
           this.isOpen = false;
           this.liveRegion = null;
-          this.optIndex = null;
           this.currentOption = null;
           this.isHovering = false;
 
@@ -108,7 +108,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.setOptionAttrs();
 
             if (this.config.useLiveRegion) {
-              this.liveRegion = new LiveRegion();
+              this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
             }
           }
         }, {
@@ -119,7 +119,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             Emitter(this);
 
             this.input.addEventListener('click', function () {
-              _this.openList().goTo(_this.optIndex || 0); // ensure its open
+              _this.openList().goTo(_this.getOptIndex() || 0); // ensure its open
             });
 
             this.input.addEventListener('blur', function () {
@@ -141,6 +141,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.initKeys();
           }
         }, {
+          key: "getOptIndex",
+          value: function getOptIndex() {
+            return this.currentOption && this.currentOpts.indexOf(this.currentOption);
+          }
+        }, {
           key: "setOptionAttrs",
           value: function setOptionAttrs() {
             this.currentOpts.forEach(function (opt) {
@@ -153,14 +158,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           value: function optionEvents() {
             var _this2 = this;
 
-            this.currentOpts.forEach(function (option, i) {
+            this.cachedOpts.forEach(function (option) {
               option.addEventListener('click', function () {
-                _this2.goTo(i).select();
+                _this2.goTo(_this2.currentOpts.indexOf(option)).select();
               });
 
               option.addEventListener('mouseover', function () {
                 // clean up
-                var prev = _this2.currentOpts[_this2.optIndex];
+                var prev = _this2.currentOption;
                 if (prev) {
                   Classlist(prev).remove(_this2.config.activeClass);
                 }
@@ -179,6 +184,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           value: function openList() {
             Classlist(this.list).add(this.config.openClass);
             this.input.setAttribute('aria-expanded', 'true');
+            if (!this.isOpen) {
+              // announcing count
+              this.announceCount();
+            }
             this.isOpen = true;
             this.emit('list:open');
             return this;
@@ -211,8 +220,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                   }
                   return _this3.goTo(k === 'down' ? 'next' : 'prev');
                 }
-                console.log(_this3.currentOpts[_this3.optIndex]);
-                _this3.openList().goTo(_this3.currentOpts[_this3.optIndex] && _this3.optIndex || 0);
+
+                _this3.goTo(_this3.currentOption ? _this3.getOptIndex() : 0).openList();
               },
               preventDefault: true
             }, {
@@ -234,40 +243,77 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
-              _this3.openList();
-              _this3.currentOpts = typeof filter === 'function' ? filter(_this3.input.value.trim(), _this3.cachedOpts) : filters[filter](_this3.input.value.trim(), _this3.cachedOpts);
-              _this3.updateOpts();
+              _this3.filter().openList();
             });
+          }
+        }, {
+          key: "filter",
+          value: function filter(supress) {
+            var _this4 = this;
+
+            var filter = this.config.filter;
+            var befores = this.currentOpts;
+            this.currentOpts = typeof filter === 'function' ? filter(this.input.value.trim(), this.cachedOpts) : filters[filter](this.input.value.trim(), this.cachedOpts);
+            // don't let user's functions break stuff
+            this.currentOpts = this.currentOpts || [];
+            this.updateOpts();
+            // announce count only if it has changed
+            if (!befores.every(function (b) {
+              return _this4.currentOpts.indexOf(b) > -1;
+            }) && !supress) {
+              this.announceCount();
+            }
+            return this;
+          }
+        }, {
+          key: "announceCount",
+          value: function announceCount() {
+            if (this.config.announcement) {
+              this.liveRegion.announce(this.config.announcement(this.currentOpts.length));
+            }
+
+            return this;
           }
         }, {
           key: "updateOpts",
           value: function updateOpts() {
-            var _this4 = this;
+            var _this5 = this;
 
             this.cachedOpts.forEach(function (opt) {
-              opt.style.display = _this4.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+              opt.style.display = _this5.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
             });
+
+            return this;
           }
         }, {
           key: "select",
           value: function select() {
-            var value = this.currentOpts[this.optIndex].innerText;
+            var currentOpt = this.currentOption;
+            if (!currentOpt) {
+              return;
+            }
+            var value = currentOpt.innerText;
             this.input.value = value;
-            this.closeList(true);
+            this.filter(true);
+            this.input.select();
+            this.closeList();
+            this.emit('selection', { text: value, option: currentOpt });
+            return this;
           }
         }, {
           key: "goTo",
           value: function goTo(option) {
             if (typeof option === 'string') {
               // 'prev' or 'next'
-              return this.goTo(option === 'next' ? this.optIndex + 1 : this.optIndex - 1);
+              var optIndex = this.getOptIndex();
+              return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1);
             }
             // NOTE: This prevents circularity
             if (!this.currentOpts[option]) {
               return this;
             }
-            // update current option index
-            this.optIndex = option;
+            // update current option
+            this.currentOption = this.currentOpts[option];
             // show pseudo focus styles
             this.pseudoFocus();
             return this;
@@ -275,7 +321,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "pseudoFocus",
           value: function pseudoFocus() {
-            var option = this.currentOpts[this.optIndex];
+            var option = this.currentOption;
             var activeClass = this.config.activeClass;
             var prevId = this.input.getAttribute('data-active-option');
             var prev = prevId && document.getElementById(prevId);
@@ -292,7 +338,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
 
               if (this.liveRegion) {
-                this.liveRegion.announce(this.currentOpts[this.optIndex].innerText);
+                this.liveRegion.announce(this.currentOption.innerText);
               } else {
                 this.input.setAttribute('aria-activedescendant', option.id);
               }

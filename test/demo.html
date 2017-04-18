@@ -14,7 +14,7 @@
         <label for="combobox">Choose Band</label>
         <div class="combo-wrap">
           <input type="text" class="combobox" id="combobox">
-          <i aria-hidden="true" class="fa fa-caret-down"></i>
+          <i aria-hidden="true" class="fa band-trigger fa-caret-down"></i>
           <div class="listbox">
             <div class="option">Ween</div>
             <div class="option">Frank Zappa</div>
@@ -35,8 +35,16 @@
     <script src="../dist/combination-box.js" charset="utf-8"></script>
     <script>
       (function () {
-        var combobox = new Combobox({
+        var trigger = document.querySelector('.band-trigger');
+        var box = new Combobox({
           activeClass: 'selected'
+        });
+        window.box = box;
+
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          console.log('openeing fucinadlai lisnts');
+          box.openList()
         });
       }());
     </script>

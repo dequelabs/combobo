@@ -4,6 +4,7 @@ const gulp = require('gulp');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const babel = require('gulp-babel');
+const o = require('gulp-open');
 const mochaPhantomJS = require('gulp-mocha-phantomjs');
 
 gulp.task('default', ['build']);
@@ -35,3 +36,5 @@ gulp.task('test', ['build'], () => {
     .src('./test/runner.html')
     .pipe(mochaPhantomJS());
 });
+
+gulp.task('test-browser', ['build'], () => gulp.src('./test/runner.html').pipe(o()));

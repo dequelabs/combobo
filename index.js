@@ -27,14 +27,13 @@ const defaults = {
   openClass: 'open',
   activeClass: null,
   useLiveRegion: true,
+  announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
 
 module.exports = class Combobox {
   constructor(config) {
     config = config || {};
-
-    window.extend = extend;
 
     // merge user config with default config
     this.config = extend(defaults, config);
@@ -45,7 +44,6 @@ module.exports = class Combobox {
     // initial state
     this.isOpen = false;
     this.liveRegion = null;
-    this.optIndex = null;
     this.currentOption = null;
     this.isHovering = false;
 
@@ -66,7 +64,7 @@ module.exports = class Combobox {
     this.setOptionAttrs();
 
     if (this.config.useLiveRegion) {
-      this.liveRegion = new LiveRegion();
+      this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
     }
   }
 
@@ -74,7 +72,7 @@ module.exports = class Combobox {
     Emitter(this);
 
     this.input.addEventListener('click', () => {
-      this.openList().goTo(this.optIndex || 0); // ensure its open
+      this.openList().goTo(this.getOptIndex() || 0); // ensure its open
     });
 
     this.input.addEventListener('blur', () => {
@@ -92,6 +90,10 @@ module.exports = class Combobox {
     this.initKeys();
   }
 
+  getOptIndex() {
+    return this.currentOption && this.currentOpts.indexOf(this.currentOption);
+  }
+
   setOptionAttrs() {
     this.currentOpts.forEach((opt) => {
       opt.setAttribute('role', 'option');
@@ -100,14 +102,16 @@ module.exports = class Combobox {
   }
 
   optionEvents() {
-    this.currentOpts.forEach((option, i) => {
+    this.cachedOpts.forEach((option) => {
       option.addEventListener('click', () => {
-        this.goTo(i).select();
+        this
+          .goTo(this.currentOpts.indexOf(option))
+          .select();
       });
 
       option.addEventListener('mouseover', () => {
         // clean up
-        const prev = this.currentOpts[this.optIndex];
+        const prev = this.currentOption;
         if (prev) { Classlist(prev).remove(this.config.activeClass); }
         Classlist(option).add(this.config.activeClass);
         this.isHovering = true;
@@ -123,6 +127,10 @@ module.exports = class Combobox {
   openList() {
     Classlist(this.list).add(this.config.openClass);
     this.input.setAttribute('aria-expanded', 'true');
+    if (!this.isOpen) {
+      // announcing count
+      this.announceCount();
+    }
     this.isOpen = true;
     this.emit('list:open');
     return this;
@@ -139,72 +147,97 @@ module.exports = class Combobox {
 
   initKeys() {
     // keydown listener
-    keyvent.down(this.input, [
-      {
-        keys: ['up', 'down'],
-        callback: (e, k) => {
-          if (this.isOpen) {
-            // if typing filtered out the pseudo-current option
-            if (this.currentOpts.indexOf(this.currentOption) === -1) {
-              return this.goTo(0);
-            }
-            return this.goTo(k === 'down' ? 'next' : 'prev');
-          }
-          console.log(this.currentOpts[this.optIndex])
-          this.openList().goTo(this.currentOpts[this.optIndex] && this.optIndex || 0);
-        },
-        preventDefault: true
+    keyvent.down(this.input, [{
+      keys: ['up', 'down'],
+      callback: (e, k) => {
+        if (this.isOpen) {
+          // if typing filtered out the pseudo-current option
+          if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0); }
+          return this.goTo(k === 'down' ? 'next' : 'prev');
+        }
+
+        this.goTo(this.currentOption ? this.getOptIndex() : 0).openList();
       },
-      {
-        keys: ['enter'],
-        callback: () => this.select()
-      },
-      {
-        keys: ['escape'],
-        callback: () => this.closeList(true)
-      }
-    ]);
+      preventDefault: true
+    }, {
+      keys: ['enter'],
+      callback: () => this.select()
+    }, {
+      keys: ['escape'],
+      callback: () => this.closeList(true)
+    }]);
 
     const ignores = [9, 13, 27];
     // filter keyup listener
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
-      this.openList();
-      this.currentOpts = typeof filter === 'function' ?
-        filter(this.input.value.trim(), this.cachedOpts) :
-        filters[filter](this.input.value.trim(), this.cachedOpts);
-      this.updateOpts();
+      this.filter().openList();
     });
+  }
+
+  filter(supress) {
+    const filter = this.config.filter;
+    const befores = this.currentOpts;
+    this.currentOpts = typeof filter === 'function' ?
+      filter(this.input.value.trim(), this.cachedOpts) :
+      filters[filter](this.input.value.trim(), this.cachedOpts);
+    // don't let user's functions break stuff
+    this.currentOpts = this.currentOpts || [];
+    this.updateOpts();
+    // announce count only if it has changed
+    if (!befores.every((b) => this.currentOpts.indexOf(b) > -1) && !supress) {
+      this.announceCount();
+    }
+    return this;
+  }
+
+  announceCount() {
+    if (this.config.announcement) {
+      this.liveRegion.announce(
+        this.config.announcement(this.currentOpts.length)
+      );
+    }
+
+    return this;
   }
 
   updateOpts() {
     this.cachedOpts.forEach((opt) => {
       opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
     });
+
+    return this;
   }
 
   select() {
-    const value = this.currentOpts[this.optIndex].innerText;
+    const currentOpt = this.currentOption;
+    if (!currentOpt) { return; }
+    const value = currentOpt.innerText;
     this.input.value = value;
-    this.closeList(true);
+    this.filter(true);
+    this.input.select();
+    this.closeList();
+    this.emit('selection', { text: value, option: currentOpt });
+    return this;
   }
 
   goTo(option) {
     if (typeof option === 'string') { // 'prev' or 'next'
-      return this.goTo(option === 'next' ? this.optIndex + 1 : this.optIndex - 1);
+      const optIndex = this.getOptIndex();
+      return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1);
     }
     // NOTE: This prevents circularity
     if (!this.currentOpts[option]) { return this; }
-    // update current option index
-    this.optIndex = option;
+    // update current option
+    this.currentOption = this.currentOpts[option];
     // show pseudo focus styles
     this.pseudoFocus();
     return this;
   }
 
   pseudoFocus() {
-    const option = this.currentOpts[this.optIndex];
+    const option = this.currentOption;
     const activeClass = this.config.activeClass;
     const prevId = this.input.getAttribute('data-active-option');
     const prev = prevId && document.getElementById(prevId);
@@ -219,7 +252,7 @@ module.exports = class Combobox {
       if (activeClass) { Classlist(option).add(activeClass); }
 
       if (this.liveRegion) {
-        this.liveRegion.announce(this.currentOpts[this.optIndex].innerText);
+        this.liveRegion.announce(this.currentOption.innerText);
       } else {
         this.input.setAttribute('aria-activedescendant', option.id);
       }
