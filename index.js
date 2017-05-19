@@ -101,10 +101,6 @@ module.exports = class Combobox {
       opt.setAttribute('role', 'option');
       opt.id = opt.id || rndid();
     });
-    // this.cachedOptGrps.forEach((optgrp) => {
-    //   let title = optgrp.getAttribute('data-label');
-    //   optgrp.innerHTML = '<strong>' + title + '</strong>' + optgrp.innerHTML;
-    // });
   }
 
   optionEvents() {
