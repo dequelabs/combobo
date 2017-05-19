@@ -223,7 +223,7 @@ module.exports = class Combobox {
       let x = 0;
       let y = 0;
       for (var i = 0; i < groups.length; i++) {
-        let title = groups[i].parentElement.getElementsByTagName('strong')[0];
+        let title = groups[i].parentElement;
         if (groups[i].style.display === 'none') {
           x++;
           if (x === groups.length) {

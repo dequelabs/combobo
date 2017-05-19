@@ -300,7 +300,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               var x = 0;
               var y = 0;
               for (var i = 0; i < groups.length; i++) {
-                var title = groups[i].parentElement.getElementsByTagName('strong')[0];
+                var title = groups[i].parentElement;
                 if (groups[i].style.display === 'none') {
                   x++;
                   if (x === groups.length) {
