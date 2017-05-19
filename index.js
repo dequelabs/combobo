@@ -24,6 +24,7 @@ const defaults = {
   input: '.combobox',
   list: '.listbox',
   options: '.listbox .option',
+  optgroup: null,
   openClass: 'open',
   activeClass: null,
   useLiveRegion: true,
@@ -40,6 +41,9 @@ module.exports = class Combobox {
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true);
+    if (this.config.optgroup) {
+      this.cachedOptGrps = elHandler((this.config.optgroup), true);
+    }
 
     // initial state
     this.isOpen = false;
@@ -185,6 +189,9 @@ module.exports = class Combobox {
     // don't let user's functions break stuff
     this.currentOpts = this.currentOpts || [];
     this.updateOpts();
+    if (this.config.optgroup) {
+      this.updateOptsGrp();
+    }
     // announce count only if it has changed
     if (!befores.every((b) => this.currentOpts.indexOf(b) > -1) && !supress) {
       this.announceCount();
@@ -205,6 +212,31 @@ module.exports = class Combobox {
   updateOpts() {
     this.cachedOpts.forEach((opt) => {
       opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+    });
+
+    return this;
+  }
+
+  updateOptsGrp() {
+    this.cachedOptGrps.forEach((optgrp) => {
+      const groups = optgrp.getElementsByClassName('option');
+      let x = 0;
+      let y = 0;
+      for (var i = 0; i < groups.length; i++) {
+        let title = groups[i].parentElement;
+        if (groups[i].style.display === 'none') {
+          x++;
+          if (x === groups.length) {
+            title.style.display = 'none';
+          }
+        }
+        if (groups[i].style.display === 'block') {
+          y++;
+          if (y === groups.length) {
+            title.style.display = 'block';
+          }
+        }
+      }
     });
 
     return this;
