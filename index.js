@@ -220,22 +220,21 @@ module.exports = class Combobox {
   updateOptsGrp() {
     console.log('fired');
     this.cachedOptGrps.forEach((optgrp) => {
-      const title = optgrp.getElementsByTagName('strong');
+      const title = groups[i].parentElement.getElementsByTagName('strong')[0];
       const groups = optgrp.getElementsByTagName('div');
       let x = 0;
-      let y = 0;
       for (var i = 0; i < groups.length; i++) {
         if (groups[i].style.display === 'none') {
           x++;
-          console.log(x);
-          console.log(groups.length);
-          groups[i].parentElement.getElementsByTagName('strong')[0].style.display = x === groups.length ? 'none' : 'block';
+          if (x === groups.length) {
+            title.style.display = 'none';
+          }
         }
         if (groups[i].style.display === 'block') {
-          y++;
-          console.log(y);
-          console.log(groups.length);
-          groups[i].parentElement.getElementsByTagName('strong')[0].style.display = y === groups.length ? 'none' : 'block';
+          x++;
+          if (x === groups.length) {
+            title.style.display = 'block';
+          }
         }
       }
     });

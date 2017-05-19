@@ -304,15 +304,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               for (var i = 0; i < groups.length; i++) {
                 if (groups[i].style.display === 'none') {
                   x++;
-                  console.log(x);
-                  console.log(groups.length);
+                  // console.log(x);
+                  // console.log(groups.length);
                   groups[i].parentElement.getElementsByTagName('strong')[0].style.display = x === groups.length ? 'none' : 'block';
                 }
                 if (groups[i].style.display === 'block') {
                   y++;
                   console.log(y);
                   console.log(groups.length);
-                  groups[i].parentElement.getElementsByTagName('strong')[0].style.display = y === groups.length ? 'none' : 'block';
+                  groups[i].parentElement.getElementsByTagName('strong')[0].style.display = y === groups.length ? 'block' : 'none';
                 }
               }
             });
