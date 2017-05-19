@@ -62,6 +62,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         input: '.combobox',
         list: '.listbox',
         options: '.listbox .option',
+        optgroup: '.listbox .optgroup[data-label]',
         openClass: 'open',
         activeClass: null,
         useLiveRegion: true,
@@ -82,6 +83,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.input = elHandler(this.config.input);
           this.list = elHandler(this.config.list);
           this.cachedOpts = this.currentOpts = elHandler(this.config.options, true);
+          this.cachedOptGrps = elHandler(this.config.optgroup, true);
 
           // initial state
           this.isOpen = false;
@@ -152,6 +154,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               opt.setAttribute('role', 'option');
               opt.id = opt.id || rndid();
             });
+            // this.cachedOptGrps.forEach((optgrp) => {
+            //   let title = optgrp.getAttribute('data-label');
+            //   optgrp.innerHTML = '<strong>' + title + '</strong>' + optgrp.innerHTML;
+            // });
           }
         }, {
           key: "optionEvents",
@@ -257,6 +263,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // don't let user's functions break stuff
             this.currentOpts = this.currentOpts || [];
             this.updateOpts();
+            this.updateOptsGrp();
             // announce count only if it has changed
             if (!befores.every(function (b) {
               return _this4.currentOpts.indexOf(b) > -1;
@@ -281,6 +288,33 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this.cachedOpts.forEach(function (opt) {
               opt.style.display = _this5.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+            });
+
+            return this;
+          }
+        }, {
+          key: "updateOptsGrp",
+          value: function updateOptsGrp() {
+            console.log('fired');
+            this.cachedOptGrps.forEach(function (optgrp) {
+              var title = optgrp.getElementsByTagName('strong');
+              var groups = optgrp.getElementsByTagName('div');
+              var x = 0;
+              var y = 0;
+              for (var i = 0; i < groups.length; i++) {
+                if (groups[i].style.display === 'none') {
+                  x++;
+                  console.log(x);
+                  console.log(groups.length);
+                  groups[i].parentElement.getElementsByTagName('strong')[0].style.display = x === groups.length ? 'none' : 'block';
+                }
+                if (groups[i].style.display === 'block') {
+                  y++;
+                  console.log(y);
+                  console.log(groups.length);
+                  groups[i].parentElement.getElementsByTagName('strong')[0].style.display = y === groups.length ? 'none' : 'block';
+                }
+              }
             });
 
             return this;
@@ -3404,6 +3438,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.removeListener = noop;
       process.removeAllListeners = noop;
       process.emit = noop;
+      process.prependListener = noop;
+      process.prependOnceListener = noop;
+
+      process.listeners = function (name) {
+        return [];
+      };
 
       process.binding = function (name) {
         throw new Error('process.binding is not supported');

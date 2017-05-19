@@ -24,6 +24,7 @@ const defaults = {
   input: '.combobox',
   list: '.listbox',
   options: '.listbox .option',
+  optgroup: '.listbox .optgroup[data-label]',
   openClass: 'open',
   activeClass: null,
   useLiveRegion: true,
@@ -40,6 +41,7 @@ module.exports = class Combobox {
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true);
+    this.cachedOptGrps = elHandler((this.config.optgroup), true);
 
     // initial state
     this.isOpen = false;
@@ -99,6 +101,10 @@ module.exports = class Combobox {
       opt.setAttribute('role', 'option');
       opt.id = opt.id || rndid();
     });
+    // this.cachedOptGrps.forEach((optgrp) => {
+    //   let title = optgrp.getAttribute('data-label');
+    //   optgrp.innerHTML = '<strong>' + title + '</strong>' + optgrp.innerHTML;
+    // });
   }
 
   optionEvents() {
@@ -185,6 +191,7 @@ module.exports = class Combobox {
     // don't let user's functions break stuff
     this.currentOpts = this.currentOpts || [];
     this.updateOpts();
+    this.updateOptsGrp();
     // announce count only if it has changed
     if (!befores.every((b) => this.currentOpts.indexOf(b) > -1) && !supress) {
       this.announceCount();
@@ -205,6 +212,32 @@ module.exports = class Combobox {
   updateOpts() {
     this.cachedOpts.forEach((opt) => {
       opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+    });
+
+    return this;
+  }
+
+  updateOptsGrp() {
+    console.log('fired');
+    this.cachedOptGrps.forEach((optgrp) => {
+      const title = optgrp.getElementsByTagName('strong');
+      const groups = optgrp.getElementsByTagName('div');
+      let x = 0;
+      let y = 0;
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].style.display === 'none') {
+          x++;
+          console.log(x);
+          console.log(groups.length);
+          groups[i].parentElement.getElementsByTagName('strong')[0].style.display = x === groups.length ? 'none' : 'block';
+        }
+        if (groups[i].style.display === 'block') {
+          y++;
+          console.log(y);
+          console.log(groups.length);
+          groups[i].parentElement.getElementsByTagName('strong')[0].style.display = y === groups.length ? 'none' : 'block';
+        }
+      }
     });
 
     return this;
