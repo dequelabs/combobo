@@ -297,22 +297,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           value: function updateOptsGrp() {
             console.log('fired');
             this.cachedOptGrps.forEach(function (optgrp) {
-              var title = optgrp.getElementsByTagName('strong');
               var groups = optgrp.getElementsByTagName('div');
               var x = 0;
               var y = 0;
               for (var i = 0; i < groups.length; i++) {
+                var title = groups[i].parentElement.getElementsByTagName('strong')[0];
                 if (groups[i].style.display === 'none') {
                   x++;
-                  // console.log(x);
-                  // console.log(groups.length);
-                  groups[i].parentElement.getElementsByTagName('strong')[0].style.display = x === groups.length ? 'none' : 'block';
+                  if (x === groups.length) {
+                    title.style.display = 'none';
+                  }
                 }
                 if (groups[i].style.display === 'block') {
                   y++;
-                  console.log(y);
-                  console.log(groups.length);
-                  groups[i].parentElement.getElementsByTagName('strong')[0].style.display = y === groups.length ? 'block' : 'none';
+                  if (y === groups.length) {
+                    title.style.display = 'block';
+                  }
                 }
               }
             });

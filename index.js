@@ -220,10 +220,11 @@ module.exports = class Combobox {
   updateOptsGrp() {
     console.log('fired');
     this.cachedOptGrps.forEach((optgrp) => {
-      const title = groups[i].parentElement.getElementsByTagName('strong')[0];
       const groups = optgrp.getElementsByTagName('div');
       let x = 0;
+      let y = 0;
       for (var i = 0; i < groups.length; i++) {
+        let title = groups[i].parentElement.getElementsByTagName('strong')[0];
         if (groups[i].style.display === 'none') {
           x++;
           if (x === groups.length) {
@@ -231,8 +232,8 @@ module.exports = class Combobox {
           }
         }
         if (groups[i].style.display === 'block') {
-          x++;
-          if (x === groups.length) {
+          y++;
+          if (y === groups.length) {
             title.style.display = 'block';
           }
         }
