@@ -24,7 +24,7 @@ const defaults = {
   input: '.combobox',
   list: '.listbox',
   options: '.listbox .option',
-  optgroup: '.listbox .optgroup[data-label]',
+  optgroup: null,
   openClass: 'open',
   activeClass: null,
   useLiveRegion: true,
@@ -41,7 +41,9 @@ module.exports = class Combobox {
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true);
-    this.cachedOptGrps = elHandler((this.config.optgroup), true);
+    if (this.config.optgroup) {
+      this.cachedOptGrps = elHandler((this.config.optgroup), true);
+    }
 
     // initial state
     this.isOpen = false;
@@ -187,7 +189,9 @@ module.exports = class Combobox {
     // don't let user's functions break stuff
     this.currentOpts = this.currentOpts || [];
     this.updateOpts();
-    this.updateOptsGrp();
+    if (this.config.optgroup) {
+      this.updateOptsGrp();
+    }
     // announce count only if it has changed
     if (!befores.every((b) => this.currentOpts.indexOf(b) > -1) && !supress) {
       this.announceCount();
@@ -215,7 +219,7 @@ module.exports = class Combobox {
 
   updateOptsGrp() {
     this.cachedOptGrps.forEach((optgrp) => {
-      const groups = optgrp.getElementsByTagName('div');
+      const groups = optgrp.getElementsByClassName('option');
       let x = 0;
       let y = 0;
       for (var i = 0; i < groups.length; i++) {

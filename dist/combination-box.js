@@ -62,7 +62,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         input: '.combobox',
         list: '.listbox',
         options: '.listbox .option',
-        optgroup: '.listbox .optgroup[data-label]',
+        optgroup: null,
         openClass: 'open',
         activeClass: null,
         useLiveRegion: true,
@@ -83,7 +83,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.input = elHandler(this.config.input);
           this.list = elHandler(this.config.list);
           this.cachedOpts = this.currentOpts = elHandler(this.config.options, true);
-          this.cachedOptGrps = elHandler(this.config.optgroup, true);
+          if (this.config.optgroup) {
+            this.cachedOptGrps = elHandler(this.config.optgroup, true);
+          }
 
           // initial state
           this.isOpen = false;
@@ -259,7 +261,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // don't let user's functions break stuff
             this.currentOpts = this.currentOpts || [];
             this.updateOpts();
-            this.updateOptsGrp();
+            if (this.config.optgroup) {
+              this.updateOptsGrp();
+            }
             // announce count only if it has changed
             if (!befores.every(function (b) {
               return _this4.currentOpts.indexOf(b) > -1;
@@ -292,7 +296,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           key: "updateOptsGrp",
           value: function updateOptsGrp() {
             this.cachedOptGrps.forEach(function (optgrp) {
-              var groups = optgrp.getElementsByTagName('div');
+              var groups = optgrp.getElementsByClassName('option');
               var x = 0;
               var y = 0;
               for (var i = 0; i < groups.length; i++) {
