@@ -214,7 +214,6 @@ module.exports = class Combobox {
   }
 
   updateOptsGrp() {
-    console.log('fired');
     this.cachedOptGrps.forEach((optgrp) => {
       const groups = optgrp.getElementsByTagName('div');
       let x = 0;
