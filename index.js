@@ -13,19 +13,21 @@ const Classlist = require('classlist');
 const extend = require('extend-shallow');
 const Emitter = require('component-emitter');
 const LiveRegion = require('live-region');
-
 const rndid = require('./lib/rndid');
-const select = require('./lib/select');
 const filters = require('./lib/filters');
 const keyvent = require('./lib/keyvent');
 const isWithin = require('./lib/is-within');
+const isInView = require('./lib/is-in-view');
 const elHandler = require('./lib/element-handler');
+
 const defaults = {
   input: '.combobox',
   list: '.listbox',
-  options: '.listbox .option',
+  options: '.option', // qualified within `list`
+  groups: '.group', // qualified within `list`
   openClass: 'open',
-  activeClass: null,
+  activeClass: 'active',
+  selectedClass: 'selected',
   useLiveRegion: true,
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
@@ -39,13 +41,26 @@ module.exports = class Combobox {
     this.config = extend(defaults, config);
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
-    this.cachedOpts = this.currentOpts = elHandler((this.config.options), true);
+    this.cachedOpts = this.currentOpts = elHandler((this.config.options), true, this.list);
+
+    // option groups
+    if (this.config.groups) {
+      const groupEls = elHandler(this.config.groups, true, this.list);
+      this.isGrouped = true;
+      this.groups = groupEls.map((groupEl) => {
+        return {
+          element: groupEl,
+          options: this.cachedOpts.filter((opt) => groupEl.contains(opt))
+        };
+      });
+    }
 
     // initial state
     this.isOpen = false;
     this.liveRegion = null;
     this.currentOption = null;
     this.isHovering = false;
+    this._dir = 'down';
 
     this.initAttrs();
     this.initEvents();
@@ -81,7 +96,6 @@ module.exports = class Combobox {
 
     // listen for clicks outside of combobox
     document.addEventListener('click', (e) => {
-      const target = e.target;
       const isOrWithin = isWithin(e.target, [this.input, this.list], true);
       if (!isOrWithin && this.isOpen) { this.closeList(); }
     });
@@ -151,12 +165,13 @@ module.exports = class Combobox {
       keys: ['up', 'down'],
       callback: (e, k) => {
         if (this.isOpen) {
+          this._dir = k;
           // if typing filtered out the pseudo-current option
-          if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0); }
-          return this.goTo(k === 'down' ? 'next' : 'prev');
+          if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0, true); }
+          return this.goTo(k === 'down' ? 'next' : 'prev', true);
         }
 
-        this.goTo(this.currentOption ? this.getOptIndex() : 0).openList();
+        this.goTo(this.currentOption ? this.getOptIndex() : 0, true).openList();
       },
       preventDefault: true
     }, {
@@ -204,9 +219,22 @@ module.exports = class Combobox {
 
   updateOpts() {
     this.cachedOpts.forEach((opt) => {
+      // TODO: support other means of hiding/showing so stuff like flex is supported
       opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
     });
 
+    this.updateGroups();
+    return this;
+  }
+
+  updateGroups() {
+    if (this.isGrouped) {
+      this.groups.forEach((groupData) => {
+        const visibleOpts = groupData.options.filter((opt) => opt.style.display === 'block');
+        // TODO: support other means of hiding/showing so stuff like flex is supported
+        groupData.element.style.display = visibleOpts.length ? 'block' : 'none';
+      });
+    }
     return this;
   }
 
@@ -222,17 +250,22 @@ module.exports = class Combobox {
     return this;
   }
 
-  goTo(option) {
+  goTo(option, fromKey) {
     if (typeof option === 'string') { // 'prev' or 'next'
       const optIndex = this.getOptIndex();
-      return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1);
+      return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1, fromKey);
     }
     // NOTE: This prevents circularity
-    if (!this.currentOpts[option]) { return this; }
+    if (!this.currentOpts[option]) {
+      // end of the line so allow scroll up for visibility of potential group labels
+      if (this.getOptIndex() === 0) { this.list.scrollTop = 0; }
+      return this;
+    }
     // update current option
     this.currentOption = this.currentOpts[option];
     // show pseudo focus styles
     this.pseudoFocus();
+    if (fromKey) { this.ensureVisible(); }
     return this;
   }
 
@@ -259,5 +292,10 @@ module.exports = class Combobox {
       this.currentOption = option;
       this.emit('change');
     }
+  }
+
+  ensureVisible() {
+    if (isInView(this.currentOption)) { return; }
+    this.list.scrollTop = this.currentOption.offsetTop;
   }
 };

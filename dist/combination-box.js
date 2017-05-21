@@ -51,19 +51,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var extend = require('extend-shallow');
       var Emitter = require('component-emitter');
       var LiveRegion = require('live-region');
-
       var rndid = require('./lib/rndid');
-      var select = require('./lib/select');
       var filters = require('./lib/filters');
       var keyvent = require('./lib/keyvent');
       var isWithin = require('./lib/is-within');
+      var isInView = require('./lib/is-in-view');
       var elHandler = require('./lib/element-handler');
+
       var defaults = {
         input: '.combobox',
         list: '.listbox',
-        options: '.listbox .option',
+        options: '.option', // qualified within `list`
+        groups: '.group', // qualified within `list`
         openClass: 'open',
-        activeClass: null,
+        activeClass: 'active',
+        selectedClass: 'selected',
         useLiveRegion: true,
         announcement: function announcement(n) {
           return n + " options available";
@@ -73,6 +75,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       module.exports = function () {
         function Combobox(config) {
+          var _this = this;
+
           _classCallCheck(this, Combobox);
 
           config = config || {};
@@ -81,13 +85,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.config = extend(defaults, config);
           this.input = elHandler(this.config.input);
           this.list = elHandler(this.config.list);
-          this.cachedOpts = this.currentOpts = elHandler(this.config.options, true);
+          this.cachedOpts = this.currentOpts = elHandler(this.config.options, true, this.list);
+
+          // option groups
+          if (this.config.groups) {
+            var groupEls = elHandler(this.config.groups, true, this.list);
+            this.isGrouped = true;
+            this.groups = groupEls.map(function (groupEl) {
+              return {
+                element: groupEl,
+                options: _this.cachedOpts.filter(function (opt) {
+                  return groupEl.contains(opt);
+                })
+              };
+            });
+          }
 
           // initial state
           this.isOpen = false;
           this.liveRegion = null;
           this.currentOption = null;
           this.isHovering = false;
+          this._dir = 'down';
 
           this.initAttrs();
           this.initEvents();
@@ -114,26 +133,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "initEvents",
           value: function initEvents() {
-            var _this = this;
+            var _this2 = this;
 
             Emitter(this);
 
             this.input.addEventListener('click', function () {
-              _this.openList().goTo(_this.getOptIndex() || 0); // ensure its open
+              _this2.openList().goTo(_this2.getOptIndex() || 0); // ensure its open
             });
 
             this.input.addEventListener('blur', function () {
-              if (!_this.isHovering) {
-                _this.closeList();
+              if (!_this2.isHovering) {
+                _this2.closeList();
               }
             });
 
             // listen for clicks outside of combobox
             document.addEventListener('click', function (e) {
-              var target = e.target;
-              var isOrWithin = isWithin(e.target, [_this.input, _this.list], true);
-              if (!isOrWithin && _this.isOpen) {
-                _this.closeList();
+              var isOrWithin = isWithin(e.target, [_this2.input, _this2.list], true);
+              if (!isOrWithin && _this2.isOpen) {
+                _this2.closeList();
               }
             });
 
@@ -156,26 +174,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "optionEvents",
           value: function optionEvents() {
-            var _this2 = this;
+            var _this3 = this;
 
             this.cachedOpts.forEach(function (option) {
               option.addEventListener('click', function () {
-                _this2.goTo(_this2.currentOpts.indexOf(option)).select();
+                _this3.goTo(_this3.currentOpts.indexOf(option)).select();
               });
 
               option.addEventListener('mouseover', function () {
                 // clean up
-                var prev = _this2.currentOption;
+                var prev = _this3.currentOption;
                 if (prev) {
-                  Classlist(prev).remove(_this2.config.activeClass);
+                  Classlist(prev).remove(_this3.config.activeClass);
                 }
-                Classlist(option).add(_this2.config.activeClass);
-                _this2.isHovering = true;
+                Classlist(option).add(_this3.config.activeClass);
+                _this3.isHovering = true;
               });
 
               option.addEventListener('mouseout', function () {
-                Classlist(option).remove(_this2.config.activeClass);
-                _this2.isHovering = false;
+                Classlist(option).remove(_this3.config.activeClass);
+                _this3.isHovering = false;
               });
             });
           }
@@ -207,49 +225,50 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "initKeys",
           value: function initKeys() {
-            var _this3 = this;
+            var _this4 = this;
 
             // keydown listener
             keyvent.down(this.input, [{
               keys: ['up', 'down'],
               callback: function callback(e, k) {
-                if (_this3.isOpen) {
+                if (_this4.isOpen) {
+                  _this4._dir = k;
                   // if typing filtered out the pseudo-current option
-                  if (_this3.currentOpts.indexOf(_this3.currentOption) === -1) {
-                    return _this3.goTo(0);
+                  if (_this4.currentOpts.indexOf(_this4.currentOption) === -1) {
+                    return _this4.goTo(0, true);
                   }
-                  return _this3.goTo(k === 'down' ? 'next' : 'prev');
+                  return _this4.goTo(k === 'down' ? 'next' : 'prev', true);
                 }
 
-                _this3.goTo(_this3.currentOption ? _this3.getOptIndex() : 0).openList();
+                _this4.goTo(_this4.currentOption ? _this4.getOptIndex() : 0, true).openList();
               },
               preventDefault: true
             }, {
               keys: ['enter'],
               callback: function callback() {
-                return _this3.select();
+                return _this4.select();
               }
             }, {
               keys: ['escape'],
               callback: function callback() {
-                return _this3.closeList(true);
+                return _this4.closeList(true);
               }
             }]);
 
             var ignores = [9, 13, 27];
             // filter keyup listener
             keyvent.up(this.input, function (e) {
-              var filter = _this3.config.filter;
+              var filter = _this4.config.filter;
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
-              _this3.filter().openList();
+              _this4.filter().openList();
             });
           }
         }, {
           key: "filter",
           value: function filter(supress) {
-            var _this4 = this;
+            var _this5 = this;
 
             var filter = this.config.filter;
             var befores = this.currentOpts;
@@ -259,7 +278,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.updateOpts();
             // announce count only if it has changed
             if (!befores.every(function (b) {
-              return _this4.currentOpts.indexOf(b) > -1;
+              return _this5.currentOpts.indexOf(b) > -1;
             }) && !supress) {
               this.announceCount();
             }
@@ -277,12 +296,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "updateOpts",
           value: function updateOpts() {
-            var _this5 = this;
+            var _this6 = this;
 
             this.cachedOpts.forEach(function (opt) {
-              opt.style.display = _this5.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+              // TODO: support other means of hiding/showing so stuff like flex is supported
+              opt.style.display = _this6.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
             });
 
+            this.updateGroups();
+            return this;
+          }
+        }, {
+          key: "updateGroups",
+          value: function updateGroups() {
+            if (this.isGrouped) {
+              this.groups.forEach(function (groupData) {
+                var visibleOpts = groupData.options.filter(function (opt) {
+                  return opt.style.display === 'block';
+                });
+                // TODO: support other means of hiding/showing so stuff like flex is supported
+                groupData.element.style.display = visibleOpts.length ? 'block' : 'none';
+              });
+            }
             return this;
           }
         }, {
@@ -302,20 +337,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         }, {
           key: "goTo",
-          value: function goTo(option) {
+          value: function goTo(option, fromKey) {
             if (typeof option === 'string') {
               // 'prev' or 'next'
               var optIndex = this.getOptIndex();
-              return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1);
+              return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1, fromKey);
             }
             // NOTE: This prevents circularity
             if (!this.currentOpts[option]) {
+              // end of the line so allow scroll up for visibility of potential group labels
+              if (this.getOptIndex() === 0) {
+                this.list.scrollTop = 0;
+              }
               return this;
             }
             // update current option
             this.currentOption = this.currentOpts[option];
             // show pseudo focus styles
             this.pseudoFocus();
+            if (fromKey) {
+              this.ensureVisible();
+            }
             return this;
           }
         }, {
@@ -346,23 +388,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.emit('change');
             }
           }
+        }, {
+          key: "ensureVisible",
+          value: function ensureVisible() {
+            if (isInView(this.currentOption)) {
+              return;
+            }
+            this.list.scrollTop = this.currentOption.offsetTop;
+          }
         }]);
 
         return Combobox;
       }();
-    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-within": 4, "./lib/keyvent": 6, "./lib/rndid": 7, "./lib/select": 8, "classlist": 13, "component-emitter": 14, "extend-shallow": 16, "live-region": 19 }], 2: [function (require, module, exports) {
+    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-in-view": 4, "./lib/is-within": 5, "./lib/keyvent": 7, "./lib/rndid": 8, "classlist": 14, "component-emitter": 15, "extend-shallow": 17, "live-region": 20 }], 2: [function (require, module, exports) {
       'use strict';
 
       var select = require('./select');
 
-      module.exports = function (l, all) {
+      module.exports = function (l, all, context) {
+        context = context || document;
         if (typeof l === 'string') {
-          return all ? select.all(l) : select(l);
+          return all ? select.all(l, context) : select(l, context);
         }
 
         return l;
       };
-    }, { "./select": 8 }], 3: [function (require, module, exports) {
+    }, { "./select": 9 }], 3: [function (require, module, exports) {
       'use strict';
 
       var val = require('./value');
@@ -384,7 +435,49 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           });
         }
       };
-    }, { "./value": 9 }], 4: [function (require, module, exports) {
+    }, { "./value": 10 }], 4: [function (require, module, exports) {
+      'use strict';
+
+      function posY(elm) {
+        var test = elm,
+            top = 0;
+
+        while (!!test && test.tagName.toLowerCase() !== 'body') {
+          top += test.offsetTop;
+          test = test.offsetParent;
+        }
+
+        return top;
+      }
+
+      function viewPortHeight() {
+        var de = document.documentElement;
+
+        if (!!window.innerWidth) {
+          return window.innerHeight;
+        } else if (de && !isNaN(de.clientHeight)) {
+          return de.clientHeight;
+        }
+
+        return 0;
+      }
+
+      function scrollY() {
+        if (window.pageYOffset) {
+          return window.pageYOffset;
+        }
+        return Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+      }
+
+      function checkvisible(elm) {
+        var vpH = viewPortHeight(); // Viewport Height
+        var st = scrollY(); // Scroll Top
+        var y = posY(elm);
+        return y > vpH + st;
+      }
+
+      module.exports = checkvisible;
+    }, {}], 5: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (target, els, checkSelf) {
@@ -404,7 +497,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return false;
       };
-    }, {}], 5: [function (require, module, exports) {
+    }, {}], 6: [function (require, module, exports) {
       'use strict';
 
       module.exports = {
@@ -417,7 +510,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         39: 'right',
         40: 'down'
       };
-    }, {}], 6: [function (require, module, exports) {
+    }, {}], 7: [function (require, module, exports) {
       'use strict';
 
       var keymap = require('./keymap');
@@ -470,7 +563,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.press = function (el, config) {
         return exports.attach('keypress', el, config);
       };
-    }, { "./keymap": 5 }], 7: [function (require, module, exports) {
+    }, { "./keymap": 6 }], 8: [function (require, module, exports) {
       'use strict';
 
       var rndm = require('rndm');
@@ -486,7 +579,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return id;
       }
-    }, { "rndm": 21 }], 8: [function (require, module, exports) {
+    }, { "rndm": 22 }], 9: [function (require, module, exports) {
       'use strict';
 
       exports = module.exports = function (selector, context) {
@@ -498,13 +591,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         context = context || document;
         return Array.prototype.slice.call(context.querySelectorAll(selector));
       };
-    }, {}], 9: [function (require, module, exports) {
+    }, {}], 10: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (el) {
         return el.getAttribute('data-value') || el.innerText;
       };
-    }, {}], 10: [function (require, module, exports) {
+    }, {}], 11: [function (require, module, exports) {
       (function (global) {
         'use strict';
 
@@ -976,7 +1069,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return keys;
         };
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "util/": 25 }], 11: [function (require, module, exports) {
+    }, { "util/": 26 }], 12: [function (require, module, exports) {
       'use strict';
 
       exports.byteLength = byteLength;
@@ -1091,7 +1184,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return parts.join('');
       }
-    }, {}], 12: [function (require, module, exports) {
+    }, {}], 13: [function (require, module, exports) {
       /*!
        * The buffer module from node.js, for the browser.
        *
@@ -2750,7 +2843,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function numberIsNaN(obj) {
         return obj !== obj; // eslint-disable-line no-self-compare
       }
-    }, { "base64-js": 11, "ieee754": 17 }], 13: [function (require, module, exports) {
+    }, { "base64-js": 12, "ieee754": 18 }], 14: [function (require, module, exports) {
       'use strict';
 
       module.exports = ClassList;
@@ -2863,7 +2956,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       ClassList.prototype.toString = function () {
         return arr.join.call(this, ' ');
       };
-    }, { "component-indexof": 15, "trim": 22 }], 14: [function (require, module, exports) {
+    }, { "component-indexof": 16, "trim": 23 }], 15: [function (require, module, exports) {
 
       /**
        * Expose `Emitter`.
@@ -3022,7 +3115,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       Emitter.prototype.hasListeners = function (event) {
         return !!this.listeners(event).length;
       };
-    }, {}], 15: [function (require, module, exports) {
+    }, {}], 16: [function (require, module, exports) {
       module.exports = function (arr, obj) {
         if (arr.indexOf) return arr.indexOf(obj);
         for (var i = 0; i < arr.length; ++i) {
@@ -3030,7 +3123,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         return -1;
       };
-    }, {}], 16: [function (require, module, exports) {
+    }, {}], 17: [function (require, module, exports) {
       'use strict';
 
       var isObject = require('is-extendable');
@@ -3066,7 +3159,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function hasOwn(obj, key) {
         return Object.prototype.hasOwnProperty.call(obj, key);
       }
-    }, { "is-extendable": 18 }], 17: [function (require, module, exports) {
+    }, { "is-extendable": 19 }], 18: [function (require, module, exports) {
       exports.read = function (buffer, offset, isLE, mLen, nBytes) {
         var e, m;
         var eLen = nBytes * 8 - mLen - 1;
@@ -3151,7 +3244,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         buffer[offset + i - d] |= s * 128;
       };
-    }, {}], 18: [function (require, module, exports) {
+    }, {}], 19: [function (require, module, exports) {
       /*!
        * is-extendable <https://github.com/jonschlinkert/is-extendable>
        *
@@ -3164,7 +3257,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       module.exports = function isExtendable(val) {
         return typeof val !== 'undefined' && val !== null && ((typeof val === "undefined" ? "undefined" : _typeof(val)) === 'object' || typeof val === 'function');
       };
-    }, {}], 19: [function (require, module, exports) {
+    }, {}], 20: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -3238,7 +3331,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (typeof module !== 'undefined') {
         module.exports = LiveRegion;
       }
-    }, {}], 20: [function (require, module, exports) {
+    }, {}], 21: [function (require, module, exports) {
       // shim for using process in browser
       var process = module.exports = {};
 
@@ -3418,7 +3511,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.umask = function () {
         return 0;
       };
-    }, {}], 21: [function (require, module, exports) {
+    }, {}], 22: [function (require, module, exports) {
       (function (Buffer) {
 
         var assert = require('assert');
@@ -3447,7 +3540,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         }
       }).call(this, require("buffer").Buffer);
-    }, { "assert": 10, "buffer": 12 }], 22: [function (require, module, exports) {
+    }, { "assert": 11, "buffer": 13 }], 23: [function (require, module, exports) {
 
       exports = module.exports = trim;
 
@@ -3462,7 +3555,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.right = function (str) {
         return str.replace(/\s*$/, '');
       };
-    }, {}], 23: [function (require, module, exports) {
+    }, {}], 24: [function (require, module, exports) {
       if (typeof Object.create === 'function') {
         // implementation from standard node.js 'util' module
         module.exports = function inherits(ctor, superCtor) {
@@ -3486,11 +3579,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctor.prototype.constructor = ctor;
         };
       }
-    }, {}], 24: [function (require, module, exports) {
+    }, {}], 25: [function (require, module, exports) {
       module.exports = function isBuffer(arg) {
         return arg && (typeof arg === "undefined" ? "undefined" : _typeof(arg)) === 'object' && typeof arg.copy === 'function' && typeof arg.fill === 'function' && typeof arg.readUInt8 === 'function';
       };
-    }, {}], 25: [function (require, module, exports) {
+    }, {}], 26: [function (require, module, exports) {
       (function (process, global) {
         // Copyright Joyent, Inc. and other Node contributors.
         //
@@ -4037,5 +4130,5 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return Object.prototype.hasOwnProperty.call(obj, prop);
         }
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "./support/isBuffer": 24, "_process": 20, "inherits": 23 }] }, {}, [1])(1);
+    }, { "./support/isBuffer": 25, "_process": 21, "inherits": 24 }] }, {}, [1])(1);
 });

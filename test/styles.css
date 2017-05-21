@@ -4,6 +4,7 @@ body, input {
   background: #212E59;
   color: #0BD4B9;
   font-size: 18px;
+  box-sizing: border-box;
 }
 
 #demo {
@@ -20,7 +21,7 @@ section {
   box-sizing: border-box;
   background: #0bd4b9;
   color: #212E59;
-  margin: 0 auto;
+  margin: 50px auto;
 }
 
 label {
@@ -103,6 +104,8 @@ button:active {
   z-index: 99;
   text-align: left;
   box-shadow: 0 3px 12px #000;
+  max-height: 250px;
+  overflow-y: auto;
 }
 
 .listbox.open {
@@ -111,9 +114,26 @@ button:active {
 
 .listbox .option {
   padding: 4px 6px;
+  cursor: default;
 }
 
-.listbox .option.selected {
+.listbox .option.active {
   color: #fff;
   background-color: #212E59;
+}
+
+.optgroup-label {
+  font-weight: bold;
+  font-size: 22px;
+  border-bottom: 5px solid;
+}
+
+footer {
+  box-sizing: border-box;
+  width: 100%;
+  background-color: #3E57A8;
+  padding: 25px;
+  min-height: 50px;
+  color: #fff;
+  margin-top: 500px;
 }
