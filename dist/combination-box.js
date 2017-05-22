@@ -64,6 +64,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         options: '.listbox .option',
         openClass: 'open',
         activeClass: null,
+        selectedClass: 'selected',
         useLiveRegion: true,
         announcement: function announcement(n) {
           return n + " options available";
@@ -289,12 +290,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           key: "select",
           value: function select() {
             var currentOpt = this.currentOption;
+            currentOpt.classList.add(this.config.selectedClass);
             if (!currentOpt) {
               return;
             }
             var value = currentOpt.innerText;
             this.input.value = value;
             this.filter(true);
+            this.cachedOpts.forEach(function (option) {
+              option.style.display = 'block';
+            });
             this.input.select();
             this.closeList();
             this.emit('selection', { text: value, option: currentOpt });
@@ -3404,6 +3409,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.removeListener = noop;
       process.removeAllListeners = noop;
       process.emit = noop;
+      process.prependListener = noop;
+      process.prependOnceListener = noop;
+
+      process.listeners = function (name) {
+        return [];
+      };
 
       process.binding = function (name) {
         throw new Error('process.binding is not supported');

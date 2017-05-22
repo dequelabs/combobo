@@ -26,6 +26,7 @@ const defaults = {
   options: '.listbox .option',
   openClass: 'open',
   activeClass: null,
+  selectedClass: 'selected',
   useLiveRegion: true,
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
@@ -212,10 +213,14 @@ module.exports = class Combobox {
 
   select() {
     const currentOpt = this.currentOption;
+    currentOpt.classList.add(this.config.selectedClass);
     if (!currentOpt) { return; }
     const value = currentOpt.innerText;
     this.input.value = value;
     this.filter(true);
+    this.cachedOpts.forEach((option) => {
+      option.style.display = 'block';
+    });
     this.input.select();
     this.closeList();
     this.emit('selection', { text: value, option: currentOpt });
