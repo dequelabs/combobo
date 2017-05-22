@@ -1,0 +1,16 @@
+{
+  "extends": "eslint:recommended",
+  "rules": {
+    "eqeqeq": 0,
+    "curly": 2,
+    "quotes": [1, "single"]
+  },
+  "env": {
+    "es6": "true",
+    "node": "true"
+  },
+  "globals": {
+    "window": true,
+    "document": true
+  }
+}

@@ -42,7 +42,8 @@ describe('Combobox', function () {
     fixture.innerHTML = ''; // clean up
   });
   //
-  // TODO: Write a test for the live region stuff
+  // TODO: Write tests for the live region stuff
+  // TODO: Write tests for option groups stuff
   //
   it('should merge user config with default config', function () {
     // confirm the custom config passed in overrode the defaults

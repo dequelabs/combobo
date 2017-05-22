@@ -9,12 +9,13 @@
   </head>
   <body id="demo">
     <h1>Combination Box</h1>
-    <section>
+    <section class="bands">
       <div class="wrp">
-        <label for="combobox">Choose Band</label>
+        <h2>Single select</h2>
+        <label for="combobox-single">Choose Band</label>
         <div class="combo-wrap">
-          <input type="text" class="combobox" id="combobox">
-          <i aria-hidden="true" class="fa band-trigger fa-caret-down"></i>
+          <input type="text" class="combobox" id="combobox-single">
+          <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="single"></i>
           <div class="listbox">
             <div class="option">Ween</div>
             <div class="option">Frank Zappa</div>
@@ -32,19 +33,67 @@
       </div>
       <button type="button">Submit</button>
     </section>
+    <section class="categories">
+      <div class="wrp">
+        <h2>Single select with option groups</h2>
+        <label for="combobox-single-with-groups">Choose Category</label>
+        <div class="combo-wrap">
+          <input type="text" class="combobox" id="combobox-single-with-groups">
+          <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="single-with-groups"></i>
+          <div class="listbox">
+            <div class="optgroup">
+              <div class="optgroup-label">Clothing</div>
+              <div class="option">Shirts</div>
+              <div class="option">Shorts</div>
+              <div class="option">Pants</div>
+            </div>
+            <div class="optgroup">
+              <div class="optgroup-label">Electronics</div>
+              <div class="option">TVs</div>
+              <div class="option">Game consoles</div>
+              <div class="option">Music equipment</div>
+            </div>
+            <div class="optgroup">
+              <div class="optgroup-label">Sporting Goods</div>
+              <div class="option">Fishing</div>
+              <div class="option">Kayaking</div>
+              <div class="option">Rock climbing</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button">Submit</button>
+    </section>
+    <footer></footer>
     <script src="../dist/combination-box.js" charset="utf-8"></script>
     <script>
       (function () {
-        var trigger = document.querySelector('.band-trigger');
-        var box = new Combobox({
-          activeClass: 'active'
-        });
-        window.box = box;
+        var box = {
+          'single': new Combobox({
+            input: '#combobox-single',
+            list: '.bands .listbox',
+            activeClass: 'active'
+          }),
+          'single-with-groups': new Combobox({
+            input: '#combobox-single-with-groups',
+            list: '.categories .listbox',
+            groups: '.optgroup',
+            activeClass: 'active'
+          })
+        };
 
-        trigger.addEventListener('click', (e) => {
-          e.stopPropagation();
-          console.log('openeing fucinadlai lisnts');
-          box.openList()
+        // handle trigger clicks to toggle state of its combobox
+        Array.prototype.slice.call(
+          document.querySelectorAll('.trigger')
+        ).forEach(function (trigger) {
+          const instName = trigger.getAttribute('data-trigger');
+          const inst = box[instName];
+          trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            console.log('clicked!?!?!');
+            console.log(inst.isOpen);
+            inst[inst.isOpen ? 'closeList' : 'openList']();
+          });
         });
       }());
     </script>
