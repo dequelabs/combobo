@@ -188,6 +188,7 @@ module.exports = class Combobox {
       const filter = this.config.filter;
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
       this.filter().openList();
+      this.currentOption.classList.remove(this.config.selectedClass);
     });
   }
 

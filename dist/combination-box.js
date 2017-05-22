@@ -263,6 +263,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return;
               }
               _this4.filter().openList();
+              _this4.currentOption.classList.remove(_this4.config.selectedClass);
             });
           }
         }, {
