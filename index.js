@@ -245,6 +245,9 @@ module.exports = class Combobox {
     const value = currentOpt.innerText;
     this.input.value = value;
     this.filter(true);
+    this.groups.forEach((group) => {
+      group.element.style.display = 'block';
+    });
     this.cachedOpts.forEach((option) => {
       option.style.display = 'block';
     });

@@ -331,6 +331,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var value = currentOpt.innerText;
             this.input.value = value;
             this.filter(true);
+            this.groups.forEach(function (group) {
+              group.element.style.display = 'block';
+            });
             this.cachedOpts.forEach(function (option) {
               option.style.display = 'block';
             });

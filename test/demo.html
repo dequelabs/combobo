@@ -82,6 +82,7 @@
           })
         };
 
+
         // handle trigger clicks to toggle state of its combobox
         Array.prototype.slice.call(
           document.querySelectorAll('.trigger')
@@ -91,6 +92,7 @@
           trigger.addEventListener('click', function (e) {
             e.stopPropagation();
             console.log('clicked!?!?!');
+            console.log(box);
             console.log(inst.isOpen);
             inst[inst.isOpen ? 'closeList' : 'openList']();
           });
