@@ -24,7 +24,7 @@ const defaults = {
   input: '.combobox',
   list: '.listbox',
   options: '.option', // qualified within `list`
-  groups: '.group', // qualified within `list`
+  groups: null, // qualified within `list`
   openClass: 'open',
   activeClass: 'active',
   selectedClass: 'selected',
@@ -59,8 +59,8 @@ module.exports = class Combobox {
     this.isOpen = false;
     this.liveRegion = null;
     this.currentOption = null;
+    this.selected = null;
     this.isHovering = false;
-    this._dir = 'down';
 
     this.initAttrs();
     this.initEvents();
@@ -92,6 +92,8 @@ module.exports = class Combobox {
 
     this.input.addEventListener('blur', () => {
       if (!this.isHovering) { this.closeList(); }
+      this.reset();
+      this.freshSelection = true;
     });
 
     // listen for clicks outside of combobox
@@ -156,6 +158,9 @@ module.exports = class Combobox {
     this.isOpen = false;
     if (focus) { this.input.focus(); }
     this.emit('list:close');
+    if (this.selected) {
+      this.input.value = this.selected.innerText;
+    }
     return this;
   }
 
@@ -165,12 +170,12 @@ module.exports = class Combobox {
       keys: ['up', 'down'],
       callback: (e, k) => {
         if (this.isOpen) {
-          this._dir = k;
           // if typing filtered out the pseudo-current option
-          if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0, true); }
+          if (this.currentOpts.indexOf(this.currentOption) === -1) {
+            return this.goTo(0, true);
+          }
           return this.goTo(k === 'down' ? 'next' : 'prev', true);
         }
-
         this.goTo(this.currentOption ? this.getOptIndex() : 0, true).openList();
       },
       preventDefault: true
@@ -186,10 +191,44 @@ module.exports = class Combobox {
     // filter keyup listener
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
+      const currentVal = this.selected && this.selected.innerText;
+      //const currentVal = this.currentOption && this.currentOption.innerText; // TODO: Support value getter
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
-      this.filter().openList();
-      this.currentOption.classList.remove(this.config.selectedClass);
+
+      console.log('isFresh? ', this.freshSelection);
+      console.log('isOpen? ', this.isOpen);
+      console.log(currentVal);
+      console.log(this.input.value);
+      //console.log(currentVal !== this.input.value);
+
+      if (this.freshSelection) {
+        console.log('1');
+        this.reset();
+        console.log(this.currentOpts);
+        if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
+          this.filter().openList();
+          this.freshSelection = false;
+          console.log('2');
+        }
+      } else {
+        console.log('3');
+        this.filter().openList();
+      }
     });
+  }
+
+  reset() {
+    this.cachedOpts.forEach((opt) => {
+      opt.style.display = 'block';
+    });
+
+    if (this.isGrouped) {
+      this.groups.forEach((g) => {
+        g.element.style.display = 'block';
+      });
+    }
+    this.currentOpts = this.cachedOpts; // reset the opts
+    return this;
   }
 
   filter(supress) {
@@ -240,20 +279,24 @@ module.exports = class Combobox {
   }
 
   select() {
+    // this.freshSelection = false;
     const currentOpt = this.currentOption;
-    currentOpt.classList.add(this.config.selectedClass);
     if (!currentOpt) { return; }
+    if (!this.multiselect && this.selected) { // clean up previously selected
+      this.selected.classList.remove('selected');
+    }
+
+    currentOpt.classList.add(this.config.selectedClass);
+    this.selected = currentOpt;
+
     const value = currentOpt.innerText;
     this.input.value = value;
+    console.log('filtering!!!?!?!?!?!?!?');
     this.filter(true);
-    this.groups.forEach((group) => {
-      group.element.style.display = 'block';
-    });
-    this.cachedOpts.forEach((option) => {
-      option.style.display = 'block';
-    });
+    this.reset();
     this.input.select();
     this.closeList();
+    this.freshSelection = true;
     this.emit('selection', { text: value, option: currentOpt });
     return this;
   }

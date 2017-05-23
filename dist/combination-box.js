@@ -62,7 +62,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         input: '.combobox',
         list: '.listbox',
         options: '.option', // qualified within `list`
-        groups: '.group', // qualified within `list`
+        groups: null, // qualified within `list`
         openClass: 'open',
         activeClass: 'active',
         selectedClass: 'selected',
@@ -105,8 +105,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.isOpen = false;
           this.liveRegion = null;
           this.currentOption = null;
+          this.selected = null;
           this.isHovering = false;
-          this._dir = 'down';
 
           this.initAttrs();
           this.initEvents();
@@ -145,6 +145,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               if (!_this2.isHovering) {
                 _this2.closeList();
               }
+              _this2.reset();
+              _this2.freshSelection = true;
             });
 
             // listen for clicks outside of combobox
@@ -220,6 +222,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.input.focus();
             }
             this.emit('list:close');
+            if (this.selected) {
+              this.input.value = this.selected.innerText;
+            }
             return this;
           }
         }, {
@@ -232,14 +237,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               keys: ['up', 'down'],
               callback: function callback(e, k) {
                 if (_this4.isOpen) {
-                  _this4._dir = k;
                   // if typing filtered out the pseudo-current option
                   if (_this4.currentOpts.indexOf(_this4.currentOption) === -1) {
                     return _this4.goTo(0, true);
                   }
                   return _this4.goTo(k === 'down' ? 'next' : 'prev', true);
                 }
-
                 _this4.goTo(_this4.currentOption ? _this4.getOptIndex() : 0, true).openList();
               },
               preventDefault: true
@@ -259,12 +262,48 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // filter keyup listener
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
+              var currentVal = _this4.selected && _this4.selected.innerText;
+              //const currentVal = this.currentOption && this.currentOption.innerText; // TODO: Support value getter
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
-              _this4.filter().openList();
-              _this4.currentOption.classList.remove(_this4.config.selectedClass);
+
+              console.log('isFresh? ', _this4.freshSelection);
+              console.log('isOpen? ', _this4.isOpen);
+              console.log(currentVal);
+              console.log(_this4.input.value);
+              //console.log(currentVal !== this.input.value);
+
+              if (_this4.freshSelection) {
+                console.log('1');
+                _this4.reset();
+                console.log(_this4.currentOpts);
+                if (currentVal && currentVal !== _this4.input.value.trim()) {
+                  // if the value has changed...
+                  _this4.filter().openList();
+                  _this4.freshSelection = false;
+                  console.log('2');
+                }
+              } else {
+                console.log('3');
+                _this4.filter().openList();
+              }
             });
+          }
+        }, {
+          key: "reset",
+          value: function reset() {
+            this.cachedOpts.forEach(function (opt) {
+              opt.style.display = 'block';
+            });
+
+            if (this.isGrouped) {
+              this.groups.forEach(function (g) {
+                g.element.style.display = 'block';
+              });
+            }
+            this.currentOpts = this.cachedOpts; // reset the opts
+            return this;
           }
         }, {
           key: "filter",
@@ -324,22 +363,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "select",
           value: function select() {
+            // this.freshSelection = false;
             var currentOpt = this.currentOption;
-            currentOpt.classList.add(this.config.selectedClass);
             if (!currentOpt) {
               return;
             }
+            if (!this.multiselect && this.selected) {
+              // clean up previously selected
+              this.selected.classList.remove('selected');
+            }
+
+            currentOpt.classList.add(this.config.selectedClass);
+            this.selected = currentOpt;
+
             var value = currentOpt.innerText;
             this.input.value = value;
+            console.log('filtering!!!?!?!?!?!?!?');
             this.filter(true);
-            this.groups.forEach(function (group) {
-              group.element.style.display = 'block';
-            });
-            this.cachedOpts.forEach(function (option) {
-              option.style.display = 'block';
-            });
+            this.reset();
             this.input.select();
             this.closeList();
+            this.freshSelection = true;
             this.emit('selection', { text: value, option: currentOpt });
             return this;
           }
