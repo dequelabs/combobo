@@ -64,6 +64,30 @@
       </div>
       <button type="button">Submit</button>
     </section>
+    <section class="multiselect">
+      <div class="wrp">
+        <h2>Multi select</h2>
+        <label for="combobox-multiselect">Choose Favorite Food</label>
+        <div class="combo-wrap">
+          <input type="text" class="combobox" id="combobox-multiselect">
+          <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="multiselect"></i>
+          <div class="listbox">
+            <div class="option">Pizza</div>
+            <div class="option">Sushi</div>
+            <div class="option">Tacos</div>
+            <div class="option">Salmon</div>
+            <div class="option">Cheeseburger</div>
+            <div class="option">Bacon Cheeseburger</div>
+            <div class="option">Steak</div>
+            <div class="option">Fried Chicken</div>
+            <div class="option">Chicken Salad</div>
+            <div class="option">Tatar Tots</div>
+            <div class="option">French Fries</div>
+          </div>
+        </div>
+      </div>
+      <button type="button">Submit</button>
+    </section>
     <footer></footer>
     <script src="../dist/combination-box.js" charset="utf-8"></script>
     <script>
@@ -78,6 +102,11 @@
             input: '#combobox-single-with-groups',
             list: '.categories .listbox',
             groups: '.optgroup',
+            activeClass: 'active'
+          }),
+          'multiselect': new Combobox({
+            input: '#combobox-multiselect',
+            list: '.multiselect .listbox',
             activeClass: 'active'
           })
         };
