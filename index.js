@@ -206,12 +206,12 @@ module.exports = class Combobox {
 
   reset() {
     this.cachedOpts.forEach((opt) => {
-      opt.style.display = 'block';
+      opt.style.display = '';
     });
 
     if (this.isGrouped) {
       this.groups.forEach((g) => {
-        g.element.style.display = 'block';
+        g.element.style.display = '';
       });
     }
     this.currentOpts = this.cachedOpts; // reset the opts
@@ -246,8 +246,7 @@ module.exports = class Combobox {
 
   updateOpts() {
     this.cachedOpts.forEach((opt) => {
-      // TODO: support other means of hiding/showing so stuff like flex is supported
-      opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+      opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : '';
     });
 
     this.updateGroups();
@@ -257,9 +256,8 @@ module.exports = class Combobox {
   updateGroups() {
     if (this.isGrouped) {
       this.groups.forEach((groupData) => {
-        const visibleOpts = groupData.options.filter((opt) => opt.style.display === 'block');
-        // TODO: support other means of hiding/showing so stuff like flex is supported
-        groupData.element.style.display = visibleOpts.length ? 'block' : 'none';
+        const visibleOpts = groupData.options.filter((opt) => opt.style.display === '');
+        groupData.element.style.display = visibleOpts.length ? '' : 'none';
       });
     }
     return this;

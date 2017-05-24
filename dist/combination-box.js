@@ -283,12 +283,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           key: "reset",
           value: function reset() {
             this.cachedOpts.forEach(function (opt) {
-              opt.style.display = 'block';
+              opt.style.display = '';
             });
 
             if (this.isGrouped) {
               this.groups.forEach(function (g) {
-                g.element.style.display = 'block';
+                g.element.style.display = '';
               });
             }
             this.currentOpts = this.cachedOpts; // reset the opts
@@ -328,8 +328,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this6 = this;
 
             this.cachedOpts.forEach(function (opt) {
-              // TODO: support other means of hiding/showing so stuff like flex is supported
-              opt.style.display = _this6.currentOpts.indexOf(opt) === -1 ? 'none' : 'block';
+              opt.style.display = _this6.currentOpts.indexOf(opt) === -1 ? 'none' : '';
             });
 
             this.updateGroups();
@@ -341,10 +340,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (this.isGrouped) {
               this.groups.forEach(function (groupData) {
                 var visibleOpts = groupData.options.filter(function (opt) {
-                  return opt.style.display === 'block';
+                  return opt.style.display === '';
                 });
-                // TODO: support other means of hiding/showing so stuff like flex is supported
-                groupData.element.style.display = visibleOpts.length ? 'block' : 'none';
+                groupData.element.style.display = visibleOpts.length ? '' : 'none';
               });
             }
             return this;
