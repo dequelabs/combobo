@@ -403,7 +403,7 @@ describe('Combobox', function () {
     });
 
     describe('selected events', function() {
-      it.only('should repopulate input value when list is closed or focus is changed', function() {
+      it('should repopulate input value when list is closed or focus is changed', function() {
         var options = combobox.currentOpts;
         simulant.fire(options[0], 'click');
         simulant.fire(combobox.input, 'keydown', {which: 27});

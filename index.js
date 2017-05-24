@@ -171,9 +171,7 @@ module.exports = class Combobox {
       callback: (e, k) => {
         if (this.isOpen) {
           // if typing filtered out the pseudo-current option
-          if (this.currentOpts.indexOf(this.currentOption) === -1) {
-            return this.goTo(0, true);
-          }
+          if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0, true); }
           return this.goTo(k === 'down' ? 'next' : 'prev', true);
         }
         this.goTo(this.currentOption ? this.getOptIndex() : 0, true).openList();
@@ -268,7 +266,6 @@ module.exports = class Combobox {
   }
 
   select() {
-    // this.freshSelection = false;
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
     if (!this.multiselect && this.selected) { // clean up previously selected

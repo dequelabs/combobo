@@ -352,7 +352,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "select",
           value: function select() {
-            // this.freshSelection = false;
             var currentOpt = this.currentOption;
             if (!currentOpt) {
               return;
