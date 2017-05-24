@@ -117,14 +117,14 @@ button:active {
   cursor: default;
 }
 
-.listbox .option.active {
-  color: #fff;
-  background-color: #212E59;
-}
-
 .listbox .option.selected {
   color: #fff;
   background-color: forestgreen;
+}
+
+.listbox .option.active {
+  color: #fff;
+  background-color: #212E59;
 }
 
 .optgroup-label {
