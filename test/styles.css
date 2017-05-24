@@ -122,6 +122,11 @@ button:active {
   background-color: #212E59;
 }
 
+.listbox .option.selected {
+  color: #fff;
+  background-color: forestgreen;
+}
+
 .optgroup-label {
   font-weight: bold;
   font-size: 22px;

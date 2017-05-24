@@ -62,7 +62,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         input: '.combobox',
         list: '.listbox',
         options: '.option', // qualified within `list`
-        groups: '.group', // qualified within `list`
+        groups: null, // qualified within `list`
         openClass: 'open',
         activeClass: 'active',
         selectedClass: 'selected',
@@ -105,8 +105,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.isOpen = false;
           this.liveRegion = null;
           this.currentOption = null;
+          this.selected = null;
           this.isHovering = false;
-          this._dir = 'down';
 
           this.initAttrs();
           this.initEvents();
@@ -145,6 +145,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               if (!_this2.isHovering) {
                 _this2.closeList();
               }
+              _this2.reset();
+              _this2.freshSelection = true;
             });
 
             // listen for clicks outside of combobox
@@ -220,6 +222,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.input.focus();
             }
             this.emit('list:close');
+            if (this.selected) {
+              this.input.value = this.selected.innerText;
+            }
             return this;
           }
         }, {
@@ -232,14 +237,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               keys: ['up', 'down'],
               callback: function callback(e, k) {
                 if (_this4.isOpen) {
-                  _this4._dir = k;
                   // if typing filtered out the pseudo-current option
                   if (_this4.currentOpts.indexOf(_this4.currentOption) === -1) {
                     return _this4.goTo(0, true);
                   }
                   return _this4.goTo(k === 'down' ? 'next' : 'prev', true);
                 }
-
                 _this4.goTo(_this4.currentOption ? _this4.getOptIndex() : 0, true).openList();
               },
               preventDefault: true
@@ -259,11 +262,37 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // filter keyup listener
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
+              var currentVal = _this4.selected && _this4.selected.innerText;
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
-              _this4.filter().openList();
+
+              if (_this4.freshSelection) {
+                _this4.reset();
+                if (currentVal && currentVal !== _this4.input.value.trim()) {
+                  // if the value has changed...
+                  _this4.filter().openList();
+                  _this4.freshSelection = false;
+                }
+              } else {
+                _this4.filter().openList();
+              }
             });
+          }
+        }, {
+          key: "reset",
+          value: function reset() {
+            this.cachedOpts.forEach(function (opt) {
+              opt.style.display = 'block';
+            });
+
+            if (this.isGrouped) {
+              this.groups.forEach(function (g) {
+                g.element.style.display = 'block';
+              });
+            }
+            this.currentOpts = this.cachedOpts; // reset the opts
+            return this;
           }
         }, {
           key: "filter",
@@ -327,11 +356,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (!currentOpt) {
               return;
             }
+            if (!this.multiselect && this.selected) {
+              // clean up previously selected
+              this.selected.classList.remove('selected');
+            }
+
+            currentOpt.classList.add(this.config.selectedClass);
+            this.selected = currentOpt;
+
             var value = currentOpt.innerText;
             this.input.value = value;
             this.filter(true);
+            this.reset();
             this.input.select();
             this.closeList();
+            this.freshSelection = true;
             this.emit('selection', { text: value, option: currentOpt });
             return this;
           }
@@ -3497,6 +3536,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.removeListener = noop;
       process.removeAllListeners = noop;
       process.emit = noop;
+      process.prependListener = noop;
+      process.prependOnceListener = noop;
+
+      process.listeners = function (name) {
+        return [];
+      };
 
       process.binding = function (name) {
         throw new Error('process.binding is not supported');

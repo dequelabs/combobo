@@ -33,7 +33,7 @@ describe('Combobox', function () {
   beforeEach(function () {
     fixture.innerHTML = MARKUP;
     combobox = new Combobox({
-      activeClass: 'selected',
+      activeClass: 'active',
       options: '.wrp .listbox .option'
     });
   });
@@ -47,7 +47,7 @@ describe('Combobox', function () {
   //
   it('should merge user config with default config', function () {
     // confirm the custom config passed in overrode the defaults
-    assert.equal(combobox.config.activeClass, 'selected');
+    assert.equal(combobox.config.activeClass, 'active');
     assert.equal(combobox.config.options, '.wrp .listbox .option');
     // confirm that the other defaults were written to config
     assert.equal(combobox.config.useLiveRegion, true);
@@ -64,7 +64,6 @@ describe('Combobox', function () {
   it('should set initial attributes', function () {
     var input = combobox.input;
     var list = combobox.list;
-    var options = combobox.cachedOpts;
 
     assert.equal(input.getAttribute('role'), 'combobox');
     assert.equal(list.getAttribute('role'), 'listbox');
@@ -166,12 +165,12 @@ describe('Combobox', function () {
         it('should remove active class from previously active and add it to the currently active option', function () {
           var options = combobox.currentOpts;
           // trick the combobox into thinking the 3rd option is active
-          options[2].classList.add('selected');
+          options[2].classList.add('active');
           combobox.goTo(2);
           // fire a mouseover on the 1st option
           simulant.fire(options[0], 'mouseover');
-          assert.isFalse(options[2].classList.contains('selected'));
-          assert.isTrue(options[0].classList.contains('selected'));
+          assert.isFalse(options[2].classList.contains('active'));
+          assert.isTrue(options[0].classList.contains('active'));
         });
 
         it('should update the isHovering property and set it to `true`', function () {
@@ -185,9 +184,9 @@ describe('Combobox', function () {
         it('should remove the active class from the option', function () {
           var options = combobox.currentOpts;
           simulant.fire(options[0], 'mouseover');
-          assert.isTrue(options[0].classList.contains('selected'));
+          assert.isTrue(options[0].classList.contains('active'));
           simulant.fire(options[0], 'mouseout');
-          assert.isFalse(options[0].classList.contains('selected'));
+          assert.isFalse(options[0].classList.contains('active'));
         });
 
         it('should update the isHovering property and set it to `false`', function () {
@@ -208,14 +207,15 @@ describe('Combobox', function () {
 
         it('should go to the first option if none are selected initially', function () {
           combobox.input.click();
-          assert.isTrue(combobox.currentOpts[0].classList.contains('selected'));
+          assert.isTrue(combobox.currentOpts[0].classList.contains('active'));
         });
 
         it('should go to the currently selected option if applicable', function () {
-          combobox.goTo(4);
+          var options = combobox.currentOpts;
+          combobox.openList();
+          simulant.fire(options[1], 'click');
           combobox.closeList();
-          combobox.input.click();
-          assert.isTrue(combobox.currentOpts[4].classList.contains('selected'));
+          assert.isTrue(options[1].classList.contains('selected'));
         });
       });
 
@@ -251,7 +251,7 @@ describe('Combobox', function () {
             // fire 1 up arrow
             simulant.fire(combobox.input, 'keydown', {which: 38});
             assert.equal(combobox.currentOpts[1], combobox.currentOption);
-            assert.isTrue(combobox.currentOpts[1].classList.contains('selected'));
+            assert.isTrue(combobox.currentOpts[1].classList.contains('active'));
           });
         });
 
@@ -320,7 +320,7 @@ describe('Combobox', function () {
               beforeEach(function () {
                 fixture.innerHTML = MARKUP;
                 combobox = new Combobox({
-                  activeClass: 'selected',
+                  activeClass: 'active',
                   filter: 'starts-with'
                 });
               });
@@ -342,7 +342,7 @@ describe('Combobox', function () {
               beforeEach(function () {
                 fixture.innerHTML = MARKUP;
                 combobox = new Combobox({
-                  activeClass: 'selected',
+                  activeClass: 'active',
                   filter: 'equals'
                 });
               });
@@ -364,7 +364,7 @@ describe('Combobox', function () {
             beforeEach(function () {
               fixture.innerHTML = MARKUP;
               combobox = new Combobox({
-                activeClass: 'selected',
+                activeClass: 'active',
                 filter: function (val, allOpts) {
                   return allOpts.filter(function (o) { return o.textContent === 'Frank Zappa'});
                 }
@@ -399,6 +399,58 @@ describe('Combobox', function () {
           simulant.fire(combobox.list, 'click');
           assert.isTrue(combobox.isOpen);
         });
+      });
+    });
+
+    describe('selected events', function() {
+      it('should repopulate input value when list is closed or focus is changed', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(combobox.input, 'keydown', {which: 27});
+        combobox.closeList();
+        simulant.fire(combobox.input, 'blur')
+        assert.equal(combobox.input.value, 'Ween');
+
+      });
+
+      it('should remove selected class once different element is selected', function(done) {
+        var options = combobox.currentOpts;
+        combobox.once('selection', function () {
+          assert.isTrue(options[1].classList.contains('selected'));
+          assert.equal(options[1], combobox.selected);
+          // another selection on a different opt
+          combobox.once('selection', function () {
+            assert.isFalse(options[1].classList.contains('selected'));
+            assert.isTrue(options[0].classList.contains('selected'));
+            assert.equal(options[0], combobox.selected);
+            done();
+          });
+
+          simulant.fire(options[0], 'click');
+        });
+
+        simulant.fire(options[1], 'click');
+
+      });
+
+      it('should add selected class to new selected element', function() {
+        var options = combobox.currentOpts;
+        combobox.once('selection', function() {
+          assert.isTrue(options[1].classList.contains('selected'));
+          assert.equal(options[1], combobox.selected);
+        });
+        simulant.fire(options[1], 'click');
+      });
+
+      it('should show all other options once element is selected', function() {
+        var options = combobox.cachedOpts;
+        combobox.once('selection', function() {
+          var visibleOpts = options.filter(function(opt) {
+            return opt.style.display === 'block';
+          });
+          assert.equal(visibleOpts.length, options.length);
+        });
+        simulant.fire(options[1], 'click');
       });
     });
   });

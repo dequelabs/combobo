@@ -11,6 +11,13 @@
   },
   "globals": {
     "window": true,
-    "document": true
+    "document": true,
+    "assert": true,
+    "simulant": true,
+    "describe": true,
+    "it": true,
+    "beforeEach": true,
+    "afterEach": true,
+    "Combobox": true
   }
 }
