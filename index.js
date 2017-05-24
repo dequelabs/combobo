@@ -29,6 +29,7 @@ const defaults = {
   activeClass: 'active',
   selectedClass: 'selected',
   useLiveRegion: true,
+  multiselect: null,
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
@@ -104,6 +105,14 @@ module.exports = class Combobox {
 
     this.optionEvents();
     this.initKeys();
+  }
+
+  checkboxes() {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.name = 'name';
+    checkbox.value = 'value';
+    checkbox.id = 'id';
   }
 
   getOptIndex() {

@@ -67,6 +67,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         activeClass: 'active',
         selectedClass: 'selected',
         useLiveRegion: true,
+        multiselect: null,
         announcement: function announcement(n) {
           return n + " options available";
         },
@@ -159,6 +160,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this.optionEvents();
             this.initKeys();
+          }
+        }, {
+          key: "checkboxes",
+          value: function checkboxes() {
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'name';
+            checkbox.value = 'value';
+            checkbox.id = 'id';
           }
         }, {
           key: "getOptIndex",
