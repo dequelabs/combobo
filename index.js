@@ -192,26 +192,15 @@ module.exports = class Combobox {
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
       const currentVal = this.selected && this.selected.innerText;
-      //const currentVal = this.currentOption && this.currentOption.innerText; // TODO: Support value getter
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
 
-      console.log('isFresh? ', this.freshSelection);
-      console.log('isOpen? ', this.isOpen);
-      console.log(currentVal);
-      console.log(this.input.value);
-      //console.log(currentVal !== this.input.value);
-
       if (this.freshSelection) {
-        console.log('1');
         this.reset();
-        console.log(this.currentOpts);
         if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
           this.filter().openList();
           this.freshSelection = false;
-          console.log('2');
         }
       } else {
-        console.log('3');
         this.filter().openList();
       }
     });
@@ -291,7 +280,6 @@ module.exports = class Combobox {
 
     const value = currentOpt.innerText;
     this.input.value = value;
-    console.log('filtering!!!?!?!?!?!?!?');
     this.filter(true);
     this.reset();
     this.input.select();

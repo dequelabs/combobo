@@ -64,7 +64,6 @@ describe('Combobox', function () {
   it('should set initial attributes', function () {
     var input = combobox.input;
     var list = combobox.list;
-    var options = combobox.cachedOpts;
 
     assert.equal(input.getAttribute('role'), 'combobox');
     assert.equal(list.getAttribute('role'), 'listbox');
@@ -404,13 +403,53 @@ describe('Combobox', function () {
     });
 
     describe('selected events', function() {
-      it.only('should remove selected class from selected element', function () {
-        //assert.equal(combobox.config.activeClass, 'selected');
+      it.only('should repopulate input value when list is closed or focus is changed', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(combobox.input, 'keydown', {which: 27});
+        combobox.closeList();
+        assert.equal(combobox.input.value, 'Ween');
 
       });
 
-      it.only('should repopulate input value when list is closed', function() {
+      it('should remove selected class once different element is selected', function(done) {
+        var options = combobox.currentOpts;
+        combobox.once('selection', function () {
+          assert.isTrue(options[1].classList.contains('selected'));
+          assert.equal(options[1], combobox.selected);
+          // another selection on a different opt
+          combobox.once('selection', function () {
+            assert.isFalse(options[1].classList.contains('selected'));
+            assert.isTrue(options[0].classList.contains('selected'));
+            assert.equal(options[0], combobox.selected);
+            done();
+          });
 
+          simulant.fire(options[0], 'click');
+        });
+
+        simulant.fire(options[1], 'click');
+
+      });
+
+      it('should add selected class to new selected element', function() {
+        var options = combobox.currentOpts;
+        combobox.once('selection', function() {
+          assert.isTrue(options[1].classList.contains('selected'));
+          assert.equal(options[1], combobox.selected);
+        });
+        simulant.fire(options[1], 'click');
+      });
+
+      it('should show all other options once element is selected', function() {
+        var options = combobox.cachedOpts;
+        combobox.once('selection', function() {
+          var visibleOpts = options.filter(function(opt) {
+            return opt.style.display === 'block';
+          });
+          assert.equal(visibleOpts.length, options.length);
+        });
+        simulant.fire(options[1], 'click');
       });
     });
   });

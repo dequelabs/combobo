@@ -263,29 +263,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
               var currentVal = _this4.selected && _this4.selected.innerText;
-              //const currentVal = this.currentOption && this.currentOption.innerText; // TODO: Support value getter
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
 
-              console.log('isFresh? ', _this4.freshSelection);
-              console.log('isOpen? ', _this4.isOpen);
-              console.log(currentVal);
-              console.log(_this4.input.value);
-              //console.log(currentVal !== this.input.value);
-
               if (_this4.freshSelection) {
-                console.log('1');
                 _this4.reset();
-                console.log(_this4.currentOpts);
                 if (currentVal && currentVal !== _this4.input.value.trim()) {
                   // if the value has changed...
                   _this4.filter().openList();
                   _this4.freshSelection = false;
-                  console.log('2');
                 }
               } else {
-                console.log('3');
                 _this4.filter().openList();
               }
             });
@@ -378,7 +367,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             var value = currentOpt.innerText;
             this.input.value = value;
-            console.log('filtering!!!?!?!?!?!?!?');
             this.filter(true);
             this.reset();
             this.input.select();
