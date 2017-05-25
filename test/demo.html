@@ -121,6 +121,102 @@
       </div>
       <button type="button">Submit</button>
     </section>
+    <section class="multiselect-with-groups">
+      <div class="wrp">
+        <h2>Multi select with option groups</h2>
+        <label for="combobox-multiselect-with-groups">Choose car options</label>
+        <div class="combo-wrap">
+          <input type="text" class="combobox" id="combobox-multiselect-with-groups">
+          <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="multiselect-with-groups"></i>
+          <div class="listbox">
+            <div class="optgroup">
+              <div class="optgroup-label">Color</div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Red</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Yellow</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Green</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Orange</span>
+              </div>
+            </div>
+            <div class="optgroup">
+              <div class="optgroup-label">Year</div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">2007</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">2001</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">1999</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">2005</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">2016</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">2006</span>
+              </div>
+            </div>
+            <div class="optgroup">
+              <div class="optgroup-label">Make</div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Ford</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">GM</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Chrysler</span>
+              </div>
+            </div>
+            <div class="optgroup">
+              <div class="optgroup-label">Doors</div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">2 Door</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">4 Door</span>
+              </div>
+            </div>
+            <div class="optgroup">
+              <div class="optgroup-label">Transmission</div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Automatic</span>
+              </div>
+              <div class="option">
+                <div class="check"></div>
+                <span class="label">Manual</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button">Submit</button>
+    </section>
     <footer></footer>
     <script src="../dist/combination-box.js" charset="utf-8"></script>
     <script>
@@ -147,6 +243,13 @@
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();
             }
+          }),
+          'multiselect-with-groups': new Combobox({
+            input: '#combobox-multiselect-with-groups',
+            list: '.multiselect-with-groups .listbox',
+            activeClass: 'active',
+            multiselect: true,
+            groups: '.optgroup'
           })
         };
 
