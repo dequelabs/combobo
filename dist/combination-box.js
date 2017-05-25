@@ -68,6 +68,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         selectedClass: 'selected',
         useLiveRegion: true,
         multiselect: false,
+        selectionValue: function selectionValue(selecteds) {
+          return selecteds.map(function (s) {
+            return s.innerText;
+          }).join(' - ');
+        },
         announcement: function announcement(n) {
           return n + " options available";
         },
@@ -108,7 +113,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.isOpen = false;
           this.liveRegion = null;
           this.currentOption = null;
-          this.selected = this.config.multiselect === true ? [] : null;
+          this.selected = [];
           this.isHovering = false;
 
           this.initAttrs();
@@ -225,7 +230,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.input.focus();
             }
             this.emit('list:close');
-            if (this.selected) {
+            if (this.multiselect === 'false' && this.selected.length) {
               this.input.value = this.selected[0].innerText.trim();
             }
             return this;
@@ -265,7 +270,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // filter keyup listener
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
-              var currentVal = _this4.selected && _this4.selected.innerText;
+              var currentVal = _this4.selected.length && _this4.selected[_this4.selected.length - 1].innerText;
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
@@ -358,19 +363,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               return;
             }
 
-            if (!this.config.multiselect && this.selected) {
+            if (!this.config.multiselect && this.selected.length) {
               // clean up previously selected
-              Classlist(this.selected).remove(this.config.selectedClass);
+              Classlist(this.selected[0]).remove(this.config.selectedClass);
             }
 
             if (this.config.multiselect) {
               this.selected.push(currentOpt);
             } else {
-              this.selected = currentOpt;
+              this.selected = [currentOpt];
             }
 
             currentOpt.classList.add(this.config.selectedClass);
-            var value = this.selected.length > 1 ? '{ ' + this.selected.length + ' selected }' : currentOpt.innerText.trim();
+            // TODO: The funky funktion
+            var value = this.selected.length > 1 ? "{ " + this.selected.length + " selected }" : currentOpt.innerText.trim();
 
             this.input.value = value;
             this.filter(true);

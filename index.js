@@ -30,6 +30,7 @@ const defaults = {
   selectedClass: 'selected',
   useLiveRegion: true,
   multiselect: false,
+  selectionValue: (selecteds) => selecteds.map((s) => s.innerText).join(' - '),
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
@@ -62,7 +63,7 @@ module.exports = class Combobox {
     this.isOpen = false;
     this.liveRegion = null;
     this.currentOption = null;
-    this.selected = this.config.multiselect === true ? [] : null;
+    this.selected = [];
     this.isHovering = false;
 
     this.initAttrs();
@@ -161,7 +162,7 @@ module.exports = class Combobox {
     this.isOpen = false;
     if (focus) { this.input.focus(); }
     this.emit('list:close');
-    if (this.selected) {
+    if (this.multiselect === 'false' && this.selected.length) {
       this.input.value = this.selected[0].innerText.trim();
     }
     return this;
@@ -192,7 +193,7 @@ module.exports = class Combobox {
     // filter keyup listener
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
-      const currentVal = this.selected && this.selected.innerText;
+      const currentVal = this.selected.length && this.selected[this.selected.length - 1].innerText;
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
 
       if (this.freshSelection) {
@@ -270,18 +271,19 @@ module.exports = class Combobox {
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
 
-    if (!this.config.multiselect && this.selected) { // clean up previously selected
-      Classlist(this.selected).remove(this.config.selectedClass)
+    if (!this.config.multiselect && this.selected.length) { // clean up previously selected
+      Classlist(this.selected[0]).remove(this.config.selectedClass)
     }
 
     if (this.config.multiselect) {
       this.selected.push(currentOpt);
     } else {
-      this.selected = currentOpt;
+      this.selected = [currentOpt];
     }
 
     currentOpt.classList.add(this.config.selectedClass);
-    const value = this.selected.length > 1 ? '{ ' + this.selected.length + ' selected }' : currentOpt.innerText.trim();
+    // TODO: The funky funktion
+    const value = this.selected.length > 1 ? `{ ${this.selected.length} selected }` : currentOpt.innerText.trim();
 
     this.input.value = value;
     this.filter(true);
