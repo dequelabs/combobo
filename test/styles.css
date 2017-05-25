@@ -145,7 +145,7 @@ button:active {
     height: 10px;
 
     /*Add a white border on the bottom and left, creating that 'L' */
-    border: solid #000;
+    border: solid #fff;
     border-width: 0 2px 2px 0;
 
     /*Rotate the L 45 degrees to turn it into a checkmark*/

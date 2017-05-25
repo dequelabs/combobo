@@ -70,7 +70,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         multiselect: false,
         selectionValue: function selectionValue(selecteds) {
           return selecteds.map(function (s) {
-            return s.innerText;
+            return s.innerText.trim();
           }).join(' - ');
         },
         announcement: function announcement(n) {
@@ -230,8 +230,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.input.focus();
             }
             this.emit('list:close');
-            if (this.multiselect === 'false' && this.selected.length) {
-              this.input.value = this.selected[0].innerText.trim();
+            if (!this.multiselect && this.selected.length) {
+              this.input.value = this.config.selectionValue(this.selected);
             }
             return this;
           }
@@ -375,8 +375,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             currentOpt.classList.add(this.config.selectedClass);
-            // TODO: The funky funktion
-            var value = this.selected.length > 1 ? "{ " + this.selected.length + " selected }" : currentOpt.innerText.trim();
+            var value = this.config.selectionValue(this.selected);
 
             this.input.value = value;
             this.filter(true);

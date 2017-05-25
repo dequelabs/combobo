@@ -30,7 +30,7 @@ const defaults = {
   selectedClass: 'selected',
   useLiveRegion: true,
   multiselect: false,
-  selectionValue: (selecteds) => selecteds.map((s) => s.innerText).join(' - '),
+  selectionValue: (selecteds) => selecteds.map((s) => s.innerText.trim()).join(' - '),
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
@@ -162,8 +162,8 @@ module.exports = class Combobox {
     this.isOpen = false;
     if (focus) { this.input.focus(); }
     this.emit('list:close');
-    if (this.multiselect === 'false' && this.selected.length) {
-      this.input.value = this.selected[0].innerText.trim();
+    if (!this.multiselect && this.selected.length) {
+      this.input.value = this.config.selectionValue(this.selected);
     }
     return this;
   }
@@ -282,8 +282,7 @@ module.exports = class Combobox {
     }
 
     currentOpt.classList.add(this.config.selectedClass);
-    // TODO: The funky funktion
-    const value = this.selected.length > 1 ? `{ ${this.selected.length} selected }` : currentOpt.innerText.trim();
+    const value = this.config.selectionValue(this.selected);
 
     this.input.value = value;
     this.filter(true);

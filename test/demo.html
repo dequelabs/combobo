@@ -141,7 +141,12 @@
             input: '#combobox-multiselect',
             list: '.multiselect .listbox',
             activeClass: 'active',
-            multiselect: true
+            multiselect: true,
+            selectionValue: (selectedOptions) => {
+              return selectedOptions.length > 1 ?
+                '{ ' + selectedOptions.length +  ' selected }' :
+                selectedOptions[0].innerText.trim();
+            }
           })
         };
 
