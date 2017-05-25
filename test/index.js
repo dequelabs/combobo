@@ -408,6 +408,7 @@ describe('Combobox', function () {
         simulant.fire(options[0], 'click');
         simulant.fire(combobox.input, 'keydown', {which: 27});
         combobox.closeList();
+        simulant.fire(combobox.input, 'blur')
         assert.equal(combobox.input.value, 'Ween');
 
       });

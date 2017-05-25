@@ -126,12 +126,14 @@ button:active {
   color: #fff;
   background-color: #212E59;
 }
+
 .option .check {
   display:inline-block;
   width: 13px;
   height: 13px;
   border: 2px solid #ddd;
 }
+
 .option .check:after {
     /*Add another block-level blank space*/
     content: '';
@@ -149,9 +151,11 @@ button:active {
     /*Rotate the L 45 degrees to turn it into a checkmark*/
     transform: rotate(45deg);
 }
+
 .selected .check:after {
   display: block;
 }
+
 .optgroup-label {
   font-weight: bold;
   font-size: 22px;
