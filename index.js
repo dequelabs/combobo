@@ -29,7 +29,7 @@ const defaults = {
   activeClass: 'active',
   selectedClass: 'selected',
   useLiveRegion: true,
-  multiselect: null,
+  multiselect: false,
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
@@ -39,7 +39,9 @@ module.exports = class Combobox {
     config = config || {};
 
     // merge user config with default config
-    this.config = extend(defaults, config);
+    this.config = {};
+    extend(this.config, defaults, config);
+
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true, this.list);
@@ -60,7 +62,7 @@ module.exports = class Combobox {
     this.isOpen = false;
     this.liveRegion = null;
     this.currentOption = null;
-    this.selected = null;
+    this.selected = this.config.multiselect === true ? [] : null;
     this.isHovering = false;
 
     this.initAttrs();
@@ -105,14 +107,6 @@ module.exports = class Combobox {
 
     this.optionEvents();
     this.initKeys();
-  }
-
-  checkboxes() {
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.name = 'name';
-    checkbox.value = 'value';
-    checkbox.id = 'id';
   }
 
   getOptIndex() {
@@ -168,7 +162,7 @@ module.exports = class Combobox {
     if (focus) { this.input.focus(); }
     this.emit('list:close');
     if (this.selected) {
-      this.input.value = this.selected.innerText;
+      this.input.value = this.selected[0].innerText.trim();
     }
     return this;
   }
@@ -277,14 +271,20 @@ module.exports = class Combobox {
   select() {
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
-    if (!this.multiselect && this.selected) { // clean up previously selected
-      this.selected.classList.remove('selected');
+
+    if (!this.config.multiselect && this.selected) { // clean up previously selected
+      Classlist(this.selected).remove(this.config.selectedClass)
+    }
+
+    if (this.config.multiselect) {
+      this.selected.push(currentOpt);
+    } else {
+      this.selected = currentOpt;
     }
 
     currentOpt.classList.add(this.config.selectedClass);
-    this.selected = currentOpt;
+    const value = this.selected.length > 1 ? '{ ' + this.selected.length + ' selected }' : currentOpt.innerText.trim();
 
-    const value = currentOpt.innerText;
     this.input.value = value;
     this.filter(true);
     this.reset();

@@ -67,7 +67,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         activeClass: 'active',
         selectedClass: 'selected',
         useLiveRegion: true,
-        multiselect: null,
+        multiselect: false,
         announcement: function announcement(n) {
           return n + " options available";
         },
@@ -83,7 +83,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           config = config || {};
 
           // merge user config with default config
-          this.config = extend(defaults, config);
+          this.config = {};
+          extend(this.config, defaults, config);
+
           this.input = elHandler(this.config.input);
           this.list = elHandler(this.config.list);
           this.cachedOpts = this.currentOpts = elHandler(this.config.options, true, this.list);
@@ -106,7 +108,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.isOpen = false;
           this.liveRegion = null;
           this.currentOption = null;
-          this.selected = null;
+          this.selected = this.config.multiselect === true ? [] : null;
           this.isHovering = false;
 
           this.initAttrs();
@@ -160,15 +162,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this.optionEvents();
             this.initKeys();
-          }
-        }, {
-          key: "checkboxes",
-          value: function checkboxes() {
-            var checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = 'name';
-            checkbox.value = 'value';
-            checkbox.id = 'id';
           }
         }, {
           key: "getOptIndex",
@@ -233,7 +226,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
             this.emit('list:close');
             if (this.selected) {
-              this.input.value = this.selected.innerText;
+              this.input.value = this.selected[0].innerText.trim();
             }
             return this;
           }
@@ -366,15 +359,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (!currentOpt) {
               return;
             }
-            if (!this.multiselect && this.selected) {
+
+            if (!this.config.multiselect && this.selected) {
               // clean up previously selected
-              this.selected.classList.remove('selected');
+              Classlist(this.selected).remove(this.config.selectedClass);
+            }
+
+            if (this.config.multiselect) {
+              this.selected.push(currentOpt);
+            } else {
+              this.selected = currentOpt;
             }
 
             currentOpt.classList.add(this.config.selectedClass);
-            this.selected = currentOpt;
+            var value = this.selected.length > 1 ? '{ ' + this.selected.length + ' selected }' : currentOpt.innerText.trim();
 
-            var value = currentOpt.innerText;
             this.input.value = value;
             this.filter(true);
             this.reset();
