@@ -417,12 +417,12 @@ describe('Combobox', function () {
         var options = combobox.currentOpts;
         combobox.once('selection', function () {
           assert.isTrue(options[1].classList.contains('selected'));
-          assert.equal(options[1], combobox.selected);
+          assert.equal(options[1], combobox.selected[0]);
           // another selection on a different opt
           combobox.once('selection', function () {
             assert.isFalse(options[1].classList.contains('selected'));
             assert.isTrue(options[0].classList.contains('selected'));
-            assert.equal(options[0], combobox.selected);
+            assert.equal(options[0], combobox.selected[0]);
             done();
           });
 
@@ -437,7 +437,7 @@ describe('Combobox', function () {
         var options = combobox.currentOpts;
         combobox.once('selection', function() {
           assert.isTrue(options[1].classList.contains('selected'));
-          assert.equal(options[1], combobox.selected);
+          assert.equal(options[1], combobox.selected[0]);
         });
         simulant.fire(options[1], 'click');
       });
@@ -446,7 +446,7 @@ describe('Combobox', function () {
         var options = combobox.cachedOpts;
         combobox.once('selection', function() {
           var visibleOpts = options.filter(function(opt) {
-            return opt.style.display === 'block';
+            return opt.style.display === '';
           });
           assert.equal(visibleOpts.length, options.length);
         });
