@@ -230,10 +230,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (focus) {
               this.input.focus();
             }
+            // if (!this.multiselect && this.selected.length) {
+            //   this.input.value = this.config.selectionValue(this.selected);
+            // }
             this.emit('list:close');
-            if (!this.multiselect && this.selected.length) {
-              this.input.value = this.config.selectionValue(this.selected);
-            }
             return this;
           }
         }, {
@@ -286,9 +286,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               // Handles if there is a fresh selection
               if (_this4.freshSelection) {
                 _this4.reset();
-                if (_this4.config.multiselect) {
-                  _this4.reset();
-                } else if (currentVal && currentVal !== _this4.input.value.trim()) {
+                if (currentVal && currentVal !== _this4.input.value.trim()) {
                   // if the value has changed...
                   _this4.filter().openList();
                   _this4.freshSelection = false;
@@ -383,6 +381,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "select",
           value: function select() {
+            var newSelected = false;
             var currentOpt = this.currentOption;
             if (!currentOpt) {
               return;
@@ -410,17 +409,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // Taking care of adding / removing selected class
             if (currentOpt.classList.contains(this.config.selectedClass)) {
               currentOpt.classList.remove(this.config.selectedClass);
+              this.emit('deselection', { text: this.input.value, option: currentOpt });
             } else {
+              newSelected = true;
               currentOpt.classList.add(this.config.selectedClass);
             }
-            var value = this.config.selectionValue(this.selected);
-            this.input.value = value;
+
+            this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
             this.filter(true);
             this.reset();
             this.input.select();
             this.closeList();
-            this.freshSelection = true;
-            this.emit('selection', { text: value, option: currentOpt });
+
+            if (newSelected) {
+              this.freshSelection = true;
+              this.emit('selection', { text: this.input.value, option: currentOpt });
+            }
             return this;
           }
         }, {

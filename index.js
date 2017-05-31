@@ -162,10 +162,10 @@ module.exports = class Combobox {
     this.input.setAttribute('aria-expanded', 'false');
     this.isOpen = false;
     if (focus) { this.input.focus(); }
+    // if (!this.multiselect && this.selected.length) {
+    //   this.input.value = this.config.selectionValue(this.selected);
+    // }
     this.emit('list:close');
-    if (!this.multiselect && this.selected.length) {
-      this.input.value = this.config.selectionValue(this.selected);
-    }
     return this;
   }
 
@@ -207,9 +207,7 @@ module.exports = class Combobox {
       // Handles if there is a fresh selection
       if (this.freshSelection) {
         this.reset();
-        if (this.config.multiselect) {
-          this.reset();
-        } else if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
+        if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
           this.filter().openList();
           this.freshSelection = false;
         }
@@ -293,6 +291,7 @@ module.exports = class Combobox {
   }
 
   select() {
+    let newSelected = false;
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
 
@@ -317,17 +316,22 @@ module.exports = class Combobox {
     // Taking care of adding / removing selected class
     if (currentOpt.classList.contains(this.config.selectedClass)) {
       currentOpt.classList.remove(this.config.selectedClass);
+      this.emit('deselection', { text: this.input.value, option: currentOpt });
     } else {
+      newSelected = true;
       currentOpt.classList.add(this.config.selectedClass);
     }
-    const value = this.config.selectionValue(this.selected);
-    this.input.value = value;
+
+    this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
     this.filter(true);
     this.reset();
     this.input.select();
     this.closeList();
-    this.freshSelection = true;
-    this.emit('selection', { text: value, option: currentOpt });
+
+    if (newSelected) {
+      this.freshSelection = true;
+      this.emit('selection', { text: this.input.value, option: currentOpt });
+    }
     return this;
   }
 
