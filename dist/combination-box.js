@@ -286,7 +286,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               // Handles if there is a fresh selection
               if (_this4.freshSelection) {
                 _this4.reset();
-                if (currentVal && currentVal !== _this4.input.value.trim()) {
+                if (_this4.config.multiselect) {
+                  _this4.reset();
+                } else if (currentVal && currentVal !== _this4.input.value.trim()) {
                   // if the value has changed...
                   _this4.filter().openList();
                   _this4.freshSelection = false;

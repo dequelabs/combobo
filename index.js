@@ -207,7 +207,9 @@ module.exports = class Combobox {
       // Handles if there is a fresh selection
       if (this.freshSelection) {
         this.reset();
-        if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
+        if (this.config.multiselect) {
+          this.reset();
+        } else if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
           this.filter().openList();
           this.freshSelection = false;
         }
