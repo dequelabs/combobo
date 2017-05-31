@@ -101,6 +101,10 @@ module.exports = class Combobox {
       this.freshSelection = true;
     });
 
+    this.input.addEventListener('focus', () => {
+      this.input.value = this.selected >= 2 ? this.config.selectionValue(this.selected) : '';
+    });
+
     // listen for clicks outside of combobox
     document.addEventListener('click', (e) => {
       const isOrWithin = isWithin(e.target, [this.input, this.list], true);
@@ -162,9 +166,10 @@ module.exports = class Combobox {
     this.input.setAttribute('aria-expanded', 'false');
     this.isOpen = false;
     if (focus) { this.input.focus(); }
-    // if (!this.multiselect && this.selected.length) {
-    //   this.input.value = this.config.selectionValue(this.selected);
-    // }
+    // Sets the value back to what it was
+    if (!this.multiselect && this.selected.length) {
+      this.input.value = this.config.selectionValue(this.selected);
+    }
     this.emit('list:close');
     return this;
   }

@@ -158,6 +158,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               _this2.freshSelection = true;
             });
 
+            this.input.addEventListener('focus', function () {
+              _this2.input.value = _this2.selected >= 2 ? _this2.config.selectionValue(_this2.selected) : '';
+            });
+
             // listen for clicks outside of combobox
             document.addEventListener('click', function (e) {
               var isOrWithin = isWithin(e.target, [_this2.input, _this2.list], true);
@@ -230,9 +234,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (focus) {
               this.input.focus();
             }
-            // if (!this.multiselect && this.selected.length) {
-            //   this.input.value = this.config.selectionValue(this.selected);
-            // }
+            // Sets the value back to what it was
+            if (!this.multiselect && this.selected.length) {
+              this.input.value = this.config.selectionValue(this.selected);
+            }
             this.emit('list:close');
             return this;
           }

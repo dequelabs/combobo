@@ -464,7 +464,8 @@ describe('Combobox', function () {
             return selectedOptions.length > 1 ?
               '{ ' + selectedOptions.length +  ' selected }' :
               selectedOptions[0].innerText.trim();
-          }
+          },
+          noResultsText: 'No results found.'
         });
       });
 
@@ -485,6 +486,25 @@ describe('Combobox', function () {
         simulant.fire(options[0], 'click');
         simulant.fire(options[2], 'click');
         assert.equal(combobox.config.selectionValue(combobox.selected), '{ 3 selected }');
+      });
+
+      it.only('should remove selected option on second click', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(options[1], 'click');
+        simulant.fire(options[1], 'click');
+        assert.equal(combobox.selected.length, 1);
+      });
+
+      it.only('should show the noResultsText when there are no matches', function() {
+        var options = combobox.currentOpts;
+        combobox.input.value = 'sdfsgdfg';
+        simulant.fire(combobox.input, 'keyup', {which: 78});
+        assert.equal(options.length, 0);
+      });
+
+      it.only('should clear input when 2 or more options are selected and backspace is hit', function() {
+
       });
     });
   });
