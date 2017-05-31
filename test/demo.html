@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body id="demo">
-    <h1>Combination Box</h1>
+    <h1>Combobo Box</h1>
     <section class="bands">
       <div class="wrp">
         <h2>Single select</h2>
@@ -225,13 +225,15 @@
           'single': new Combobox({
             input: '#combobox-single',
             list: '.bands .listbox',
-            activeClass: 'active'
+            activeClass: 'active',
+            noResultsText: 'No results found.'
           }),
           'single-with-groups': new Combobox({
             input: '#combobox-single-with-groups',
             list: '.categories .listbox',
             groups: '.optgroup',
-            activeClass: 'active'
+            activeClass: 'active',
+            noResultsText: 'No results found.'
           }),
           'multiselect': new Combobox({
             input: '#combobox-multiselect',
@@ -242,14 +244,16 @@
               return selectedOptions.length > 1 ?
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();
-            }
+            },
+            noResultsText: 'No results found.'
           }),
           'multiselect-with-groups': new Combobox({
             input: '#combobox-multiselect-with-groups',
             list: '.multiselect-with-groups .listbox',
             activeClass: 'active',
             multiselect: true,
-            groups: '.optgroup'
+            groups: '.optgroup',
+            noResultsText: 'No results found.'
           })
         };
 

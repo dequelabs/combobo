@@ -30,6 +30,7 @@ const defaults = {
   selectedClass: 'selected',
   useLiveRegion: true,
   multiselect: false,
+  noResultsText: null,
   selectionValue: (selecteds) => selecteds.map((s) => s.innerText.trim()).join(' - '),
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
@@ -187,6 +188,13 @@ module.exports = class Combobox {
     }, {
       keys: ['escape'],
       callback: () => this.closeList(true)
+    }, {
+      keys: ['backspace'],
+      callback: () => {
+        if (this.selected.length >= 2) {
+          this.input.value = '';
+        }
+      }
     }]);
 
     const ignores = [9, 13, 27];
@@ -196,6 +204,7 @@ module.exports = class Combobox {
       const currentVal = this.selected.length && this.selected[this.selected.length - 1].innerText;
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
 
+      // Handles if there is a fresh selection
       if (this.freshSelection) {
         this.reset();
         if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
@@ -204,6 +213,20 @@ module.exports = class Combobox {
         }
       } else {
         this.filter().openList();
+      }
+
+      //Handles if there are no results found
+      let noResults = this.list.querySelector('.no-results-text');
+      if (this.config.noResultsText && !this.currentOpts.length) {
+        if (!noResults) {
+          noResults = document.createElement('div');
+          Classlist(noResults).add('no-results-text');
+          noResults.innerText = this.config.noResultsText;
+          this.list.append(noResults);
+        }
+      }
+      if (noResults && this.currentOpts.length){
+        this.list.removeChild(noResults);
       }
     });
   }
@@ -275,15 +298,27 @@ module.exports = class Combobox {
       Classlist(this.selected[0]).remove(this.config.selectedClass)
     }
 
+    // Multiselect option
     if (this.config.multiselect) {
-      this.selected.push(currentOpt);
+      const idx = this.selected.indexOf(currentOpt);
+      //If option is in array and gets clicked, remove it
+      if (idx > -1) {
+        this.selected.splice(idx, 1);
+      } else {
+        this.selected.push(currentOpt);
+      }
     } else {
+      // Single select stuff
       this.selected = [currentOpt];
     }
 
-    currentOpt.classList.add(this.config.selectedClass);
+    // Taking care of adding / removing selected class
+    if (currentOpt.classList.contains(this.config.selectedClass)) {
+      currentOpt.classList.remove(this.config.selectedClass);
+    } else {
+      currentOpt.classList.add(this.config.selectedClass);
+    }
     const value = this.config.selectionValue(this.selected);
-
     this.input.value = value;
     this.filter(true);
     this.reset();

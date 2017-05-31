@@ -472,14 +472,14 @@ describe('Combobox', function () {
         fixture.innerHTML = ''; // clean up
       });
 
-      it.only('should select more than one option', function() {
+      it('should select more than one option', function() {
         var options = combobox.currentOpts;
         simulant.fire(options[1], 'click');
         simulant.fire(options[0], 'click');
         assert.equal(combobox.selected.length, 2);
       });
 
-      it.only('should populate input value with multi selected count', function() {
+      it('should populate input value with multi selected count', function() {
         var options = combobox.currentOpts;
         simulant.fire(options[1], 'click');
         simulant.fire(options[0], 'click');
