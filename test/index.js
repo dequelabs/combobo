@@ -488,7 +488,7 @@ describe('Combobox', function () {
         assert.equal(combobox.config.selectionValue(combobox.selected), '{ 3 selected }');
       });
 
-      it.only('should remove selected option on second click', function() {
+      it('should remove selected option on second click', function() {
         var options = combobox.currentOpts;
         simulant.fire(options[0], 'click');
         simulant.fire(options[1], 'click');
@@ -496,15 +496,31 @@ describe('Combobox', function () {
         assert.equal(combobox.selected.length, 1);
       });
 
-      it.only('should show the noResultsText when there are no matches', function() {
-        var options = combobox.currentOpts;
-        combobox.input.value = 'sdfsgdfg';
+      it('should show the noResultsText when there are no matches', function() {
+        combobox.input.value = '345356456';
         simulant.fire(combobox.input, 'keyup', {which: 78});
-        assert.equal(options.length, 0);
+        var noResults = document.querySelector('.no-results-text');
+        assert.equal(combobox.currentOpts.length, 0);
+        assert.equal(noResults.textContent, combobox.config.noResultsText)
       });
 
-      it.only('should clear input when 2 or more options are selected and backspace is hit', function() {
+      it('should clear input when 2 or more options are selected and backspace is hit', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(options[1], 'click');
+        // Trigger backspace
+        simulant.fire(combobox.input, 'keydown', {which:8});
+        assert.equal(combobox.input.value, '');
 
+      });
+
+      it('should clear input when input is focused and has 2 or more options selected', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(options[1], 'click');
+        // Trigger a focused
+        simulant.fire(combobox.input, 'focus');
+        assert.equal(combobox.input.value, '');
       });
     });
   });
