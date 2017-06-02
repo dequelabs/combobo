@@ -417,12 +417,12 @@ describe('Combobox', function () {
         var options = combobox.currentOpts;
         combobox.once('selection', function () {
           assert.isTrue(options[1].classList.contains('selected'));
-          assert.equal(options[1], combobox.selected);
+          assert.equal(options[1], combobox.selected[0]);
           // another selection on a different opt
           combobox.once('selection', function () {
             assert.isFalse(options[1].classList.contains('selected'));
             assert.isTrue(options[0].classList.contains('selected'));
-            assert.equal(options[0], combobox.selected);
+            assert.equal(options[0], combobox.selected[0]);
             done();
           });
 
@@ -437,7 +437,7 @@ describe('Combobox', function () {
         var options = combobox.currentOpts;
         combobox.once('selection', function() {
           assert.isTrue(options[1].classList.contains('selected'));
-          assert.equal(options[1], combobox.selected);
+          assert.equal(options[1], combobox.selected[0]);
         });
         simulant.fire(options[1], 'click');
       });
@@ -446,11 +446,81 @@ describe('Combobox', function () {
         var options = combobox.cachedOpts;
         combobox.once('selection', function() {
           var visibleOpts = options.filter(function(opt) {
-            return opt.style.display === 'block';
+            return opt.style.display === '';
           });
           assert.equal(visibleOpts.length, options.length);
         });
         simulant.fire(options[1], 'click');
+      });
+    });
+
+    describe('Multi-select events', function() {
+      beforeEach(function () {
+        fixture.innerHTML = MARKUP;
+        combobox = new Combobox({
+          activeClass: 'active',
+          multiselect: true,
+          selectionValue: (selectedOptions) => {
+            return selectedOptions.length > 1 ?
+              '{ ' + selectedOptions.length +  ' selected }' :
+              selectedOptions[0].innerText.trim();
+          },
+          noResultsText: 'No results found.'
+        });
+      });
+
+      afterEach(function () {
+        fixture.innerHTML = ''; // clean up
+      });
+
+      it('should select more than one option', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[1], 'click');
+        simulant.fire(options[0], 'click');
+        assert.equal(combobox.selected.length, 2);
+      });
+
+      it('should populate input value with multi selected count', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[1], 'click');
+        simulant.fire(options[0], 'click');
+        simulant.fire(options[2], 'click');
+        assert.equal(combobox.config.selectionValue(combobox.selected), '{ 3 selected }');
+      });
+
+      it('should remove selected option on second click', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(options[1], 'click');
+        simulant.fire(options[1], 'click');
+        assert.equal(combobox.selected.length, 1);
+      });
+
+      it('should show the noResultsText when there are no matches', function() {
+        combobox.input.value = '345356456';
+        simulant.fire(combobox.input, 'keyup', {which: 78});
+        var noResults = document.querySelector('.no-results-text');
+        assert.equal(combobox.currentOpts.length, 0);
+        assert.equal(noResults.textContent, combobox.config.noResultsText)
+      });
+
+      it('should clear input when 2 or more options are selected and backspace is hit', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(options[1], 'click');
+        // Trigger backspace
+        simulant.fire(combobox.input, 'keydown', {which:8});
+        assert.equal(combobox.input.value, '');
+
+      });
+
+      it('should clear input when input is focused and has 2 or more options selected', function() {
+        var options = combobox.currentOpts;
+        simulant.fire(options[0], 'click');
+        simulant.fire(options[1], 'click');
+        // Trigger a focused
+        simulant.fire(combobox.input, 'focus');
+        assert.equal(combobox.input.value, '');
       });
     });
   });

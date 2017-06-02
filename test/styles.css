@@ -127,6 +127,35 @@ button:active {
   background-color: #212E59;
 }
 
+.option .check {
+  display:inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #ddd;
+}
+
+.option .check:after {
+    /*Add another block-level blank space*/
+    content: '';
+    display: none;
+    margin: 0 auto;
+
+    /*Make it a small rectangle so the border will create an L-shape*/
+    width: 4px;
+    height: 10px;
+
+    /*Add a white border on the bottom and left, creating that 'L' */
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+
+    /*Rotate the L 45 degrees to turn it into a checkmark*/
+    transform: rotate(45deg);
+}
+
+.selected .check:after {
+  display: block;
+}
+
 .optgroup-label {
   font-weight: bold;
   font-size: 22px;

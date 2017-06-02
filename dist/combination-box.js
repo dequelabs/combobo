@@ -67,6 +67,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         activeClass: 'active',
         selectedClass: 'selected',
         useLiveRegion: true,
+        multiselect: false,
+        noResultsText: null,
+        selectionValue: function selectionValue(selecteds) {
+          return selecteds.map(function (s) {
+            return s.innerText.trim();
+          }).join(' - ');
+        },
         announcement: function announcement(n) {
           return n + " options available";
         },
@@ -82,7 +89,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           config = config || {};
 
           // merge user config with default config
-          this.config = extend(defaults, config);
+          this.config = {};
+          extend(this.config, defaults, config);
+
           this.input = elHandler(this.config.input);
           this.list = elHandler(this.config.list);
           this.cachedOpts = this.currentOpts = elHandler(this.config.options, true, this.list);
@@ -105,7 +114,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.isOpen = false;
           this.liveRegion = null;
           this.currentOption = null;
-          this.selected = null;
+          this.selected = [];
           this.isHovering = false;
 
           this.initAttrs();
@@ -147,6 +156,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
               _this2.reset();
               _this2.freshSelection = true;
+            });
+
+            this.input.addEventListener('focus', function () {
+              _this2.input.value = _this2.selected.length >= 2 ? '' : _this2.config.selectionValue(_this2.selected);
             });
 
             // listen for clicks outside of combobox
@@ -221,10 +234,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (focus) {
               this.input.focus();
             }
-            this.emit('list:close');
-            if (this.selected) {
-              this.input.value = this.selected.innerText;
+            // Sets the value back to what it was
+            if (!this.multiselect && this.selected.length) {
+              this.input.value = this.config.selectionValue(this.selected);
             }
+            this.emit('list:close');
             return this;
           }
         }, {
@@ -256,17 +270,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               callback: function callback() {
                 return _this4.closeList(true);
               }
+            }, {
+              keys: ['backspace'],
+              callback: function callback() {
+                if (_this4.selected.length >= 2) {
+                  _this4.input.value = '';
+                }
+              }
             }]);
 
             var ignores = [9, 13, 27];
             // filter keyup listener
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
-              var currentVal = _this4.selected && _this4.selected.innerText;
+              var currentVal = _this4.selected.length && _this4.selected[_this4.selected.length - 1].innerText;
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
 
+              // Handles if there is a fresh selection
               if (_this4.freshSelection) {
                 _this4.reset();
                 if (currentVal && currentVal !== _this4.input.value.trim()) {
@@ -276,6 +298,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
               } else {
                 _this4.filter().openList();
+              }
+
+              //Handles if there are no results found
+              var noResults = _this4.list.querySelector('.no-results-text');
+              if (_this4.config.noResultsText && !_this4.currentOpts.length && !noResults) {
+                // create the noResults element
+                noResults = document.createElement('div');
+                Classlist(noResults).add('no-results-text');
+                noResults.innerHTML = _this4.config.noResultsText;
+                _this4.list.appendChild(noResults);
+              } else if (noResults && _this4.currentOpts.length) {
+                _this4.list.removeChild(noResults);
               }
             });
           }
@@ -350,26 +384,50 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "select",
           value: function select() {
+            var newSelected = false;
             var currentOpt = this.currentOption;
             if (!currentOpt) {
               return;
             }
-            if (!this.multiselect && this.selected) {
+
+            if (!this.config.multiselect && this.selected.length) {
               // clean up previously selected
-              this.selected.classList.remove('selected');
+              Classlist(this.selected[0]).remove(this.config.selectedClass);
             }
 
-            currentOpt.classList.add(this.config.selectedClass);
-            this.selected = currentOpt;
+            // Multiselect option
+            if (this.config.multiselect) {
+              var idx = this.selected.indexOf(currentOpt);
+              //If option is in array and gets clicked, remove it
+              if (idx > -1) {
+                this.selected.splice(idx, 1);
+              } else {
+                this.selected.push(currentOpt);
+              }
+            } else {
+              // Single select stuff
+              this.selected = [currentOpt];
+            }
 
-            var value = currentOpt.innerText;
-            this.input.value = value;
+            // Taking care of adding / removing selected class
+            if (Classlist(currentOpt).contains(this.config.selectedClass)) {
+              currentOpt.classList.remove(this.config.selectedClass);
+              this.emit('deselection', { text: this.input.value, option: currentOpt });
+            } else {
+              newSelected = true;
+              currentOpt.classList.add(this.config.selectedClass);
+            }
+
+            this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
             this.filter(true);
             this.reset();
             this.input.select();
             this.closeList();
-            this.freshSelection = true;
-            this.emit('selection', { text: value, option: currentOpt });
+
+            if (newSelected) {
+              this.freshSelection = true;
+              this.emit('selection', { text: this.input.value, option: currentOpt });
+            }
             return this;
           }
         }, {
@@ -538,6 +596,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       'use strict';
 
       module.exports = {
+        8: 'backspace',
         9: 'tab',
         13: 'enter',
         27: 'escape',

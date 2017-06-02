@@ -29,6 +29,9 @@ const defaults = {
   activeClass: 'active',
   selectedClass: 'selected',
   useLiveRegion: true,
+  multiselect: false,
+  noResultsText: null,
+  selectionValue: (selecteds) => selecteds.map((s) => s.innerText.trim()).join(' - '),
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
@@ -38,7 +41,9 @@ module.exports = class Combobox {
     config = config || {};
 
     // merge user config with default config
-    this.config = extend(defaults, config);
+    this.config = {};
+    extend(this.config, defaults, config);
+
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true, this.list);
@@ -59,7 +64,7 @@ module.exports = class Combobox {
     this.isOpen = false;
     this.liveRegion = null;
     this.currentOption = null;
-    this.selected = null;
+    this.selected = [];
     this.isHovering = false;
 
     this.initAttrs();
@@ -94,6 +99,10 @@ module.exports = class Combobox {
       if (!this.isHovering) { this.closeList(); }
       this.reset();
       this.freshSelection = true;
+    });
+
+    this.input.addEventListener('focus', () => {
+      this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
     });
 
     // listen for clicks outside of combobox
@@ -157,10 +166,11 @@ module.exports = class Combobox {
     this.input.setAttribute('aria-expanded', 'false');
     this.isOpen = false;
     if (focus) { this.input.focus(); }
-    this.emit('list:close');
-    if (this.selected) {
-      this.input.value = this.selected.innerText;
+    // Sets the value back to what it was
+    if (!this.multiselect && this.selected.length) {
+      this.input.value = this.config.selectionValue(this.selected);
     }
+    this.emit('list:close');
     return this;
   }
 
@@ -183,15 +193,23 @@ module.exports = class Combobox {
     }, {
       keys: ['escape'],
       callback: () => this.closeList(true)
+    }, {
+      keys: ['backspace'],
+      callback: () => {
+        if (this.selected.length >= 2) {
+          this.input.value = '';
+        }
+      }
     }]);
 
     const ignores = [9, 13, 27];
     // filter keyup listener
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
-      const currentVal = this.selected && this.selected.innerText;
+      const currentVal = this.selected.length && this.selected[this.selected.length - 1].innerText;
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
 
+      // Handles if there is a fresh selection
       if (this.freshSelection) {
         this.reset();
         if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
@@ -200,6 +218,17 @@ module.exports = class Combobox {
         }
       } else {
         this.filter().openList();
+      }
+
+      //Handles if there are no results found
+      let noResults = this.list.querySelector('.no-results-text');
+      if (this.config.noResultsText && !this.currentOpts.length && !noResults) { // create the noResults element
+        noResults = document.createElement('div');
+        Classlist(noResults).add('no-results-text');
+        noResults.innerHTML = this.config.noResultsText;
+        this.list.appendChild(noResults);
+      } else if (noResults && this.currentOpts.length) {
+        this.list.removeChild(noResults);
       }
     });
   }
@@ -264,23 +293,47 @@ module.exports = class Combobox {
   }
 
   select() {
+    let newSelected = false;
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
-    if (!this.multiselect && this.selected) { // clean up previously selected
-      this.selected.classList.remove('selected');
+
+    if (!this.config.multiselect && this.selected.length) { // clean up previously selected
+      Classlist(this.selected[0]).remove(this.config.selectedClass)
     }
 
-    currentOpt.classList.add(this.config.selectedClass);
-    this.selected = currentOpt;
+    // Multiselect option
+    if (this.config.multiselect) {
+      const idx = this.selected.indexOf(currentOpt);
+      //If option is in array and gets clicked, remove it
+      if (idx > -1) {
+        this.selected.splice(idx, 1);
+      } else {
+        this.selected.push(currentOpt);
+      }
+    } else {
+      // Single select stuff
+      this.selected = [currentOpt];
+    }
 
-    const value = currentOpt.innerText;
-    this.input.value = value;
+    // Taking care of adding / removing selected class
+    if (Classlist(currentOpt).contains(this.config.selectedClass)) {
+      currentOpt.classList.remove(this.config.selectedClass);
+      this.emit('deselection', { text: this.input.value, option: currentOpt });
+    } else {
+      newSelected = true;
+      currentOpt.classList.add(this.config.selectedClass);
+    }
+
+    this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
     this.filter(true);
     this.reset();
     this.input.select();
     this.closeList();
-    this.freshSelection = true;
-    this.emit('selection', { text: value, option: currentOpt });
+
+    if (newSelected) {
+      this.freshSelection = true;
+      this.emit('selection', { text: this.input.value, option: currentOpt });
+    }
     return this;
   }
 
