@@ -226,7 +226,11 @@
             input: '#combobox-single',
             list: '.bands .listbox',
             activeClass: 'active',
-            noResultsText: 'No results found.'
+            noResultsText: 'No results found.',
+            optionValue: (option) => {
+              console.log(option);
+              console.log(box.single.input.value);
+            }
           }),
           'single-with-groups': new Combobox({
             input: '#combobox-single-with-groups',
@@ -241,6 +245,7 @@
             activeClass: 'active',
             multiselect: true,
             selectionValue: (selectedOptions) => {
+              console.log(selectedOptions.length > 1);
               return selectedOptions.length > 1 ?
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();

@@ -74,6 +74,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             return s.innerText.trim();
           }).join(' - ');
         },
+        optionValue: function optionValue(option) {
+          return option.innerHTML;
+        },
         announcement: function announcement(n) {
           return n + " options available";
         },
@@ -159,7 +162,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
 
             this.input.addEventListener('focus', function () {
-              _this2.input.value = _this2.selected.length >= 2 ? '' : _this2.config.selectionValue(_this2.selected);
+              if (_this2.selected.length) {
+                _this2.input.value = _this2.selected.length >= 2 ? '' : _this2.config.selectionValue(_this2.selected);
+                console.log('this');
+              }
             });
 
             // listen for clicks outside of combobox
@@ -284,6 +290,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
               var currentVal = _this4.selected.length && _this4.selected[_this4.selected.length - 1].innerText;
+              console.log(_this4.config.optionValue(_this4.currentOpts));
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
