@@ -102,7 +102,7 @@ module.exports = class Combobox {
     });
 
     this.input.addEventListener('focus', () => {
-      this.input.value = this.selected >= 2 ? this.config.selectionValue(this.selected) : '';
+      this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
     });
 
     // listen for clicks outside of combobox
@@ -222,15 +222,12 @@ module.exports = class Combobox {
 
       //Handles if there are no results found
       let noResults = this.list.querySelector('.no-results-text');
-      if (this.config.noResultsText && !this.currentOpts.length) {
-        if (!noResults) {
-          noResults = document.createElement('div');
-          Classlist(noResults).add('no-results-text');
-          noResults.innerText = this.config.noResultsText;
-          this.list.append(noResults);
-        }
-      }
-      if (noResults && this.currentOpts.length){
+      if (this.config.noResultsText && !this.currentOpts.length && !noResults) { // create the noResults element
+        noResults = document.createElement('div');
+        Classlist(noResults).add('no-results-text');
+        noResults.innerHTML = this.config.noResultsText;
+        this.list.appendChild(noResults);
+      } else if (noResults && this.currentOpts.length) {
         this.list.removeChild(noResults);
       }
     });
@@ -319,7 +316,7 @@ module.exports = class Combobox {
     }
 
     // Taking care of adding / removing selected class
-    if (currentOpt.classList.contains(this.config.selectedClass)) {
+    if (Classlist(currentOpt).contains(this.config.selectedClass)) {
       currentOpt.classList.remove(this.config.selectedClass);
       this.emit('deselection', { text: this.input.value, option: currentOpt });
     } else {

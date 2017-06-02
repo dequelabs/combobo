@@ -159,7 +159,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
 
             this.input.addEventListener('focus', function () {
-              _this2.input.value = _this2.selected >= 2 ? _this2.config.selectionValue(_this2.selected) : '';
+              _this2.input.value = _this2.selected.length >= 2 ? '' : _this2.config.selectionValue(_this2.selected);
             });
 
             // listen for clicks outside of combobox
@@ -302,15 +302,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
               //Handles if there are no results found
               var noResults = _this4.list.querySelector('.no-results-text');
-              if (_this4.config.noResultsText && !_this4.currentOpts.length) {
-                if (!noResults) {
-                  noResults = document.createElement('div');
-                  Classlist(noResults).add('no-results-text');
-                  noResults.innerText = _this4.config.noResultsText;
-                  _this4.list.append(noResults);
-                }
-              }
-              if (noResults && _this4.currentOpts.length) {
+              if (_this4.config.noResultsText && !_this4.currentOpts.length && !noResults) {
+                // create the noResults element
+                noResults = document.createElement('div');
+                Classlist(noResults).add('no-results-text');
+                noResults.innerHTML = _this4.config.noResultsText;
+                _this4.list.appendChild(noResults);
+              } else if (noResults && _this4.currentOpts.length) {
                 _this4.list.removeChild(noResults);
               }
             });
@@ -412,7 +410,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             // Taking care of adding / removing selected class
-            if (currentOpt.classList.contains(this.config.selectedClass)) {
+            if (Classlist(currentOpt).contains(this.config.selectedClass)) {
               currentOpt.classList.remove(this.config.selectedClass);
               this.emit('deselection', { text: this.input.value, option: currentOpt });
             } else {
