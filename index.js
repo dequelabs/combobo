@@ -32,6 +32,7 @@ const defaults = {
   multiselect: false,
   noResultsText: null,
   selectionValue: (selecteds) => selecteds.map((s) => s.innerText.trim()).join(' - '),
+  optionValue: (option) => option.innerHTML,
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
@@ -97,12 +98,12 @@ module.exports = class Combobox {
 
     this.input.addEventListener('blur', () => {
       if (!this.isHovering) { this.closeList(); }
-      this.reset();
-      this.freshSelection = true;
     });
 
     this.input.addEventListener('focus', () => {
-      this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
+      if (this.selected.length) {
+        this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
+      }
     });
 
     // listen for clicks outside of combobox
@@ -206,13 +207,13 @@ module.exports = class Combobox {
     // filter keyup listener
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
-      const currentVal = this.selected.length && this.selected[this.selected.length - 1].innerText;
+      const cachedVal = this.cachedInputValue;
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
 
       // Handles if there is a fresh selection
       if (this.freshSelection) {
         this.reset();
-        if (currentVal && (currentVal !== this.input.value.trim())) { // if the value has changed...
+        if (cachedVal && (cachedVal.trim() !== this.input.value.trim())) { // if the value has changed...
           this.filter().openList();
           this.freshSelection = false;
         }
@@ -275,7 +276,14 @@ module.exports = class Combobox {
 
   updateOpts() {
     this.cachedOpts.forEach((opt) => {
+      // configure display of options based on filtering
       opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : '';
+    });
+
+    // configure the innerHTML of each option based on what optionValues returns
+    this.currentOpts.forEach((actopt) => {
+      const newVal = this.config.optionValue(actopt);
+      actopt.innerHTML = newVal;
     });
 
     this.updateGroups();
@@ -325,6 +333,7 @@ module.exports = class Combobox {
     }
 
     this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
+    this.cachedInputValue = this.input.value;
     this.filter(true);
     this.reset();
     this.input.select();

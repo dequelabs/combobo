@@ -72,50 +72,17 @@
           <input type="text" class="combobox" id="combobox-multiselect">
           <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="multiselect"></i>
           <div class="listbox">
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Pizza</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Sushi</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Tacos</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Salmon</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Cheeseburger</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Bacon Cheeseburger</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Steak</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Fried Chicken</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Chicken Salad</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">Tatar Tots</span>
-            </div>
-            <div class="option">
-              <div class="check"></div>
-              <span class="label">French Fries</span>
-            </div>
+            <div class="option">Pizza</div>
+            <div class="option">Sushi</div>
+            <div class="option">Tacos</div>
+            <div class="option">Salmon</div>
+            <div class="option">Cheeseburger</div>
+            <div class="option">Bacon Cheeseburger</div>
+            <div class="option">Steak</div>
+            <div class="option">Fried Chicken</div>
+            <div class="option">Chicken Salad</div>
+            <div class="option">Tatar Tots</div>
+            <div class="option">French Fries</div>
           </div>
         </div>
       </div>
@@ -132,84 +99,67 @@
             <div class="optgroup">
               <div class="optgroup-label">Color</div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Red</span>
+                <div class="check">Red</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Yellow</span>
+                <div class="check">Yellow</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Green</span>
+                <div class="check">Green</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Orange</span>
+                <div class="check">Orange</div>
               </div>
             </div>
             <div class="optgroup">
               <div class="optgroup-label">Year</div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">2007</span>
+                <div class="check">2007</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">2001</span>
+                <div class="check">2001</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">1999</span>
+                <div class="check">1999</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">2005</span>
+                <div class="check">2005</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">2016</span>
+                <div class="check">2016</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">2006</span>
+                <div class="check">2006</div>
               </div>
             </div>
             <div class="optgroup">
               <div class="optgroup-label">Make</div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Ford</span>
+                <div class="check">Ford</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">GM</span>
+                <div class="check">GM</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Chrysler</span>
+                <div class="check">Chrysler</div>
               </div>
             </div>
             <div class="optgroup">
               <div class="optgroup-label">Doors</div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">2 Door</span>
+                <div class="check">2 Door</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">4 Door</span>
+                <div class="check">4 Door</div>
               </div>
             </div>
             <div class="optgroup">
               <div class="optgroup-label">Transmission</div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Automatic</span>
+                <div class="check">Automatic</div>
               </div>
               <div class="option">
-                <div class="check"></div>
-                <span class="label">Manual</span>
+                <div class="check">Manual</div>
               </div>
             </div>
           </div>
@@ -221,36 +171,58 @@
     <script src="../dist/combination-box.js" charset="utf-8"></script>
     <script>
       (function () {
+        function wrapNum(str, val) {
+          if (!val || str.toLowerCase().indexOf(val.toLowerCase()) === -1) {
+            return str;
+          }
+          var regex = new RegExp(val, 'i');
+          return str.replace(regex, '<span class="underline">$&</span>');
+        }
+
         var box = {
           'single': new Combobox({
             input: '#combobox-single',
             list: '.bands .listbox',
             activeClass: 'active',
-            noResultsText: 'No results found.'
+            noResultsText: 'No results found.',
+            optionValue: (option) => {
+              var inputVal = box.single.input.value;
+              return wrapNum(option.innerText, inputVal);
+            }
           }),
-          'single-with-groups': new Combobox({
+          'singleWithGroups': new Combobox({
             input: '#combobox-single-with-groups',
             list: '.categories .listbox',
             groups: '.optgroup',
             activeClass: 'active',
-            noResultsText: 'No results found.'
+            noResultsText: 'No results found.',
+            optionValue: (option) => {
+              var inputVal = box.singleWithGroups.input.value;
+              return wrapNum(option.innerText, inputVal);
+            }
           }),
           'multiselect': new Combobox({
             input: '#combobox-multiselect',
             list: '.multiselect .listbox',
             activeClass: 'active',
+            getOptionValue: (o) => o.querySelector('.label').innerText,
             multiselect: true,
             selectionValue: (selectedOptions) => {
               return selectedOptions.length > 1 ?
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();
             },
-            noResultsText: 'No results found.'
+            noResultsText: 'No results found.',
+            optionValue: (option) => {
+              var inputVal = box.multiselect.input.value;
+              return wrapNum(option.innerText, inputVal)
+            }
           }),
           'multiselect-with-groups': new Combobox({
             input: '#combobox-multiselect-with-groups',
             list: '.multiselect-with-groups .listbox',
             activeClass: 'active',
+            getOptionValue: (o) => o.querySelector('.label').innerText,
             multiselect: true,
             groups: '.optgroup',
             noResultsText: 'No results found.'

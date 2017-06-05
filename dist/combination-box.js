@@ -74,6 +74,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             return s.innerText.trim();
           }).join(' - ');
         },
+        optionValue: function optionValue(option) {
+          return option.innerHTML;
+        },
         announcement: function announcement(n) {
           return n + " options available";
         },
@@ -154,12 +157,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               if (!_this2.isHovering) {
                 _this2.closeList();
               }
-              _this2.reset();
-              _this2.freshSelection = true;
             });
 
             this.input.addEventListener('focus', function () {
-              _this2.input.value = _this2.selected.length >= 2 ? '' : _this2.config.selectionValue(_this2.selected);
+              if (_this2.selected.length) {
+                _this2.input.value = _this2.selected.length >= 2 ? '' : _this2.config.selectionValue(_this2.selected);
+              }
             });
 
             // listen for clicks outside of combobox
@@ -283,7 +286,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // filter keyup listener
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
-              var currentVal = _this4.selected.length && _this4.selected[_this4.selected.length - 1].innerText;
+              var cachedVal = _this4.cachedInputValue;
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
@@ -291,7 +294,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               // Handles if there is a fresh selection
               if (_this4.freshSelection) {
                 _this4.reset();
-                if (currentVal && currentVal !== _this4.input.value.trim()) {
+                if (cachedVal && cachedVal.trim() !== _this4.input.value.trim()) {
                   // if the value has changed...
                   _this4.filter().openList();
                   _this4.freshSelection = false;
@@ -362,7 +365,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this6 = this;
 
             this.cachedOpts.forEach(function (opt) {
+              // configure display of options based on filtering
               opt.style.display = _this6.currentOpts.indexOf(opt) === -1 ? 'none' : '';
+            });
+
+            // configure the innerHTML of each option based on what optionValues returns
+            this.currentOpts.forEach(function (actopt) {
+              var newVal = _this6.config.optionValue(actopt);
+              actopt.innerHTML = newVal;
             });
 
             this.updateGroups();
@@ -419,6 +429,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
+            this.cachedInputValue = this.input.value;
             this.filter(true);
             this.reset();
             this.input.select();

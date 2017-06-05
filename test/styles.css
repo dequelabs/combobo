@@ -127,18 +127,24 @@ button:active {
   background-color: #212E59;
 }
 
-.option .check {
+.listbox .underline {
+  text-decoration: underline;
+}
+
+.option:before {
+  content: '';
   display:inline-block;
   width: 13px;
   height: 13px;
   border: 2px solid #ddd;
+  margin-right: 7px;
 }
 
-.option .check:after {
+.option:after {
     /*Add another block-level blank space*/
     content: '';
     display: none;
-    margin: 0 auto;
+    margin: 2px auto;
 
     /*Make it a small rectangle so the border will create an L-shape*/
     width: 4px;
@@ -152,8 +158,10 @@ button:active {
     transform: rotate(45deg);
 }
 
-.selected .check:after {
-  display: block;
+.option.selected:after {
+  display:inline-block;
+  left: 12px;
+  position: absolute;
 }
 
 .optgroup-label {
