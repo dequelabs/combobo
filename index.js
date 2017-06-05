@@ -283,11 +283,7 @@ module.exports = class Combobox {
     // configure the innerHTML of each option based on what optionValues returns
     this.currentOpts.forEach((actopt) => {
       const newVal = this.config.optionValue(actopt);
-      if (this.config.multiselect) {
-        actopt.getElementsByClassName('label')[0].innerHTML = newVal;
-      } else {
-        actopt.innerHTML = newVal;
-      }
+      actopt.innerHTML = newVal;
     });
 
     this.updateGroups();
