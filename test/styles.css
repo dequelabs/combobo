@@ -127,6 +127,10 @@ button:active {
   background-color: #212E59;
 }
 
+.listbox .underline {
+  text-decoration: underline;
+}
+
 .option .check {
   display:inline-block;
   width: 13px;

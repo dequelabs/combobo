@@ -221,6 +221,14 @@
     <script src="../dist/combination-box.js" charset="utf-8"></script>
     <script>
       (function () {
+        function wrapNum(str, val) {
+          if (!val || str.toLowerCase().indexOf(val.toLowerCase()) === -1) {
+            return str;
+          }
+          var regex = new RegExp(val, 'i');
+          return str.replace(regex, '<span class="underline">$&</span>');
+        }
+
         var box = {
           'single': new Combobox({
             input: '#combobox-single',
@@ -228,34 +236,43 @@
             activeClass: 'active',
             noResultsText: 'No results found.',
             optionValue: (option) => {
-              console.log(option);
-              console.log(box.single.input.value);
+              var inputVal = box.single.input.value;
+              return wrapNum(option.innerText, inputVal);
             }
           }),
-          'single-with-groups': new Combobox({
+          'singleWithGroups': new Combobox({
             input: '#combobox-single-with-groups',
             list: '.categories .listbox',
             groups: '.optgroup',
             activeClass: 'active',
-            noResultsText: 'No results found.'
+            noResultsText: 'No results found.',
+            optionValue: (option) => {
+              var inputVal = box.singleWithGroups.input.value;
+              return wrapNum(option.innerText, inputVal);
+            }
           }),
           'multiselect': new Combobox({
             input: '#combobox-multiselect',
             list: '.multiselect .listbox',
             activeClass: 'active',
+            getOptionValue: (o) => o.querySelector('.label').innerText,
             multiselect: true,
             selectionValue: (selectedOptions) => {
-              console.log(selectedOptions.length > 1);
               return selectedOptions.length > 1 ?
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();
             },
-            noResultsText: 'No results found.'
+            noResultsText: 'No results found.',
+            optionValue: (option) => {
+              var inputVal = box.multiselect.input.value;
+              return wrapNum(option.innerText, inputVal)
+            }
           }),
           'multiselect-with-groups': new Combobox({
             input: '#combobox-multiselect-with-groups',
             list: '.multiselect-with-groups .listbox',
             activeClass: 'active',
+            getOptionValue: (o) => o.querySelector('.label').innerText,
             multiselect: true,
             groups: '.optgroup',
             noResultsText: 'No results found.'
