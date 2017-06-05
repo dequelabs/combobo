@@ -65,13 +65,6 @@ var combobo = new Combobox({
 });
 ```
 
-
-## Methods TODO
-* `Progresso#goTo`: Accepts a number (0 - 100) in which the progress bar will go to (%). Example: `progress.goTo(5); // set the progress bar to 5%`
-* `Progresso#start`: Randomly increments the progress (random interval time and random progress increment).
-* `Progresso#pause`: Pause the progress bar in it's current state
-* `Progresso#done`: Sets the progress to 100%.  Call when stuff is done loading.
-
 ## Events TODO
 Add an event listener with `.on`, remove event listener with `.off` (see example below)
 * `list:open`:
@@ -81,15 +74,14 @@ Add an event listener with `.on`, remove event listener with `.off` (see example
 * `change`:
 
 ```js TODO:
-var progress = new Progresso();
+var combobo = new Combobox();
 
-progress
+combobo
   .on('change', function () {
     console.log('stuff has changed and stuff');
   })
-  .on('complete', function () {
-    console.log('loading complete!');
-    progresso.off('change');
+  .on('selection', function () {
+    console.log('selection made!');
   });
 ```
 
