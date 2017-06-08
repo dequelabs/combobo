@@ -265,8 +265,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               preventDefault: true
             }, {
               keys: ['enter'],
-              callback: function callback() {
-                return _this4.select();
+              callback: function callback(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                _this4.select();
               }
             }, {
               keys: ['escape'],
@@ -3604,12 +3606,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.removeListener = noop;
       process.removeAllListeners = noop;
       process.emit = noop;
-      process.prependListener = noop;
-      process.prependOnceListener = noop;
-
-      process.listeners = function (name) {
-        return [];
-      };
 
       process.binding = function (name) {
         throw new Error('process.binding is not supported');

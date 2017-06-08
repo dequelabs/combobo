@@ -190,7 +190,11 @@ module.exports = class Combobox {
       preventDefault: true
     }, {
       keys: ['enter'],
-      callback: () => this.select()
+      callback: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.select();
+      }
     }, {
       keys: ['escape'],
       callback: () => this.closeList(true)
