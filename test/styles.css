@@ -131,7 +131,8 @@ button:active {
   text-decoration: underline;
 }
 
-.option:before {
+.multiselect .option:before,
+.multiselect-with-groups .option:before {
   content: '';
   display:inline-block;
   width: 13px;
@@ -140,7 +141,8 @@ button:active {
   margin-right: 7px;
 }
 
-.option:after {
+.multiselect .option:after,
+.multiselect-with-groups .option:after {
     /*Add another block-level blank space*/
     content: '';
     display: none;
@@ -158,7 +160,8 @@ button:active {
     transform: rotate(45deg);
 }
 
-.option.selected:after {
+.multiselect .option.selected:after,
+.multiselect-with-groups .option.selected:after {
   display:inline-block;
   left: 12px;
   position: absolute;
