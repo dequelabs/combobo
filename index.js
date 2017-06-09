@@ -19,6 +19,7 @@ const keyvent = require('./lib/keyvent');
 const isWithin = require('./lib/is-within');
 const isInView = require('./lib/is-in-view');
 const elHandler = require('./lib/element-handler');
+const isElementInView = require('./lib/is-element-in-view');
 
 const defaults = {
   input: '.combobox',
@@ -181,6 +182,16 @@ module.exports = class Combobox {
       keys: ['up', 'down'],
       callback: (e, k) => {
         if (this.isOpen) {
+          // Dectecting if element is inView
+          this.currentOpts.forEach((opt) => {
+            if (!isElementInView(opt, this.list).bottom) {
+              console.log('Not in view');
+              if (opt.className === 'active') {
+                console.log('Not in view and has active class');
+              }
+            }
+          });
+
           // if typing filtered out the pseudo-current option
           if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0, true); }
           return this.goTo(k === 'down' ? 'next' : 'prev', true);
@@ -365,7 +376,7 @@ module.exports = class Combobox {
     this.currentOption = this.currentOpts[option];
     // show pseudo focus styles
     this.pseudoFocus();
-    if (fromKey) { this.ensureVisible(); }
+    // if (fromKey) { this.ensureVisible(); }
     return this;
   }
 
