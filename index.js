@@ -17,8 +17,8 @@ const rndid = require('./lib/rndid');
 const filters = require('./lib/filters');
 const keyvent = require('./lib/keyvent');
 const isWithin = require('./lib/is-within');
-const isInView = require('./lib/is-in-view');
 const elHandler = require('./lib/element-handler');
+const scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
 
 const defaults = {
   input: '.combobox',
@@ -197,7 +197,10 @@ module.exports = class Combobox {
       }
     }, {
       keys: ['escape'],
-      callback: () => this.closeList(true)
+      callback: (e) => {
+        e.stopPropagation();
+        this.closeList(true);
+      }
     }, {
       keys: ['backspace'],
       callback: () => {
@@ -365,7 +368,12 @@ module.exports = class Combobox {
     this.currentOption = this.currentOpts[option];
     // show pseudo focus styles
     this.pseudoFocus();
-    if (fromKey) { this.ensureVisible(); }
+    // Dectecting if element is inView and scroll to it.
+    this.currentOpts.forEach((opt) => {
+      if (opt.classList.contains('active')) {
+        scrollIntoViewIfNeeded(opt, false);
+      }
+    });
     return this;
   }
 
@@ -392,10 +400,5 @@ module.exports = class Combobox {
       this.currentOption = option;
       this.emit('change');
     }
-  }
-
-  ensureVisible() {
-    if (isInView(this.currentOption)) { return; }
-    this.list.scrollTop = this.currentOption.offsetTop;
   }
 };
