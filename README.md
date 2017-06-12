@@ -19,11 +19,11 @@ Just include `combobo.js`.
 ```
 
 ## Options
-* `input` (_Classname_): Class of the input element.
+* `input` (_HTMLElement|String_): The selector for the input (combobox) element
   * Defaults to `.combobox`
-* `list` (_Classname_): Class of the list element.
+* `list` (_HTMLElement|String_): The selector for the list of options element.
   * Defaults to `.listbox`
-* `options` (_Classname_): Class of each option in the list.
+* `options` (_HTMLElement|String_): The selector for the option element.
   * Defaults to `.option`
 * `groups` (_Boolean_): Determines whether or not that this option list has optgroups
 * `openClass` (_Classname_): Class name that gets added when list is open.
