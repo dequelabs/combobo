@@ -19,11 +19,11 @@ Just include `combobo.js`.
 ```
 
 ## Options
-* `input` (_HTMLElement|String_): The selector for the input (combobox) element
+* `input` (_HTMLElement|String_): The selector for the input (combobox) element or the input element reference.
   * Defaults to `.combobox`
-* `list` (_HTMLElement|String_): The selector for the list of options element.
+* `list` (_HTMLElement|String_): The selector for the list element or the list element reference.
   * Defaults to `.listbox`
-* `options` (_HTMLElement|String_): The selector for the option element.
+* `options` (_HTMLElement|String_): The selector for the option elements (qualified within the list) or the option element references.
   * Defaults to `.option`
 * `groups` (_Boolean_): Determines whether or not that this option list has optgroups
 * `openClass` (_Classname_): Class name that gets added when list is open.
@@ -32,17 +32,18 @@ Just include `combobo.js`.
   * Defaults to `active`
 * `selectedClass` (_Classname_): Class name that gets added when list item is selected
   * Defaults to `selectedClass`
-* `useLiveRegion` (_Boolean_): Determines whether or not to use Live Region
+* `useLiveRegion` (_Boolean_): Determines whether or not to use Live Region (if `false`, `aria-activedescendant` will be used instead)
   * Defaults to `true`
 * `multiselect` (_Boolean_): Determines whether or not to enable multiselect features
   * Defaults to `false`
 * `noResultsText` (_String_): Sets text for when there are no matches
-* `selectionValue` (_Function_): Allows to add customized views for multiselected items for input.
-* `optionValue` (_Function_): Allows to add customized highlighting features to each option that matches
-* `announcement` (_Function_): Announcement of currently selected items in list.
-* `filter` (_String_): String that sets how handle the filter
-  * Defaults to contains
-  * Other options: 'starts-with', 'equals', or funk
+* `selectionValue` (_Function_): Allows to add customized values for the input upon selection.
+* `optionValue` (_Function_): Allows to add customized markup to each option in the list.
+* `announcement` (_Function_): Announcement of currently selected items in list. The function accepts 1 argumet which is the number of options selected.
+  * Defaults to `function (n) { return n + ' options available'; }`
+* `filter` (_String|Function_): String that sets how handle the filter or a function that returns the filtered options.
+  * Defaults to `'contains'`
+  * Other out-of-the-box options: `'starts-with'`, `'equals'`
 
 ### Example Combobo call with options
 
