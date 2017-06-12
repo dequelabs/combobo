@@ -197,7 +197,10 @@ module.exports = class Combobox {
       }
     }, {
       keys: ['escape'],
-      callback: () => this.closeList(true)
+      callback: (e) => {
+        e.stopPropagation();
+        this.closeList(true);
+      }
     }, {
       keys: ['backspace'],
       callback: () => {

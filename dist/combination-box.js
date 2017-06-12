@@ -272,8 +272,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
             }, {
               keys: ['escape'],
-              callback: function callback() {
-                return _this4.closeList(true);
+              callback: function callback(e) {
+                e.stopPropagation();
+                _this4.closeList(true);
               }
             }, {
               keys: ['backspace'],
