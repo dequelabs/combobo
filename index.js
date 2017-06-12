@@ -18,7 +18,6 @@ const filters = require('./lib/filters');
 const keyvent = require('./lib/keyvent');
 const isWithin = require('./lib/is-within');
 const elHandler = require('./lib/element-handler');
-const isElementInView = require('./lib/is-element-in-view');
 const scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
 
 const defaults = {
@@ -368,11 +367,8 @@ module.exports = class Combobox {
     this.pseudoFocus();
     // Dectecting if element is inView and scroll to it.
     this.currentOpts.forEach((opt) => {
-      if (!isElementInView(opt, this.list).top) {
-        if (opt.classList.contains('active')) {
-          const activeNode = document.querySelector('.active');
-          scrollIntoViewIfNeeded(activeNode, false);
-        }
+      if (opt.classList.contains('active')) {
+        scrollIntoViewIfNeeded(opt, false);
       }
     });
     return this;

@@ -56,7 +56,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var keyvent = require('./lib/keyvent');
       var isWithin = require('./lib/is-within');
       var elHandler = require('./lib/element-handler');
-      var isElementInView = require('./lib/is-element-in-view');
       var scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
 
       var defaults = {
@@ -447,8 +446,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "goTo",
           value: function goTo(option, fromKey) {
-            var _this7 = this;
-
             if (typeof option === 'string') {
               // 'prev' or 'next'
               var optIndex = this.getOptIndex();
@@ -468,11 +465,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.pseudoFocus();
             // Dectecting if element is inView and scroll to it.
             this.currentOpts.forEach(function (opt) {
-              if (!isElementInView(opt, _this7.list).top) {
-                if (opt.classList.contains('active')) {
-                  var activeNode = document.querySelector('.active');
-                  scrollIntoViewIfNeeded(activeNode, false);
-                }
+              if (opt.classList.contains('active')) {
+                scrollIntoViewIfNeeded(opt, false);
               }
             });
             return this;
@@ -509,7 +503,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return Combobox;
       }();
-    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-element-in-view": 4, "./lib/is-within": 5, "./lib/keyvent": 7, "./lib/rndid": 8, "classlist": 16, "component-emitter": 17, "extend-shallow": 19, "live-region": 22, "scroll-into-view-if-needed": 25 }], 2: [function (require, module, exports) {
+    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-within": 4, "./lib/keyvent": 6, "./lib/rndid": 7, "classlist": 15, "component-emitter": 16, "extend-shallow": 18, "live-region": 21, "scroll-into-view-if-needed": 24 }], 2: [function (require, module, exports) {
       'use strict';
 
       var select = require('./select');
@@ -522,7 +516,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return l;
       };
-    }, { "./select": 9 }], 3: [function (require, module, exports) {
+    }, { "./select": 8 }], 3: [function (require, module, exports) {
       'use strict';
 
       var val = require('./value');
@@ -544,68 +538,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           });
         }
       };
-    }, { "./value": 10 }], 4: [function (require, module, exports) {
-      'use strict';
-
-      /**
-       * @typedef {Object} ElementInView
-       * @property {boolean} top Top is in view
-       * @property {boolean} bottom Bottom is in view
-       * @property {boolean} left Left is in view
-       * @property {boolean} right Right is in view
-       * @property {boolean} body Body is in view
-       */
-
-      function getParentRect(parent) {
-        if (parent instanceof HTMLElement) {
-          return parent.getBoundingClientRect();
-        }
-
-        return {
-          top: 0,
-          left: 0,
-          right: window.innerWidth,
-          bottom: window.innerHeight
-        };
-      }
-
-      /**
-       * Detect if element is in view
-       *
-       * @method isElementInView
-       * @param  {HTMLElement} element Target element
-       * @param  {HTMLElement} [parentElement] Container element, default is widnow
-       * @return {ElementInView}
-       */
-      function isElementInView(element, parentElement) {
-        if (element instanceof HTMLElement === false) {
-          throw TypeError('`element` requires a HTMLElement, but saw' + String(element));
-        }
-
-        var top = void 0,
-            bottom = void 0,
-            left = void 0,
-            right = void 0,
-            body = void 0;
-
-        var rect = element.getBoundingClientRect();
-        var parentRect = getParentRect(parentElement);
-
-        top = rect.top >= parentRect.top && rect.left < parentRect.right && rect.right > parentRect.left && rect.top < parentRect.bottom;
-
-        left = rect.left < parentRect.right && rect.left >= parentRect.left && rect.top < parentRect.bottom && rect.bottom > parentRect.top;
-
-        bottom = rect.bottom > parentRect.top && rect.bottom <= parentRect.bottom && rect.left < parentRect.right && rect.right > parentRect.left;
-
-        right = rect.bottom > parentRect.top && rect.top < parentRect.bottom && rect.right > parentRect.left && rect.right <= parentRect.right;
-
-        body = top || left || bottom || right || rect.left <= parentRect.left && rect.top <= parentRect.top && rect.bottom >= parentRect.bottom && rect.right >= parentRect.right;
-
-        return { top: top, bottom: bottom, left: left, right: right, body: body };
-      }
-
-      module.exports = isElementInView;
-    }, {}], 5: [function (require, module, exports) {
+    }, { "./value": 9 }], 4: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (target, els, checkSelf) {
@@ -625,7 +558,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return false;
       };
-    }, {}], 6: [function (require, module, exports) {
+    }, {}], 5: [function (require, module, exports) {
       'use strict';
 
       module.exports = {
@@ -639,7 +572,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         39: 'right',
         40: 'down'
       };
-    }, {}], 7: [function (require, module, exports) {
+    }, {}], 6: [function (require, module, exports) {
       'use strict';
 
       var keymap = require('./keymap');
@@ -692,7 +625,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.press = function (el, config) {
         return exports.attach('keypress', el, config);
       };
-    }, { "./keymap": 6 }], 8: [function (require, module, exports) {
+    }, { "./keymap": 5 }], 7: [function (require, module, exports) {
       'use strict';
 
       var rndm = require('rndm');
@@ -708,7 +641,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return id;
       }
-    }, { "rndm": 24 }], 9: [function (require, module, exports) {
+    }, { "rndm": 23 }], 8: [function (require, module, exports) {
       'use strict';
 
       exports = module.exports = function (selector, context) {
@@ -720,13 +653,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         context = context || document;
         return Array.prototype.slice.call(context.querySelectorAll(selector));
       };
-    }, {}], 10: [function (require, module, exports) {
+    }, {}], 9: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (el) {
         return el.getAttribute('data-value') || el.innerText;
       };
-    }, {}], 11: [function (require, module, exports) {
+    }, {}], 10: [function (require, module, exports) {
       var BezierEasing = require('bezier-easing');
 
       // Predefined set of animations. Similar to CSS easing functions
@@ -834,7 +767,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         };
       }
-    }, { "bezier-easing": 14 }], 12: [function (require, module, exports) {
+    }, { "bezier-easing": 13 }], 11: [function (require, module, exports) {
       (function (global) {
         'use strict';
 
@@ -1306,7 +1239,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return keys;
         };
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "util/": 29 }], 13: [function (require, module, exports) {
+    }, { "util/": 28 }], 12: [function (require, module, exports) {
       'use strict';
 
       exports.byteLength = byteLength;
@@ -1421,7 +1354,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return parts.join('');
       }
-    }, {}], 14: [function (require, module, exports) {
+    }, {}], 13: [function (require, module, exports) {
       /**
        * https://github.com/gre/bezier-easing
        * BezierEasing - use bezier curve for transition easing function
@@ -1538,7 +1471,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return calcBezier(getTForX(x), mY1, mY2);
         };
       };
-    }, {}], 15: [function (require, module, exports) {
+    }, {}], 14: [function (require, module, exports) {
       /*!
        * The buffer module from node.js, for the browser.
        *
@@ -3197,7 +3130,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function numberIsNaN(obj) {
         return obj !== obj; // eslint-disable-line no-self-compare
       }
-    }, { "base64-js": 13, "ieee754": 20 }], 16: [function (require, module, exports) {
+    }, { "base64-js": 12, "ieee754": 19 }], 15: [function (require, module, exports) {
       'use strict';
 
       module.exports = ClassList;
@@ -3310,7 +3243,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       ClassList.prototype.toString = function () {
         return arr.join.call(this, ' ');
       };
-    }, { "component-indexof": 18, "trim": 26 }], 17: [function (require, module, exports) {
+    }, { "component-indexof": 17, "trim": 25 }], 16: [function (require, module, exports) {
 
       /**
        * Expose `Emitter`.
@@ -3469,7 +3402,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       Emitter.prototype.hasListeners = function (event) {
         return !!this.listeners(event).length;
       };
-    }, {}], 18: [function (require, module, exports) {
+    }, {}], 17: [function (require, module, exports) {
       module.exports = function (arr, obj) {
         if (arr.indexOf) return arr.indexOf(obj);
         for (var i = 0; i < arr.length; ++i) {
@@ -3477,7 +3410,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         return -1;
       };
-    }, {}], 19: [function (require, module, exports) {
+    }, {}], 18: [function (require, module, exports) {
       'use strict';
 
       var isObject = require('is-extendable');
@@ -3513,7 +3446,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function hasOwn(obj, key) {
         return Object.prototype.hasOwnProperty.call(obj, key);
       }
-    }, { "is-extendable": 21 }], 20: [function (require, module, exports) {
+    }, { "is-extendable": 20 }], 19: [function (require, module, exports) {
       exports.read = function (buffer, offset, isLE, mLen, nBytes) {
         var e, m;
         var eLen = nBytes * 8 - mLen - 1;
@@ -3598,7 +3531,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         buffer[offset + i - d] |= s * 128;
       };
-    }, {}], 21: [function (require, module, exports) {
+    }, {}], 20: [function (require, module, exports) {
       /*!
        * is-extendable <https://github.com/jonschlinkert/is-extendable>
        *
@@ -3611,7 +3544,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       module.exports = function isExtendable(val) {
         return typeof val !== 'undefined' && val !== null && ((typeof val === "undefined" ? "undefined" : _typeof(val)) === 'object' || typeof val === 'function');
       };
-    }, {}], 22: [function (require, module, exports) {
+    }, {}], 21: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -3685,7 +3618,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (typeof module !== 'undefined') {
         module.exports = LiveRegion;
       }
-    }, {}], 23: [function (require, module, exports) {
+    }, {}], 22: [function (require, module, exports) {
       // shim for using process in browser
       var process = module.exports = {};
 
@@ -3871,7 +3804,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.umask = function () {
         return 0;
       };
-    }, {}], 24: [function (require, module, exports) {
+    }, {}], 23: [function (require, module, exports) {
       (function (Buffer) {
 
         var assert = require('assert');
@@ -3900,7 +3833,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         }
       }).call(this, require("buffer").Buffer);
-    }, { "assert": 12, "buffer": 15 }], 25: [function (require, module, exports) {
+    }, { "assert": 11, "buffer": 14 }], 24: [function (require, module, exports) {
       'use strict';
 
       Object.defineProperty(exports, "__esModule", {
@@ -3980,7 +3913,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function _interopRequireDefault(obj) {
         return obj && obj.__esModule ? obj : { default: obj };
       }
-    }, { "amator": 11 }], 26: [function (require, module, exports) {
+    }, { "amator": 10 }], 25: [function (require, module, exports) {
 
       exports = module.exports = trim;
 
@@ -3995,7 +3928,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.right = function (str) {
         return str.replace(/\s*$/, '');
       };
-    }, {}], 27: [function (require, module, exports) {
+    }, {}], 26: [function (require, module, exports) {
       if (typeof Object.create === 'function') {
         // implementation from standard node.js 'util' module
         module.exports = function inherits(ctor, superCtor) {
@@ -4019,11 +3952,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctor.prototype.constructor = ctor;
         };
       }
-    }, {}], 28: [function (require, module, exports) {
+    }, {}], 27: [function (require, module, exports) {
       module.exports = function isBuffer(arg) {
         return arg && (typeof arg === "undefined" ? "undefined" : _typeof(arg)) === 'object' && typeof arg.copy === 'function' && typeof arg.fill === 'function' && typeof arg.readUInt8 === 'function';
       };
-    }, {}], 29: [function (require, module, exports) {
+    }, {}], 28: [function (require, module, exports) {
       (function (process, global) {
         // Copyright Joyent, Inc. and other Node contributors.
         //
@@ -4570,5 +4503,5 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return Object.prototype.hasOwnProperty.call(obj, prop);
         }
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "./support/isBuffer": 28, "_process": 23, "inherits": 27 }] }, {}, [1])(1);
+    }, { "./support/isBuffer": 27, "_process": 22, "inherits": 26 }] }, {}, [1])(1);
 });
