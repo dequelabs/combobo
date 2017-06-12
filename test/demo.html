@@ -228,14 +228,14 @@
               return wrapNum(option.innerText, inputVal);
             }
           }),
-          'singleWithGroups': new Combobox({
+          'single-with-groups': new Combobox({
             input: '#combobox-single-with-groups',
             list: '.categories .listbox',
             groups: '.optgroup',
             activeClass: 'active',
             noResultsText: 'No results found.',
             optionValue: (option) => {
-              var inputVal = box.singleWithGroups.input.value;
+              var inputVal = box['single-with-groups'].input.value;
               return wrapNum(option.innerText, inputVal);
             }
           }),

@@ -20,6 +20,7 @@ const isWithin = require('./lib/is-within');
 const isInView = require('./lib/is-in-view');
 const elHandler = require('./lib/element-handler');
 const isElementInView = require('./lib/is-element-in-view');
+const scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
 
 const defaults = {
   input: '.combobox',
@@ -182,15 +183,6 @@ module.exports = class Combobox {
       keys: ['up', 'down'],
       callback: (e, k) => {
         if (this.isOpen) {
-          // Dectecting if element is inView
-          this.currentOpts.forEach((opt) => {
-            if (!isElementInView(opt, this.list).bottom) {
-              console.log('Not in view');
-              if (opt.className === 'active') {
-                console.log('Not in view and has active class');
-              }
-            }
-          });
 
           // if typing filtered out the pseudo-current option
           if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0, true); }
@@ -223,6 +215,7 @@ module.exports = class Combobox {
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
       const cachedVal = this.cachedInputValue;
+
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
 
       // Handles if there is a fresh selection
@@ -377,6 +370,15 @@ module.exports = class Combobox {
     // show pseudo focus styles
     this.pseudoFocus();
     // if (fromKey) { this.ensureVisible(); }
+    // Dectecting if element is inView and scroll to it.
+    this.currentOpts.forEach((opt) => {
+      if (!isElementInView(opt, this.list).top) {
+        if (opt.classList.contains('active')) {
+          const activeNode = document.querySelector('.active');
+          scrollIntoViewIfNeeded(activeNode, false);
+        }
+      }
+    });
     return this;
   }
 
