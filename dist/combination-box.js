@@ -256,7 +256,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               keys: ['up', 'down'],
               callback: function callback(e, k) {
                 if (_this4.isOpen) {
-
                   // if typing filtered out the pseudo-current option
                   if (_this4.currentOpts.indexOf(_this4.currentOption) === -1) {
                     return _this4.goTo(0, true);
@@ -292,7 +291,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             keyvent.up(this.input, function (e) {
               var filter = _this4.config.filter;
               var cachedVal = _this4.cachedInputValue;
-
               if (ignores.indexOf(e.which) > -1 || !filter) {
                 return;
               }
@@ -469,7 +467,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.currentOption = this.currentOpts[option];
             // show pseudo focus styles
             this.pseudoFocus();
-            // if (fromKey) { this.ensureVisible(); }
             // Dectecting if element is inView and scroll to it.
             this.currentOpts.forEach(function (opt) {
               if (!isElementInView(opt, _this7.list).top) {
@@ -508,14 +505,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.currentOption = option;
               this.emit('change');
             }
-          }
-        }, {
-          key: "ensureVisible",
-          value: function ensureVisible() {
-            if (isInView(this.currentOption)) {
-              return;
-            }
-            this.list.scrollTop = this.currentOption.offsetTop;
           }
         }]);
 

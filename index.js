@@ -183,7 +183,6 @@ module.exports = class Combobox {
       keys: ['up', 'down'],
       callback: (e, k) => {
         if (this.isOpen) {
-
           // if typing filtered out the pseudo-current option
           if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0, true); }
           return this.goTo(k === 'down' ? 'next' : 'prev', true);
@@ -215,7 +214,6 @@ module.exports = class Combobox {
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
       const cachedVal = this.cachedInputValue;
-
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
 
       // Handles if there is a fresh selection
@@ -369,7 +367,6 @@ module.exports = class Combobox {
     this.currentOption = this.currentOpts[option];
     // show pseudo focus styles
     this.pseudoFocus();
-    // if (fromKey) { this.ensureVisible(); }
     // Dectecting if element is inView and scroll to it.
     this.currentOpts.forEach((opt) => {
       if (!isElementInView(opt, this.list).top) {
@@ -405,10 +402,5 @@ module.exports = class Combobox {
       this.currentOption = option;
       this.emit('change');
     }
-  }
-
-  ensureVisible() {
-    if (isInView(this.currentOption)) { return; }
-    this.list.scrollTop = this.currentOption.offsetTop;
   }
 };
