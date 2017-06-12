@@ -65,7 +65,7 @@ var combobo = new Combobox({
 });
 ```
 
-## Events TODO
+## Events
 Add an event listener with `.on`, remove event listener with `.off` (see example below)
 * `list:open`: Fires when the list is in an open state.
 * `list:close`: Fires when the list is in a closed state.
@@ -73,7 +73,7 @@ Add an event listener with `.on`, remove event listener with `.off` (see example
 * `selection`: Fires when an item in the list is selected.
 * `change`: Fires after a selection is made.
 
-```js TODO:
+```js
 var combobo = new Combobox();
 
 combobo
