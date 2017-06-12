@@ -39,7 +39,7 @@ Just include `combobo.js`.
 * `noResultsText` (_String_): Sets text for when there are no matches
 * `selectionValue` (_Function_): Allows to add customized views for multiselected items for input.
 * `optionValue` (_Function_): Allows to add customized highlighting features to each option that matches
-* `announcement` (_Function_): N/A
+* `announcement` (_Function_): Announcement of currently selected items in list.
 * `filter` (_String_): String that sets how handle the filter
   * Defaults to contains
   * Other options: 'starts-with', 'equals', or funk
@@ -67,11 +67,11 @@ var combobo = new Combobox({
 
 ## Events TODO
 Add an event listener with `.on`, remove event listener with `.off` (see example below)
-* `list:open`:
-* `list:close`:
-* `deselection`:
-* `selection`:
-* `change`:
+* `list:open`: Fires when the list is in an open state.
+* `list:close`: Fires when the list is in a closed state.
+* `deselection`: Fires when a selected element is deselected.
+* `selection`: Fires when an item in the list is selected.
+* `change`: Fires after a selection is made.
 
 ```js TODO:
 var combobo = new Combobox();
