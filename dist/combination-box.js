@@ -55,7 +55,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var filters = require('./lib/filters');
       var keyvent = require('./lib/keyvent');
       var isWithin = require('./lib/is-within');
-      var isInView = require('./lib/is-in-view');
       var elHandler = require('./lib/element-handler');
       var isElementInView = require('./lib/is-element-in-view');
       var scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
@@ -510,7 +509,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return Combobox;
       }();
-    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-element-in-view": 4, "./lib/is-in-view": 5, "./lib/is-within": 6, "./lib/keyvent": 8, "./lib/rndid": 9, "classlist": 17, "component-emitter": 18, "extend-shallow": 20, "live-region": 23, "scroll-into-view-if-needed": 26 }], 2: [function (require, module, exports) {
+    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-element-in-view": 4, "./lib/is-within": 5, "./lib/keyvent": 7, "./lib/rndid": 8, "classlist": 16, "component-emitter": 17, "extend-shallow": 19, "live-region": 22, "scroll-into-view-if-needed": 25 }], 2: [function (require, module, exports) {
       'use strict';
 
       var select = require('./select');
@@ -523,7 +522,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return l;
       };
-    }, { "./select": 10 }], 3: [function (require, module, exports) {
+    }, { "./select": 9 }], 3: [function (require, module, exports) {
       'use strict';
 
       var val = require('./value');
@@ -545,7 +544,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           });
         }
       };
-    }, { "./value": 11 }], 4: [function (require, module, exports) {
+    }, { "./value": 10 }], 4: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -609,48 +608,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {}], 5: [function (require, module, exports) {
       'use strict';
 
-      function posY(elm) {
-        var test = elm,
-            top = 0;
-
-        while (!!test && test.tagName.toLowerCase() !== 'body') {
-          top += test.offsetTop;
-          test = test.offsetParent;
-        }
-
-        return top;
-      }
-
-      function viewPortHeight() {
-        var de = document.documentElement;
-
-        if (!!window.innerWidth) {
-          return window.innerHeight;
-        } else if (de && !isNaN(de.clientHeight)) {
-          return de.clientHeight;
-        }
-
-        return 0;
-      }
-
-      function scrollY() {
-        if (window.pageYOffset) {
-          return window.pageYOffset;
-        }
-        return Math.max(document.documentElement.scrollTop, document.body.scrollTop);
-      }
-
-      function checkvisible(elm) {
-        var vpH = viewPortHeight(); // Viewport Height
-        var st = scrollY(); // Scroll Top
-        var y = posY(elm);
-        return y > vpH + st;
-      }
-
-      module.exports = checkvisible;
-    }, {}], 6: [function (require, module, exports) {
-      'use strict';
-
       module.exports = function (target, els, checkSelf) {
         els = !els.length ? [els] : els;
 
@@ -668,7 +625,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return false;
       };
-    }, {}], 7: [function (require, module, exports) {
+    }, {}], 6: [function (require, module, exports) {
       'use strict';
 
       module.exports = {
@@ -682,7 +639,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         39: 'right',
         40: 'down'
       };
-    }, {}], 8: [function (require, module, exports) {
+    }, {}], 7: [function (require, module, exports) {
       'use strict';
 
       var keymap = require('./keymap');
@@ -735,7 +692,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.press = function (el, config) {
         return exports.attach('keypress', el, config);
       };
-    }, { "./keymap": 7 }], 9: [function (require, module, exports) {
+    }, { "./keymap": 6 }], 8: [function (require, module, exports) {
       'use strict';
 
       var rndm = require('rndm');
@@ -751,7 +708,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return id;
       }
-    }, { "rndm": 25 }], 10: [function (require, module, exports) {
+    }, { "rndm": 24 }], 9: [function (require, module, exports) {
       'use strict';
 
       exports = module.exports = function (selector, context) {
@@ -763,13 +720,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         context = context || document;
         return Array.prototype.slice.call(context.querySelectorAll(selector));
       };
-    }, {}], 11: [function (require, module, exports) {
+    }, {}], 10: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (el) {
         return el.getAttribute('data-value') || el.innerText;
       };
-    }, {}], 12: [function (require, module, exports) {
+    }, {}], 11: [function (require, module, exports) {
       var BezierEasing = require('bezier-easing');
 
       // Predefined set of animations. Similar to CSS easing functions
@@ -877,7 +834,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         };
       }
-    }, { "bezier-easing": 15 }], 13: [function (require, module, exports) {
+    }, { "bezier-easing": 14 }], 12: [function (require, module, exports) {
       (function (global) {
         'use strict';
 
@@ -1349,7 +1306,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return keys;
         };
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "util/": 30 }], 14: [function (require, module, exports) {
+    }, { "util/": 29 }], 13: [function (require, module, exports) {
       'use strict';
 
       exports.byteLength = byteLength;
@@ -1464,7 +1421,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return parts.join('');
       }
-    }, {}], 15: [function (require, module, exports) {
+    }, {}], 14: [function (require, module, exports) {
       /**
        * https://github.com/gre/bezier-easing
        * BezierEasing - use bezier curve for transition easing function
@@ -1581,7 +1538,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return calcBezier(getTForX(x), mY1, mY2);
         };
       };
-    }, {}], 16: [function (require, module, exports) {
+    }, {}], 15: [function (require, module, exports) {
       /*!
        * The buffer module from node.js, for the browser.
        *
@@ -3240,7 +3197,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function numberIsNaN(obj) {
         return obj !== obj; // eslint-disable-line no-self-compare
       }
-    }, { "base64-js": 14, "ieee754": 21 }], 17: [function (require, module, exports) {
+    }, { "base64-js": 13, "ieee754": 20 }], 16: [function (require, module, exports) {
       'use strict';
 
       module.exports = ClassList;
@@ -3353,7 +3310,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       ClassList.prototype.toString = function () {
         return arr.join.call(this, ' ');
       };
-    }, { "component-indexof": 19, "trim": 27 }], 18: [function (require, module, exports) {
+    }, { "component-indexof": 18, "trim": 26 }], 17: [function (require, module, exports) {
 
       /**
        * Expose `Emitter`.
@@ -3512,7 +3469,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       Emitter.prototype.hasListeners = function (event) {
         return !!this.listeners(event).length;
       };
-    }, {}], 19: [function (require, module, exports) {
+    }, {}], 18: [function (require, module, exports) {
       module.exports = function (arr, obj) {
         if (arr.indexOf) return arr.indexOf(obj);
         for (var i = 0; i < arr.length; ++i) {
@@ -3520,7 +3477,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         return -1;
       };
-    }, {}], 20: [function (require, module, exports) {
+    }, {}], 19: [function (require, module, exports) {
       'use strict';
 
       var isObject = require('is-extendable');
@@ -3556,7 +3513,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function hasOwn(obj, key) {
         return Object.prototype.hasOwnProperty.call(obj, key);
       }
-    }, { "is-extendable": 22 }], 21: [function (require, module, exports) {
+    }, { "is-extendable": 21 }], 20: [function (require, module, exports) {
       exports.read = function (buffer, offset, isLE, mLen, nBytes) {
         var e, m;
         var eLen = nBytes * 8 - mLen - 1;
@@ -3641,7 +3598,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         buffer[offset + i - d] |= s * 128;
       };
-    }, {}], 22: [function (require, module, exports) {
+    }, {}], 21: [function (require, module, exports) {
       /*!
        * is-extendable <https://github.com/jonschlinkert/is-extendable>
        *
@@ -3654,7 +3611,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       module.exports = function isExtendable(val) {
         return typeof val !== 'undefined' && val !== null && ((typeof val === "undefined" ? "undefined" : _typeof(val)) === 'object' || typeof val === 'function');
       };
-    }, {}], 23: [function (require, module, exports) {
+    }, {}], 22: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -3728,7 +3685,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (typeof module !== 'undefined') {
         module.exports = LiveRegion;
       }
-    }, {}], 24: [function (require, module, exports) {
+    }, {}], 23: [function (require, module, exports) {
       // shim for using process in browser
       var process = module.exports = {};
 
@@ -3914,7 +3871,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.umask = function () {
         return 0;
       };
-    }, {}], 25: [function (require, module, exports) {
+    }, {}], 24: [function (require, module, exports) {
       (function (Buffer) {
 
         var assert = require('assert');
@@ -3943,7 +3900,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         }
       }).call(this, require("buffer").Buffer);
-    }, { "assert": 13, "buffer": 16 }], 26: [function (require, module, exports) {
+    }, { "assert": 12, "buffer": 15 }], 25: [function (require, module, exports) {
       'use strict';
 
       Object.defineProperty(exports, "__esModule", {
@@ -4023,7 +3980,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function _interopRequireDefault(obj) {
         return obj && obj.__esModule ? obj : { default: obj };
       }
-    }, { "amator": 12 }], 27: [function (require, module, exports) {
+    }, { "amator": 11 }], 26: [function (require, module, exports) {
 
       exports = module.exports = trim;
 
@@ -4038,7 +3995,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.right = function (str) {
         return str.replace(/\s*$/, '');
       };
-    }, {}], 28: [function (require, module, exports) {
+    }, {}], 27: [function (require, module, exports) {
       if (typeof Object.create === 'function') {
         // implementation from standard node.js 'util' module
         module.exports = function inherits(ctor, superCtor) {
@@ -4062,11 +4019,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctor.prototype.constructor = ctor;
         };
       }
-    }, {}], 29: [function (require, module, exports) {
+    }, {}], 28: [function (require, module, exports) {
       module.exports = function isBuffer(arg) {
         return arg && (typeof arg === "undefined" ? "undefined" : _typeof(arg)) === 'object' && typeof arg.copy === 'function' && typeof arg.fill === 'function' && typeof arg.readUInt8 === 'function';
       };
-    }, {}], 30: [function (require, module, exports) {
+    }, {}], 29: [function (require, module, exports) {
       (function (process, global) {
         // Copyright Joyent, Inc. and other Node contributors.
         //
@@ -4613,5 +4570,5 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return Object.prototype.hasOwnProperty.call(obj, prop);
         }
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "./support/isBuffer": 29, "_process": 24, "inherits": 28 }] }, {}, [1])(1);
+    }, { "./support/isBuffer": 28, "_process": 23, "inherits": 27 }] }, {}, [1])(1);
 });

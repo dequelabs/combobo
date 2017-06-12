@@ -17,7 +17,6 @@ const rndid = require('./lib/rndid');
 const filters = require('./lib/filters');
 const keyvent = require('./lib/keyvent');
 const isWithin = require('./lib/is-within');
-const isInView = require('./lib/is-in-view');
 const elHandler = require('./lib/element-handler');
 const isElementInView = require('./lib/is-element-in-view');
 const scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
