@@ -12,15 +12,15 @@ gulp.task('build', ['babelify']);
 
 gulp.task('browserify', () => {
   return browserify('./index.js', {
-    standalone: 'Combobox'
+    standalone: 'Combobo'
   })
     .bundle()
-    .pipe(source('combination-box.js'))
+    .pipe(source('combobo.js'))
     .pipe(gulp.dest('dist'));
 });
 
 gulp.task('babelify', ['browserify'], () => {
-  return gulp.src('./dist/combination-box.js')
+  return gulp.src('./dist/combobo.js')
     .pipe(babel({
       presets: ['es2015']
     }))
@@ -34,7 +34,9 @@ gulp.task('watch', () => {
 gulp.task('test', ['build'], () => {
   return gulp
     .src('./test/runner.html')
-    .pipe(mochaPhantomJS());
+    .pipe(mochaPhantomJS({
+      reporter: 'nyan'
+    }));
 });
 
 gulp.task('test-browser', ['build'], () => gulp.src('./test/runner.html').pipe(o()));

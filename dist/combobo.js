@@ -20,7 +20,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       g = self;
     } else {
       g = this;
-    }g.Combobox = f();
+    }g.Combobo = f();
   }
 })(function () {
   var define, module, exports;return function e(t, n, r) {
@@ -84,10 +84,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       };
 
       module.exports = function () {
-        function Combobox(config) {
+        function Combobo(config) {
           var _this = this;
 
-          _classCallCheck(this, Combobox);
+          _classCallCheck(this, Combobo);
 
           config = config || {};
 
@@ -124,7 +124,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.initEvents();
         }
 
-        _createClass(Combobox, [{
+        _createClass(Combobo, [{
           key: "initAttrs",
           value: function initAttrs() {
             this.input.setAttribute('role', 'combobox');
@@ -357,7 +357,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           key: "announceCount",
           value: function announceCount() {
             if (this.config.announcement) {
-              this.liveRegion.announce(this.config.announcement(this.currentOpts.length));
+              this.liveRegion.announce(this.config.announcement(this.currentOpts.length), 500);
             }
 
             return this;
@@ -492,7 +492,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
 
               if (this.liveRegion) {
-                this.liveRegion.announce(this.currentOption.innerText);
+                this.liveRegion.announce(this.currentOption.innerText, 500);
               } else {
                 this.input.setAttribute('aria-activedescendant', option.id);
               }
@@ -502,7 +502,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         }]);
 
-        return Combobox;
+        return Combobo;
       }();
     }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-within": 4, "./lib/keyvent": 6, "./lib/rndid": 7, "classlist": 15, "component-emitter": 16, "extend-shallow": 18, "live-region": 21, "scroll-into-view-if-needed": 24 }], 2: [function (require, module, exports) {
       'use strict';
@@ -661,10 +661,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return el.getAttribute('data-value') || el.innerText;
       };
     }, {}], 10: [function (require, module, exports) {
-      var BezierEasing = require('bezier-easing');
+      var BezierEasing = require('bezier-easing'
 
       // Predefined set of animations. Similar to CSS easing functions
-      var animations = {
+      );var animations = {
         ease: BezierEasing(0.25, 0.1, 0.25, 1),
         easeIn: BezierEasing(0.42, 0, 1, 1),
         easeOut: BezierEasing(0, 0, 0.58, 1),
@@ -701,8 +701,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         });
 
         var durationInMs = options.duration || 400;
-        var durationInFrames = Math.max(1, durationInMs * 0.06); // 0.06 because 60 frames pers 1,000 ms
-        var previousAnimationId;
+        var durationInFrames = Math.max(1, durationInMs * 0.06 // 0.06 because 60 frames pers 1,000 ms
+        );var previousAnimationId;
         var frame = 0;
 
         previousAnimationId = scheduler.next(loop);
@@ -2414,7 +2414,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function decodeCodePointsArray(codePoints) {
         var len = codePoints.length;
         if (len <= MAX_ARGUMENTS_LENGTH) {
-          return String.fromCharCode.apply(String, codePoints); // avoid extra slice()
+          return String.fromCharCode.apply(String, codePoints // avoid extra slice()
+          );
         }
 
         // Decode in chunks to avoid "call stack size exceeded".
@@ -2489,9 +2490,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         if (end < start) end = start;
 
-        var newBuf = this.subarray(start, end);
+        var newBuf = this.subarray(start, end
         // Return an augmented `Uint8Array` instance
-        newBuf.__proto__ = Buffer.prototype;
+        );newBuf.__proto__ = Buffer.prototype;
         return newBuf;
       };
 
@@ -3003,9 +3004,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       function base64clean(str) {
         // Node strips out invalid characters like \n and \t from the string, base64-js does not
-        str = str.trim().replace(INVALID_BASE64_RE, '');
+        str = str.trim().replace(INVALID_BASE64_RE, ''
         // Node converts strings with length < 2 to ''
-        if (str.length < 2) return '';
+        );if (str.length < 2) return '';
         // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
         while (str.length % 4 !== 0) {
           str = str + '=';
@@ -3026,10 +3027,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var bytes = [];
 
         for (var i = 0; i < length; ++i) {
-          codePoint = string.charCodeAt(i);
+          codePoint = string.charCodeAt(i
 
           // is surrogate component
-          if (codePoint > 0xD7FF && codePoint < 0xE000) {
+          );if (codePoint > 0xD7FF && codePoint < 0xE000) {
             // last char was a lead
             if (!leadSurrogate) {
               // no lead yet

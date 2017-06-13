@@ -37,7 +37,7 @@ const defaults = {
   filter: 'contains' // 'starts-with', 'equals', or funk
 };
 
-module.exports = class Combobox {
+module.exports = class Combobo {
   constructor(config) {
     config = config || {};
 
@@ -274,7 +274,8 @@ module.exports = class Combobox {
   announceCount() {
     if (this.config.announcement) {
       this.liveRegion.announce(
-        this.config.announcement(this.currentOpts.length)
+        this.config.announcement(this.currentOpts.length),
+        500
       );
     }
 
@@ -393,7 +394,7 @@ module.exports = class Combobox {
       if (activeClass) { Classlist(option).add(activeClass); }
 
       if (this.liveRegion) {
-        this.liveRegion.announce(this.currentOption.innerText);
+        this.liveRegion.announce(this.currentOption.innerText, 500);
       } else {
         this.input.setAttribute('aria-activedescendant', option.id);
       }

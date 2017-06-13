@@ -26,19 +26,22 @@ var MARKUP = [
   '</section>'
 ].join('');
 
-describe('Combobox', function () {
+describe('Combobo', function () {
   var fixture = document.getElementById('fixture');
   var combobox;
 
   beforeEach(function () {
     fixture.innerHTML = MARKUP;
-    combobox = new Combobox({
+    combobox = new Combobo({
       activeClass: 'active',
       options: '.wrp .listbox .option'
     });
   });
 
   afterEach(function () {
+    if (combobox.liveRegion && combobox.liveRegion.region) {
+      combobox.liveRegion.region.parentNode.removeChild(combobox.liveRegion.region);
+    }
     fixture.innerHTML = ''; // clean up
   });
   //
@@ -72,7 +75,7 @@ describe('Combobox', function () {
     assert.equal(input.getAttribute('aria-autocomplete'), 'list');
   });
 
-  describe('Combobox#openList', function () {
+  describe('Combobo#openList', function () {
     it('should add the open class to the listbox', function () {
       var listbox = combobox.list;
       assert.isFalse(listbox.classList.contains('open'));
@@ -104,7 +107,7 @@ describe('Combobox', function () {
     });
   });
 
-  describe('Combobox#closeList', function () {
+  describe('Combobo#closeList', function () {
     it('should remove the open class from the listbox', function () {
       var listbox = combobox.list;
       combobox.openList();
@@ -319,7 +322,7 @@ describe('Combobox', function () {
             describe('starts-with', function () {
               beforeEach(function () {
                 fixture.innerHTML = MARKUP;
-                combobox = new Combobox({
+                combobox = new Combobo({
                   activeClass: 'active',
                   filter: 'starts-with'
                 });
@@ -341,7 +344,7 @@ describe('Combobox', function () {
             describe('equals', function () {
               beforeEach(function () {
                 fixture.innerHTML = MARKUP;
-                combobox = new Combobox({
+                combobox = new Combobo({
                   activeClass: 'active',
                   filter: 'equals'
                 });
@@ -363,7 +366,7 @@ describe('Combobox', function () {
           describe('custom function', function () {
             beforeEach(function () {
               fixture.innerHTML = MARKUP;
-              combobox = new Combobox({
+              combobox = new Combobo({
                 activeClass: 'active',
                 filter: function (val, allOpts) {
                   return allOpts.filter(function (o) { return o.textContent === 'Frank Zappa'});
@@ -457,10 +460,10 @@ describe('Combobox', function () {
     describe('Multi-select events', function() {
       beforeEach(function () {
         fixture.innerHTML = MARKUP;
-        combobox = new Combobox({
+        combobox = new Combobo({
           activeClass: 'active',
           multiselect: true,
-          selectionValue: (selectedOptions) => {
+          selectionValue: function (selectedOptions) {
             return selectedOptions.length > 1 ?
               '{ ' + selectedOptions.length +  ' selected }' :
               selectedOptions[0].innerText.trim();

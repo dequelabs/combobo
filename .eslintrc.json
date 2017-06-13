@@ -18,6 +18,6 @@
     "it": true,
     "beforeEach": true,
     "afterEach": true,
-    "Combobox": true
+    "Combobo": true
   }
 }

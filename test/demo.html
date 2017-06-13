@@ -206,7 +206,7 @@
       <button type="button">Submit</button>
     </section>
     <footer></footer>
-    <script src="../dist/combination-box.js" charset="utf-8"></script>
+    <script src="../dist/combobo.js" charset="utf-8"></script>
     <script>
       (function () {
         function wrapNum(str, val) {
@@ -218,7 +218,7 @@
         }
 
         var box = {
-          'single': new Combobox({
+          'single': new Combobo({
             input: '#combobox-single',
             list: '.bands .listbox',
             activeClass: 'active',
@@ -228,7 +228,7 @@
               return wrapNum(option.innerText, inputVal);
             }
           }),
-          'single-with-groups': new Combobox({
+          'single-with-groups': new Combobo({
             input: '#combobox-single-with-groups',
             list: '.categories .listbox',
             groups: '.optgroup',
@@ -239,7 +239,7 @@
               return wrapNum(option.innerText, inputVal);
             }
           }),
-          'multiselect': new Combobox({
+          'multiselect': new Combobo({
             input: '#combobox-multiselect',
             list: '.multiselect .listbox',
             activeClass: 'active',
@@ -256,7 +256,7 @@
               return wrapNum(option.innerText, inputVal)
             }
           }),
-          'multiselect-with-groups': new Combobox({
+          'multiselect-with-groups': new Combobo({
             input: '#combobox-multiselect-with-groups',
             list: '.multiselect-with-groups .listbox',
             activeClass: 'active',

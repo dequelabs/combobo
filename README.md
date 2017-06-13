@@ -1,21 +1,32 @@
 # Combobo
+
 Combination Box built with accessibility in mind.
 
 ## Installation
+
 ```bash
 $ npm install combobo
 ```
 
 ## Usage
+
+### In the browser
 Just include `combobo.js`.
 
 ```html
 <body>
-  <script src="node_modules/combobo.js"></script>
+  <script src="./node_modules/combobo/dist/combobo.js"></script>
   <script>
-    var combobo = new Combobox();
+    var combobo = new Combobo();
   </script>
 </body>
+```
+
+### With browserify
+
+```js
+const Combobo = require('combobo');
+const combobo = new Combobo();
 ```
 
 ## Options
@@ -48,7 +59,7 @@ Just include `combobo.js`.
 ### Example Combobo call with options
 
 ```js
-var combobo = new Combobox({
+var combobo = new Combobo({
   input: '.combobox',
   list: '.listbox',
   options: '.option', // qualified within `list`
@@ -75,7 +86,7 @@ Add an event listener with `.on`, remove event listener with `.off` (see example
 * `change`: Fires after a selection is made.
 
 ```js
-var combobo = new Combobox();
+var combobo = new Combobo();
 
 combobo
   .on('change', function () {
