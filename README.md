@@ -48,8 +48,8 @@ const combobo = new Combobo();
 * `multiselect` (_Boolean_): Determines whether or not to enable multiselect features
   * Defaults to `false`
 * `noResultsText` (_String_): Sets text for when there are no matches
-* `selectionValue` (_Function_): Allows to add customized values for the input upon selection.
-* `optionValue` (_Function_): Allows to add customized markup to each option in the list.
+* `selectionValue` (_Function_): A function that should return what the desired value of the input should be upon selection (this is especially useful for multiselect in that you can configure custom input values like `{3 Items Selected}`). An array of the selected options is passed as the one argument to the function.
+* `optionValue` (_Function|String_): A function that should return the desired markup of each option in the list (this allows for custom display of each option based on what is currently typed in the field) OR a string class that is to be added to the span that will be wrapped around the matched text in each option.
 * `announcement` (_Function_): Announcement of currently selected items in list. The function accepts 1 argumet which is the number of options selected.
   * Defaults to `function (n) { return n + ' options available'; }`
 * `filter` (_String|Function_): String that sets how handle the filter or a function that returns the filtered options.
@@ -71,7 +71,7 @@ var combobo = new Combobo({
   multiselect: false,
   noResultsText: null,
   selectionValue: (selecteds) => selecteds.map((s) => s.innerText.trim()).join(' - '),
-  optionValue: (option) => option.innerHTML,
+  optionValue: 'underline', // wrap the matched portion of the option (if applicable) in a span with class "underline"
   announcement: (n) => `${n} options available`,
   filter: 'contains' // 'starts-with', 'equals', or funk
 });

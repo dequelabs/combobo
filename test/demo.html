@@ -223,10 +223,7 @@
             list: '.bands .listbox',
             activeClass: 'active',
             noResultsText: 'No results found.',
-            optionValue: (option) => {
-              var inputVal = box.single.input.value;
-              return wrapNum(option.innerText, inputVal);
-            }
+            optionValue: 'foo'
           }),
           'single-with-groups': new Combobo({
             input: '#combobox-single-with-groups',
@@ -243,7 +240,6 @@
             input: '#combobox-multiselect',
             list: '.multiselect .listbox',
             activeClass: 'active',
-            getOptionValue: (o) => o.querySelector('.label').innerText,
             multiselect: true,
             selectionValue: (selectedOptions) => {
               return selectedOptions.length > 1 ?
@@ -260,7 +256,6 @@
             input: '#combobox-multiselect-with-groups',
             list: '.multiselect-with-groups .listbox',
             activeClass: 'active',
-            getOptionValue: (o) => o.querySelector('.label').innerText,
             multiselect: true,
             groups: '.optgroup',
             noResultsText: 'No results found.'

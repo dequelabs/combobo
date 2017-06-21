@@ -15,6 +15,10 @@ h1 {
   font-size: 4em;
 }
 
+.foo {
+  border: 1px solid;
+}
+
 section {
   padding: 3em;
   width: 600px;

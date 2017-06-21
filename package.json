@@ -1,6 +1,6 @@
 {
   "name": "combobo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Accessible combobox widget/plugin",
   "main": "dist/combination-box.js",
   "directories": {
@@ -34,7 +34,7 @@
     "live-region": "^1.0.0",
     "mocha": "^3.2.0",
     "rndm": "^1.2.0",
-    "scroll-into-view-if-needed": "^1.1.0",
+    "scrollto-element": "^1.0.4",
     "simulant": "^0.2.2",
     "vinyl-source-stream": "^1.1.0"
   }
