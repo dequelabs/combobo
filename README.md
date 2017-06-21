@@ -113,5 +113,5 @@ combobo
 
 ## Running tests
 ```bash
-$ gulp test
+$ npm run test
 ```
