@@ -97,6 +97,20 @@ combobo
   });
 ```
 
+## Methods
+* `goTo`: accepts 1 argument which is either a *String* ('prev' or 'next'), which as it sounds will navigate Combobo to the previous or next option, or the index (*Number*) of the option to be traversed to.  NOTE: This method does not select the option but rather highlights it as if the option is hovered or arrowed to.
+* `select`: selects the currently highlighted option
+* `getOptIndex`: returns the index (within the currently visible options) of the currently selected option.
+
+### Example usage
+
+```js
+// move 5 options forward and select the option
+combobo
+  .goTo(combobo.getOptIndex() + 5)
+  .select();
+```
+
 ## Running tests
 ```bash
 $ gulp test
