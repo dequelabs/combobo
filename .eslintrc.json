@@ -19,8 +19,5 @@
     "beforeEach": true,
     "afterEach": true,
     "Combobo": true
-  },
-  "parserOptions": {
-    "sourceType": "module"
   }
 }

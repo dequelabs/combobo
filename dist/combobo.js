@@ -721,6 +721,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {}], 12: [function (require, module, exports) {
       'use strict';
 
+      /**
+       * Checks if `target` is completely in viewport and returns an object containing:
+       * - {Boolean} visible   if the target is visible
+       * - {String}  position  the position the element is offscreen ('top' or 'bottom')
+       *
+       * @param  {HTMLElement} target the element in question
+       * @return {Object}
+       */
+
       module.exports = function (target) {
         var windowHeight = window.innerHeight;
         var rect = target.getBoundingClientRect();
