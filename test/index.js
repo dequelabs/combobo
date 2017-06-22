@@ -8,7 +8,7 @@ var MARKUP = [
         '<input type="text" class="combobox" id="combobox">',
         '<i aria-hidden="true" class="fa fa-caret-down"></i>',
         '<div class="listbox">',
-          '<div class="option">Ween</div>',
+          '<div id="ween" class="option">Ween</div>',
           '<div class="option">Frank Zappa</div>',
           '<div class="option">Snarky Puppy</div>',
           '<div class="option">Umphreys McGee</div>',
@@ -34,7 +34,8 @@ describe('Combobo', function () {
     fixture.innerHTML = MARKUP;
     combobox = new Combobo({
       activeClass: 'active',
-      options: '.wrp .listbox .option'
+      options: '.wrp .listbox .option',
+      optionValue: 'foo'
     });
   });
 
@@ -44,10 +45,7 @@ describe('Combobo', function () {
     }
     fixture.innerHTML = ''; // clean up
   });
-  //
-  // TODO: Write tests for the live region stuff
-  // TODO: Write tests for option groups stuff
-  //
+
   it('should merge user config with default config', function () {
     // confirm the custom config passed in overrode the defaults
     assert.equal(combobox.config.activeClass, 'active');
@@ -73,6 +71,48 @@ describe('Combobo', function () {
     assert.equal(input.getAttribute('aria-owns'), list.id);
     assert.equal(input.getAttribute('aria-expanded'), 'false');
     assert.equal(input.getAttribute('aria-autocomplete'), 'list');
+  });
+
+  describe('Combobo#updateOpts', function () {
+    it('should properly configure the display of options', function () {
+      // input value
+      combobox.input.value = 'WEE';
+      // fire a keyup
+      simulant.fire(combobox.input, 'keyup', {which: 78});
+      combobox.cachedOpts.forEach(function (opt) {
+        var isHidden = opt.style.display === 'none';
+        if (opt.id && opt.id === 'ween') {
+          assert.isFalse(isHidden);
+        } else {
+          assert.isTrue(isHidden)
+        }
+      });
+    });
+
+    it('should properly configure the innerHTML of options', function () {
+      // input value
+      combobox.input.value = 'WEE';
+      // fire a keyup
+      simulant.fire(combobox.input, 'keyup', {which: 78});
+      var foo = document.getElementById('ween').querySelector('.foo');
+      assert.isTrue(!!foo);
+      assert.equal(foo.innerHTML.toLowerCase(), 'wee');
+    });
+  });
+
+  describe('liveRegion', function () {
+    it('should create a live region', function () {
+      assert.isTrue(!!combobox.liveRegion);
+      assert.isTrue(document.body.contains(combobox.liveRegion.region))
+    });
+
+    it('should announce changes', function () {
+      // fire 3 down arrows...
+      simulant.fire(combobox.input, 'keydown', {which: 40});
+      simulant.fire(combobox.input, 'keydown', {which: 40});
+      simulant.fire(combobox.input, 'keydown', {which: 40});
+      assert.isTrue(!!combobox.liveRegion.region.childElementCount);
+    });
   });
 
   describe('Combobo#openList', function () {
@@ -105,6 +145,9 @@ describe('Combobo', function () {
       // test will fail if this stuff fails
       combobox.openList().closeList().openList().closeList();
     });
+    // TODO: Phantom doesn't let us check if the element is in view
+    // (got this test passing in the browser but failing in headless)
+    it.skip('should ensure the list is in view');
   });
 
   describe('Combobo#closeList', function () {

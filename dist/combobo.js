@@ -38,50 +38,37 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }({ 1: [function (require, module, exports) {
       'use strict';
 
-      /**
-       * NOTE:
-       * - https://www.w3.org/TR/2016/WD-wai-aria-practices-1.1-20160317/#combobox
-       *    - "For each combobox pattern the button need not be in the tab order if there
-       *    is an appropriate keystroke associated with the input element such that when
-       *    focus is on the input, the keystroke triggers display of the associated drop
-       *    down list."
-       */
-
       var Classlist = require('classlist');
       var extend = require('extend-shallow');
       var Emitter = require('component-emitter');
       var LiveRegion = require('live-region');
-      var rndid = require('./lib/rndid');
+      var scrollToElement = require('scrollto-element');
+      var inView = require('./lib/utils/is-scrolled-in-view');
+      var viewportStatus = require('./lib/utils/viewport-status');
       var filters = require('./lib/filters');
-      var keyvent = require('./lib/keyvent');
-      var isWithin = require('./lib/is-within');
-      var elHandler = require('./lib/element-handler');
-      var scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
+      var keyvent = require('./lib/utils/keyvent');
+      var isWithin = require('./lib/utils/is-within');
+      var elHandler = require('./lib/utils/element-handler');
+      var attrs = require('./lib/attributes');
+      var wrapMatch = require('./lib/utils/wrap-match');
+      var defaults = require('./lib/defaults');
 
-      var defaults = {
-        input: '.combobox',
-        list: '.listbox',
-        options: '.option', // qualified within `list`
-        groups: null, // qualified within `list`
-        openClass: 'open',
-        activeClass: 'active',
-        selectedClass: 'selected',
-        useLiveRegion: true,
-        multiselect: false,
-        noResultsText: null,
-        selectionValue: function selectionValue(selecteds) {
-          return selecteds.map(function (s) {
-            return s.innerText.trim();
-          }).join(' - ');
-        },
-        optionValue: function optionValue(option) {
-          return option.innerHTML;
-        },
-        announcement: function announcement(n) {
-          return n + " options available";
-        },
-        filter: 'contains' // 'starts-with', 'equals', or funk
-      };
+      /**
+       *       /////////////
+       *       // COMBOBO //
+       *       /////////////
+       *
+       *           ."`".
+       *       .-./ _=_ \.-.
+       *      {  (,(oYo),) }}
+       *      {{ |   "   |} }
+       *      { { \(---)/  }}
+       *      {{  }'-=-'{ } }
+       *      { { }._:_.{  }}
+       *      {{  } -:- { } }
+       *      {_{ }`===`{  _}
+       *     ((((\)     (/))))
+       */
 
       module.exports = function () {
         function Combobo(config) {
@@ -113,36 +100,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
           }
 
+          attrs(this.input, this.list, this.cachedOpts);
+
           // initial state
           this.isOpen = false;
-          this.liveRegion = null;
           this.currentOption = null;
           this.selected = [];
           this.isHovering = false;
 
-          this.initAttrs();
+          if (this.config.useLiveRegion) {
+            this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
+          }
+
           this.initEvents();
         }
 
         _createClass(Combobo, [{
-          key: "initAttrs",
-          value: function initAttrs() {
-            this.input.setAttribute('role', 'combobox');
-            this.list.setAttribute('role', 'listbox');
-
-            // ensure list has an id for the input's aria-owns attribute
-            this.list.id = this.list.id || rndid();
-            this.input.setAttribute('aria-owns', this.list.id);
-            this.input.setAttribute('aria-autocomplete', 'list');
-            this.input.setAttribute('aria-expanded', 'false');
-
-            this.setOptionAttrs();
-
-            if (this.config.useLiveRegion) {
-              this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
-            }
-          }
-        }, {
           key: "initEvents",
           value: function initEvents() {
             var _this2 = this;
@@ -182,14 +155,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             return this.currentOption && this.currentOpts.indexOf(this.currentOption);
           }
         }, {
-          key: "setOptionAttrs",
-          value: function setOptionAttrs() {
-            this.currentOpts.forEach(function (opt) {
-              opt.setAttribute('role', 'option');
-              opt.id = opt.id || rndid();
-            });
-          }
-        }, {
           key: "optionEvents",
           value: function optionEvents() {
             var _this3 = this;
@@ -226,6 +191,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
             this.isOpen = true;
             this.emit('list:open');
+            var status = viewportStatus(this.list);
+            if (!status.visible) {
+              var offset = status.position === 'bottom' ? 0 - (window.innerHeight - (this.input.clientHeight + this.list.clientHeight)) : 0;
+
+              scrollToElement({
+                element: this.input,
+                offset: offset,
+                bezier: [0.19, 1, 0.22, 1],
+                duration: 100
+              });
+            }
+
             return this;
           }
         }, {
@@ -306,10 +283,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 _this4.filter().openList();
               }
 
-              //Handles if there are no results found
+              // Handles if there are no results found
               var noResults = _this4.list.querySelector('.no-results-text');
               if (_this4.config.noResultsText && !_this4.currentOpts.length && !noResults) {
-                // create the noResults element
                 noResults = document.createElement('div');
                 Classlist(noResults).add('no-results-text');
                 noResults.innerHTML = _this4.config.noResultsText;
@@ -331,6 +307,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 g.element.style.display = '';
               });
             }
+
             this.currentOpts = this.cachedOpts; // reset the opts
             return this;
           }
@@ -351,12 +328,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }) && !supress) {
               this.announceCount();
             }
+
             return this;
           }
         }, {
           key: "announceCount",
           value: function announceCount() {
-            if (this.config.announcement) {
+            if (this.config.announcement && this.liveRegion) {
               this.liveRegion.announce(this.config.announcement(this.currentOpts.length), 500);
             }
 
@@ -367,15 +345,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           value: function updateOpts() {
             var _this6 = this;
 
+            var optVal = this.config.optionValue;
             this.cachedOpts.forEach(function (opt) {
               // configure display of options based on filtering
               opt.style.display = _this6.currentOpts.indexOf(opt) === -1 ? 'none' : '';
-            });
 
-            // configure the innerHTML of each option based on what optionValues returns
-            this.currentOpts.forEach(function (actopt) {
-              var newVal = _this6.config.optionValue(actopt);
-              actopt.innerHTML = newVal;
+              // configure the innerHTML of each option
+              opt.innerHTML = typeof optVal === 'string' ? wrapMatch(opt, _this6.input, optVal) : optVal(opt);
             });
 
             this.updateGroups();
@@ -442,17 +418,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.freshSelection = true;
               this.emit('selection', { text: this.input.value, option: currentOpt });
             }
+
             return this;
           }
         }, {
           key: "goTo",
           value: function goTo(option, fromKey) {
+            var _this7 = this;
+
             if (typeof option === 'string') {
               // 'prev' or 'next'
               var optIndex = this.getOptIndex();
               return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1, fromKey);
             }
-            // NOTE: This prevents circularity
+
             if (!this.currentOpts[option]) {
               // end of the line so allow scroll up for visibility of potential group labels
               if (this.getOptIndex() === 0) {
@@ -466,10 +445,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.pseudoFocus();
             // Dectecting if element is inView and scroll to it.
             this.currentOpts.forEach(function (opt) {
-              if (opt.classList.contains('active')) {
-                scrollIntoViewIfNeeded(opt, false);
+              if (opt.classList.contains('active') && !inView(_this7.list, opt)) {
+                scrollToElement(opt);
               }
             });
+
             return this;
           }
         }, {
@@ -499,25 +479,77 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               this.currentOption = option;
               this.emit('change');
             }
+
+            return this;
           }
         }]);
 
         return Combobo;
       }();
-    }, { "./lib/element-handler": 2, "./lib/filters": 3, "./lib/is-within": 4, "./lib/keyvent": 6, "./lib/rndid": 7, "classlist": 15, "component-emitter": 16, "extend-shallow": 18, "live-region": 21, "scroll-into-view-if-needed": 24 }], 2: [function (require, module, exports) {
+
+      /**
+       * NOTE:
+       * - https://www.w3.org/TR/2016/WD-wai-aria-practices-1.1-20160317/#combobox
+       *    - "For each combobox pattern the button need not be in the tab order if there
+       *    is an appropriate keystroke associated with the input element such that when
+       *    focus is on the input, the keystroke triggers display of the associated drop
+       *    down list."
+       */
+    }, { "./lib/attributes": 2, "./lib/defaults": 3, "./lib/filters": 4, "./lib/utils/element-handler": 5, "./lib/utils/is-scrolled-in-view": 6, "./lib/utils/is-within": 7, "./lib/utils/keyvent": 9, "./lib/utils/viewport-status": 12, "./lib/utils/wrap-match": 13, "classlist": 18, "component-emitter": 19, "extend-shallow": 21, "live-region": 24, "scrollto-element": 27 }], 2: [function (require, module, exports) {
       'use strict';
 
-      var select = require('./select');
+      var rndid = require('./utils/rndid');
 
-      module.exports = function (l, all, context) {
-        context = context || document;
-        if (typeof l === 'string') {
-          return all ? select.all(l, context) : select(l, context);
-        }
+      /**
+       * Sets attributes on input / list / options
+       */
+      module.exports = function (input, list, options) {
+        list.id = list.id || rndid();
 
-        return l;
+        input.setAttribute('role', 'combobox');
+        list.setAttribute('role', 'listbox');
+        input.setAttribute('aria-owns', list.id);
+        input.setAttribute('aria-autocomplete', 'list');
+        input.setAttribute('aria-expanded', 'false');
+
+        options.forEach(function (opt) {
+          opt.setAttribute('role', 'option');
+          opt.id = opt.id || rndid();
+        });
       };
-    }, { "./select": 8 }], 3: [function (require, module, exports) {
+    }, { "./utils/rndid": 10 }], 3: [function (require, module, exports) {
+      'use strict';
+
+      /**
+       * The default config for Combobo
+       * @type {Object}
+       */
+
+      module.exports = {
+        input: '.combobox',
+        list: '.listbox',
+        options: '.option', // qualified within `list`
+        groups: null, // qualified within `list`
+        openClass: 'open',
+        activeClass: 'active',
+        selectedClass: 'selected',
+        useLiveRegion: true,
+        multiselect: false,
+        noResultsText: null,
+        selectionValue: function selectionValue(selecteds) {
+          return selecteds.map(function (s) {
+            return s.innerText.trim();
+          }).join(' - ');
+        },
+        optionValue: function optionValue(option) {
+          return option.innerHTML;
+        },
+        announcement: function announcement(n) {
+          return n + " options available";
+        },
+        filter: 'contains' // 'starts-with', 'equals', or funk
+      };
+    }, {}], 4: [function (require, module, exports) {
       'use strict';
 
       var val = require('./value');
@@ -539,7 +571,40 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           });
         }
       };
-    }, { "./value": 9 }], 4: [function (require, module, exports) {
+    }, { "./value": 14 }], 5: [function (require, module, exports) {
+      'use strict';
+
+      var select = require('./select');
+
+      module.exports = function (l, all, context) {
+        context = context || document;
+        if (typeof l === 'string') {
+          return all ? select.all(l, context) : select(l, context);
+        }
+
+        return l;
+      };
+    }, { "./select": 11 }], 6: [function (require, module, exports) {
+      'use strict';
+
+      /**
+       * Checks if an option is COMPLETELY visible in a list
+       * @param  {HTMLElement} list The scrollable list element
+       * @param  {HTMLElement} opt  The option in question
+       * @return {Boolean}
+       */
+
+      module.exports = function (list, opt) {
+        var listHeight = list.clientHeight;
+        var optHeight = opt.clientHeight;
+        var scrollTop = list.scrollTop;
+        var offsetTop = opt.offsetTop;
+        var isAbove = scrollTop > offsetTop;
+        var isBelow = scrollTop + listHeight - optHeight < offsetTop;
+
+        return !isAbove && !isBelow;
+      };
+    }, {}], 7: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (target, els, checkSelf) {
@@ -559,7 +624,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return false;
       };
-    }, {}], 5: [function (require, module, exports) {
+    }, {}], 8: [function (require, module, exports) {
       'use strict';
 
       module.exports = {
@@ -573,7 +638,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         39: 'right',
         40: 'down'
       };
-    }, {}], 6: [function (require, module, exports) {
+    }, {}], 9: [function (require, module, exports) {
       'use strict';
 
       var keymap = require('./keymap');
@@ -592,7 +657,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return;
         }
         target.addEventListener(eventType, function (e) {
-          var which = e.which;
           var keyName = keymap[e.which];
 
           config.forEach(function (c) {
@@ -608,7 +672,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       /**
        * Example usage:
-       * const keyboard = require('keyboard');
+       * const keyboard = require('keyvent');
        * keyboard.up(element, [
        *   {
        *     keys: ['space', 'enter'],
@@ -626,7 +690,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.press = function (el, config) {
         return exports.attach('keypress', el, config);
       };
-    }, { "./keymap": 5 }], 7: [function (require, module, exports) {
+    }, { "./keymap": 8 }], 10: [function (require, module, exports) {
       'use strict';
 
       var rndm = require('rndm');
@@ -642,7 +706,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return id;
       }
-    }, { "rndm": 23 }], 8: [function (require, module, exports) {
+    }, { "rndm": 26 }], 11: [function (require, module, exports) {
       'use strict';
 
       exports = module.exports = function (selector, context) {
@@ -654,121 +718,69 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         context = context || document;
         return Array.prototype.slice.call(context.querySelectorAll(selector));
       };
-    }, {}], 9: [function (require, module, exports) {
+    }, {}], 12: [function (require, module, exports) {
+      'use strict';
+
+      /**
+       * Checks if `target` is completely in viewport and returns an object containing:
+       * - {Boolean} visible   if the target is visible
+       * - {String}  position  the position the element is offscreen ('top' or 'bottom')
+       *
+       * @param  {HTMLElement} target the element in question
+       * @return {Object}
+       */
+
+      module.exports = function (target) {
+        var windowHeight = window.innerHeight;
+        var rect = target.getBoundingClientRect();
+        var isOffTop = rect.top < 0;
+        var isOffBottom = rect.bottom > windowHeight;
+        var isVisible = !isOffTop && !isOffBottom;
+        var data = {
+          visible: isVisible
+        };
+
+        if (!isVisible) {
+          data.position = isOffTop ? 'top' : 'bottom';
+        }
+
+        return data;
+      };
+    }, {}], 13: [function (require, module, exports) {
+      'use strict';
+
+      /**
+       * Wraps any matches (between input value on option) in a span with the accent class
+       * @param  {HTMLElement} optionEl    The option element
+       * @param  {HTMLElement} input       The input element
+       * @param  {String} accentClass      The class to be added to the match span
+       * @return {String}                  The result html string
+       */
+
+      module.exports = function (optionEl, input, accentClass) {
+        var inputText = input.value;
+        var optionText = optionEl.innerText;
+        var matchStart = optionText.toLowerCase().indexOf(inputText.toLowerCase());
+        var matchLength = inputText.length;
+
+        accentClass = accentClass || 'underline';
+
+        if (inputText && matchStart >= 0) {
+          var before = optionText.substring(0, matchStart);
+          var matchText = optionText.substr(matchStart, matchLength);
+          var after = optionText.substring(matchStart + matchLength);
+          return before + "<span class=\"" + accentClass + "\">" + matchText + "</span>" + after;
+        }
+
+        return optionText;
+      };
+    }, {}], 14: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (el) {
         return el.getAttribute('data-value') || el.innerText;
       };
-    }, {}], 10: [function (require, module, exports) {
-      var BezierEasing = require('bezier-easing'
-
-      // Predefined set of animations. Similar to CSS easing functions
-      );var animations = {
-        ease: BezierEasing(0.25, 0.1, 0.25, 1),
-        easeIn: BezierEasing(0.42, 0, 1, 1),
-        easeOut: BezierEasing(0, 0, 0.58, 1),
-        easeInOut: BezierEasing(0.42, 0, 0.58, 1),
-        linear: BezierEasing(0, 0, 1, 1)
-      };
-
-      module.exports = animate;
-
-      function animate(source, target, options) {
-        var start = Object.create(null);
-        var diff = Object.create(null);
-        options = options || {};
-        // We let clients specify their own easing function
-        var easing = typeof options.easing === 'function' ? options.easing : animations[options.easing];
-
-        // if nothing is specified, default to ease (similar to CSS animations)
-        if (!easing) {
-          if (options.easing) {
-            console.warn('Unknown easing function in amator: ' + options.easing);
-          }
-          easing = animations.ease;
-        }
-
-        var step = typeof options.step === 'function' ? options.step : noop;
-        var done = typeof options.done === 'function' ? options.done : noop;
-
-        var scheduler = getScheduler(options.scheduler);
-
-        var keys = Object.keys(target);
-        keys.forEach(function (key) {
-          start[key] = source[key];
-          diff[key] = target[key] - source[key];
-        });
-
-        var durationInMs = options.duration || 400;
-        var durationInFrames = Math.max(1, durationInMs * 0.06 // 0.06 because 60 frames pers 1,000 ms
-        );var previousAnimationId;
-        var frame = 0;
-
-        previousAnimationId = scheduler.next(loop);
-
-        return {
-          cancel: cancel
-        };
-
-        function cancel() {
-          scheduler.cancel(previousAnimationId);
-          previousAnimationId = 0;
-        }
-
-        function loop() {
-          var t = easing(frame / durationInFrames);
-          frame += 1;
-          setValues(t);
-          if (frame <= durationInFrames) {
-            previousAnimationId = scheduler.next(loop);
-            step(source);
-          } else {
-            previousAnimationId = 0;
-            setTimeout(function () {
-              done(source);
-            }, 0);
-          }
-        }
-
-        function setValues(t) {
-          keys.forEach(function (key) {
-            source[key] = diff[key] * t + start[key];
-          });
-        }
-      }
-
-      function noop() {}
-
-      function getScheduler(scheduler) {
-        if (!scheduler) {
-          var canRaf = typeof window !== 'undefined' && window.requestAnimationFrame;
-          return canRaf ? rafScheduler() : timeoutScheduler();
-        }
-        if (typeof scheduler.next !== 'function') throw new Error('Scheduler is supposed to have next(cb) function');
-        if (typeof scheduler.cancel !== 'function') throw new Error('Scheduler is supposed to have cancel(handle) function');
-
-        return scheduler;
-      }
-
-      function rafScheduler() {
-        return {
-          next: window.requestAnimationFrame.bind(window),
-          cancel: window.cancelAnimationFrame.bind(window)
-        };
-      }
-
-      function timeoutScheduler() {
-        return {
-          next: function next(cb) {
-            return setTimeout(cb, 1000 / 60);
-          },
-          cancel: function cancel(id) {
-            return clearTimeout(id);
-          }
-        };
-      }
-    }, { "bezier-easing": 13 }], 11: [function (require, module, exports) {
+    }, {}], 15: [function (require, module, exports) {
       (function (global) {
         'use strict';
 
@@ -1240,7 +1252,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return keys;
         };
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "util/": 28 }], 12: [function (require, module, exports) {
+    }, { "util/": 31 }], 16: [function (require, module, exports) {
       'use strict';
 
       exports.byteLength = byteLength;
@@ -1355,124 +1367,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return parts.join('');
       }
-    }, {}], 13: [function (require, module, exports) {
-      /**
-       * https://github.com/gre/bezier-easing
-       * BezierEasing - use bezier curve for transition easing function
-       * by Gaëtan Renaudeau 2014 - 2015 – MIT License
-       */
-
-      // These values are established by empiricism with tests (tradeoff: performance VS precision)
-      var NEWTON_ITERATIONS = 4;
-      var NEWTON_MIN_SLOPE = 0.001;
-      var SUBDIVISION_PRECISION = 0.0000001;
-      var SUBDIVISION_MAX_ITERATIONS = 10;
-
-      var kSplineTableSize = 11;
-      var kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
-
-      var float32ArraySupported = typeof Float32Array === 'function';
-
-      function A(aA1, aA2) {
-        return 1.0 - 3.0 * aA2 + 3.0 * aA1;
-      }
-      function B(aA1, aA2) {
-        return 3.0 * aA2 - 6.0 * aA1;
-      }
-      function C(aA1) {
-        return 3.0 * aA1;
-      }
-
-      // Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
-      function calcBezier(aT, aA1, aA2) {
-        return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
-      }
-
-      // Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
-      function getSlope(aT, aA1, aA2) {
-        return 3.0 * A(aA1, aA2) * aT * aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
-      }
-
-      function binarySubdivide(aX, aA, aB, mX1, mX2) {
-        var currentX,
-            currentT,
-            i = 0;
-        do {
-          currentT = aA + (aB - aA) / 2.0;
-          currentX = calcBezier(currentT, mX1, mX2) - aX;
-          if (currentX > 0.0) {
-            aB = currentT;
-          } else {
-            aA = currentT;
-          }
-        } while (Math.abs(currentX) > SUBDIVISION_PRECISION && ++i < SUBDIVISION_MAX_ITERATIONS);
-        return currentT;
-      }
-
-      function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
-        for (var i = 0; i < NEWTON_ITERATIONS; ++i) {
-          var currentSlope = getSlope(aGuessT, mX1, mX2);
-          if (currentSlope === 0.0) {
-            return aGuessT;
-          }
-          var currentX = calcBezier(aGuessT, mX1, mX2) - aX;
-          aGuessT -= currentX / currentSlope;
-        }
-        return aGuessT;
-      }
-
-      module.exports = function bezier(mX1, mY1, mX2, mY2) {
-        if (!(0 <= mX1 && mX1 <= 1 && 0 <= mX2 && mX2 <= 1)) {
-          throw new Error('bezier x values must be in [0, 1] range');
-        }
-
-        // Precompute samples table
-        var sampleValues = float32ArraySupported ? new Float32Array(kSplineTableSize) : new Array(kSplineTableSize);
-        if (mX1 !== mY1 || mX2 !== mY2) {
-          for (var i = 0; i < kSplineTableSize; ++i) {
-            sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
-          }
-        }
-
-        function getTForX(aX) {
-          var intervalStart = 0.0;
-          var currentSample = 1;
-          var lastSample = kSplineTableSize - 1;
-
-          for (; currentSample !== lastSample && sampleValues[currentSample] <= aX; ++currentSample) {
-            intervalStart += kSampleStepSize;
-          }
-          --currentSample;
-
-          // Interpolate to provide an initial guess for t
-          var dist = (aX - sampleValues[currentSample]) / (sampleValues[currentSample + 1] - sampleValues[currentSample]);
-          var guessForT = intervalStart + dist * kSampleStepSize;
-
-          var initialSlope = getSlope(guessForT, mX1, mX2);
-          if (initialSlope >= NEWTON_MIN_SLOPE) {
-            return newtonRaphsonIterate(aX, guessForT, mX1, mX2);
-          } else if (initialSlope === 0.0) {
-            return guessForT;
-          } else {
-            return binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, mX1, mX2);
-          }
-        }
-
-        return function BezierEasing(x) {
-          if (mX1 === mY1 && mX2 === mY2) {
-            return x; // linear
-          }
-          // Because JavaScript number are imprecise, we should guarantee the extremes are right.
-          if (x === 0) {
-            return 0;
-          }
-          if (x === 1) {
-            return 1;
-          }
-          return calcBezier(getTForX(x), mY1, mY2);
-        };
-      };
-    }, {}], 14: [function (require, module, exports) {
+    }, {}], 17: [function (require, module, exports) {
       /*!
        * The buffer module from node.js, for the browser.
        *
@@ -3132,7 +3027,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function numberIsNaN(obj) {
         return obj !== obj; // eslint-disable-line no-self-compare
       }
-    }, { "base64-js": 12, "ieee754": 19 }], 15: [function (require, module, exports) {
+    }, { "base64-js": 16, "ieee754": 22 }], 18: [function (require, module, exports) {
       'use strict';
 
       module.exports = ClassList;
@@ -3245,7 +3140,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       ClassList.prototype.toString = function () {
         return arr.join.call(this, ' ');
       };
-    }, { "component-indexof": 17, "trim": 25 }], 16: [function (require, module, exports) {
+    }, { "component-indexof": 20, "trim": 28 }], 19: [function (require, module, exports) {
 
       /**
        * Expose `Emitter`.
@@ -3404,7 +3299,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       Emitter.prototype.hasListeners = function (event) {
         return !!this.listeners(event).length;
       };
-    }, {}], 17: [function (require, module, exports) {
+    }, {}], 20: [function (require, module, exports) {
       module.exports = function (arr, obj) {
         if (arr.indexOf) return arr.indexOf(obj);
         for (var i = 0; i < arr.length; ++i) {
@@ -3412,7 +3307,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         return -1;
       };
-    }, {}], 18: [function (require, module, exports) {
+    }, {}], 21: [function (require, module, exports) {
       'use strict';
 
       var isObject = require('is-extendable');
@@ -3448,7 +3343,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function hasOwn(obj, key) {
         return Object.prototype.hasOwnProperty.call(obj, key);
       }
-    }, { "is-extendable": 20 }], 19: [function (require, module, exports) {
+    }, { "is-extendable": 23 }], 22: [function (require, module, exports) {
       exports.read = function (buffer, offset, isLE, mLen, nBytes) {
         var e, m;
         var eLen = nBytes * 8 - mLen - 1;
@@ -3533,7 +3428,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         buffer[offset + i - d] |= s * 128;
       };
-    }, {}], 20: [function (require, module, exports) {
+    }, {}], 23: [function (require, module, exports) {
       /*!
        * is-extendable <https://github.com/jonschlinkert/is-extendable>
        *
@@ -3546,7 +3441,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       module.exports = function isExtendable(val) {
         return typeof val !== 'undefined' && val !== null && ((typeof val === "undefined" ? "undefined" : _typeof(val)) === 'object' || typeof val === 'function');
       };
-    }, {}], 21: [function (require, module, exports) {
+    }, {}], 24: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -3620,7 +3515,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (typeof module !== 'undefined') {
         module.exports = LiveRegion;
       }
-    }, {}], 22: [function (require, module, exports) {
+    }, {}], 25: [function (require, module, exports) {
       // shim for using process in browser
       var process = module.exports = {};
 
@@ -3806,7 +3701,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.umask = function () {
         return 0;
       };
-    }, {}], 23: [function (require, module, exports) {
+    }, {}], 26: [function (require, module, exports) {
       (function (Buffer) {
 
         var assert = require('assert');
@@ -3835,87 +3730,271 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         }
       }).call(this, require("buffer").Buffer);
-    }, { "assert": 11, "buffer": 14 }], 24: [function (require, module, exports) {
-      'use strict';
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-
-      exports.default = function (elem, centerIfNeeded, options, finalElement) {
-
-        if (!elem) throw new Error('Element is required in scrollIntoViewIfNeeded');
-
-        function withinBounds(value, min, max, extent) {
-          if (false === centerIfNeeded || max <= value + extent && value <= min + extent) {
-            return Math.min(max, Math.max(min, value));
-          } else {
-            return (min + max) / 2;
-          }
-        }
-
-        function makeArea(left, top, width, height) {
-          return { "left": left, "top": top, "width": width, "height": height,
-            "right": left + width, "bottom": top + height,
-            "translate": function translate(x, y) {
-              return makeArea(x + left, y + top, width, height);
-            },
-            "relativeFromTo": function relativeFromTo(lhs, rhs) {
-              var newLeft = left,
-                  newTop = top;
-              lhs = lhs.offsetParent;
-              rhs = rhs.offsetParent;
-              if (lhs === rhs) {
-                return area;
+    }, { "assert": 15, "buffer": 17 }], 27: [function (require, module, exports) {
+      !function (e, t) {
+        "object" == (typeof exports === "undefined" ? "undefined" : _typeof(exports)) && "object" == (typeof module === "undefined" ? "undefined" : _typeof(module)) ? module.exports = t() : "function" == typeof define && define.amd ? define([], t) : "object" == (typeof exports === "undefined" ? "undefined" : _typeof(exports)) ? exports.scrolltoElement = t() : e.scrolltoElement = t();
+      }(this, function () {
+        return function (e) {
+          function t(r) {
+            if (n[r]) return n[r].exports;var o = n[r] = { i: r, l: !1, exports: {} };return e[r].call(o.exports, o, o.exports, t), o.l = !0, o.exports;
+          }var n = {};return t.m = e, t.c = n, t.i = function (e) {
+            return e;
+          }, t.d = function (e, n, r) {
+            t.o(e, n) || Object.defineProperty(e, n, { configurable: !1, enumerable: !0, get: r });
+          }, t.n = function (e) {
+            var n = e && e.__esModule ? function () {
+              return e.default;
+            } : function () {
+              return e;
+            };return t.d(n, "a", n), n;
+          }, t.o = function (e, t) {
+            return Object.prototype.hasOwnProperty.call(e, t);
+          }, t.p = "", t(t.s = 1);
+        }([function (e, t, n) {
+          "use strict";
+          function r(e) {
+            return e && e.__esModule ? e : { default: e };
+          }function o(e) {
+            if (Array.isArray(e)) {
+              for (var t = 0, n = Array(e.length); t < e.length; t++) {
+                n[t] = e[t];
+              }return n;
+            }return Array.from(e);
+          }function i() {}function u(e) {
+            function t(e) {
+              null === h && (h = e);var r = e - h,
+                  o = u(r / n) * w;l.scrollTop = Math.round(d + o), r < n ? (0, a.default)(t) : c();
+            }var n = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 100,
+                r = 0,
+                u = void 0,
+                c = void 0;if ((0, s.isElement)(e)) u = f.default.apply(void 0, m), c = i;else {
+              if (!(0, s.isObject)(e)) throw new TypeError("The first argument must be HTMLElement or Object.");if (!(0, s.isElement)(e.element)) throw new TypeError("`element` must be HTMLElement.");r = (0, s.isNumeric)(e.offset) ? e.offset : 0, u = (0, s.isArray)(e.bezier) && 4 === e.bezier.length ? f.default.apply(void 0, o(e.bezier)) : f.default.apply(void 0, m), n = e.duration, c = (0, s.isFunction)(e.then) ? e.then : i, e = e.element;
+            }(!(0, s.isNumeric)(n) || n < 0) && (n = 100);var l = (0, p.default)(e),
+                d = l.scrollTop,
+                y = l.offsetTop,
+                h = null,
+                v = void 0;v = "BODY" === l.nodeName ? e.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || document.body.scrollTop) - y : e.offsetTop - y;var w = v - d + r;(0, a.default)(t);
+          }Object.defineProperty(t, "__esModule", { value: !0 });var c = n(4),
+              f = r(c),
+              l = n(7),
+              a = r(l),
+              s = n(2),
+              d = n(3),
+              p = r(d),
+              m = [.19, 1, .22, 1];t.default = u;
+        }, function (e, t, n) {
+          "use strict";
+          var r = n(0),
+              o = function (e) {
+            return e && e.__esModule ? e : { default: e };
+          }(r);e.exports = o.default;
+        }, function (e, t, n) {
+          "use strict";
+          function r(e) {
+            return Object.prototype.toString.call(e);
+          }function o(e) {
+            return "[object Object]" === r(e);
+          }function i(e) {
+            return null != e && "[object Array]" === r(e);
+          }function u(e) {
+            return !isNaN(parseFloat(e)) && isFinite(e);
+          }function c(e) {
+            return u(e) && e >= 0;
+          }function f(e) {
+            return null != e && "[object Function]" === r(e);
+          }function l(e) {
+            return "object" === a(window.HTMLElement) ? e instanceof window.HTMLElement : !!e && "object" === (void 0 === e ? "undefined" : a(e)) && null !== e && 1 === e.nodeType && "string" == typeof e.nodeName;
+          }Object.defineProperty(t, "__esModule", { value: !0 });var a = "function" == typeof Symbol && "symbol" == _typeof(Symbol.iterator) ? function (e) {
+            return typeof e === "undefined" ? "undefined" : _typeof(e);
+          } : function (e) {
+            return e && "function" == typeof Symbol && e.constructor === Symbol && e !== Symbol.prototype ? "symbol" : typeof e === "undefined" ? "undefined" : _typeof(e);
+          };t.isObject = o, t.isArray = i, t.isNumeric = u, t.isPositive = c, t.isFunction = f, t.isElement = l;
+        }, function (e, t, n) {
+          "use strict";
+          function r(e) {
+            var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : [],
+                n = e.parentNode;return null === n || "HTML" === n.nodeName ? t : r(n, t.concat(n));
+          }function o(e, t) {
+            return window.getComputedStyle(e, null).getPropertyValue(t);
+          }function i(e) {
+            return o(e, "overflow") + o(e, "overflow-y");
+          }function u(e) {
+            if (1 === e.nodeType) return f.test(i(e)) && e.scrollHeight > e.clientHeight;
+          }function c(e) {
+            for (var t = r(e), n = document.body, o = 0, i = t.length; o < i; o++) {
+              if (u(t[o])) {
+                n = t[o];break;
               }
-              for (; lhs; lhs = lhs.offsetParent) {
-                newLeft += lhs.offsetLeft + lhs.clientLeft;
-                newTop += lhs.offsetTop + lhs.clientTop;
-              }
-              for (; rhs; rhs = rhs.offsetParent) {
-                newLeft -= rhs.offsetLeft + rhs.clientLeft;
-                newTop -= rhs.offsetTop + rhs.clientTop;
-              }
-              return makeArea(newLeft, newTop, width, height);
-            }
+            }return n;
+          }Object.defineProperty(t, "__esModule", { value: !0 });var f = /(auto|scroll)/;t.default = c;
+        }, function (e, t) {
+          function n(e, t) {
+            return 1 - 3 * t + 3 * e;
+          }function r(e, t) {
+            return 3 * t - 6 * e;
+          }function o(e) {
+            return 3 * e;
+          }function i(e, t, i) {
+            return ((n(t, i) * e + r(t, i)) * e + o(t)) * e;
+          }function u(e, t, i) {
+            return 3 * n(t, i) * e * e + 2 * r(t, i) * e + o(t);
+          }function c(e, t, n, r, o) {
+            var u,
+                c,
+                f = 0;do {
+              c = t + (n - t) / 2, u = i(c, r, o) - e, u > 0 ? n = c : t = c;
+            } while (Math.abs(u) > a && ++f < s);return c;
+          }function f(e, t, n, r) {
+            for (var o = 0; o < l; ++o) {
+              var c = u(t, n, r);if (0 === c) return t;t -= (i(t, n, r) - e) / c;
+            }return t;
+          }var l = 4,
+              a = 1e-7,
+              s = 10,
+              d = 11,
+              p = 1 / (d - 1),
+              m = "function" == typeof Float32Array;e.exports = function (e, t, n, r) {
+            function o(t) {
+              for (var r = 0, o = 1, i = d - 1; o !== i && l[o] <= t; ++o) {
+                r += p;
+              }--o;var a = (t - l[o]) / (l[o + 1] - l[o]),
+                  s = r + a * p,
+                  m = u(s, e, n);return m >= .001 ? f(t, s, e, n) : 0 === m ? s : c(t, r, r + p, e, n);
+            }if (!(0 <= e && e <= 1 && 0 <= n && n <= 1)) throw new Error("bezier x values must be in [0, 1] range");var l = m ? new Float32Array(d) : new Array(d);if (e !== t || n !== r) for (var a = 0; a < d; ++a) {
+              l[a] = i(a * p, e, n);
+            }return function (u) {
+              return e === t && n === r ? u : 0 === u ? 0 : 1 === u ? 1 : i(o(u), t, r);
+            };
           };
-        }
-
-        var parent,
-            area = makeArea(elem.offsetLeft, elem.offsetTop, elem.offsetWidth, elem.offsetHeight);
-        while ((parent = elem.parentNode) instanceof HTMLElement && elem !== finalElement) {
-          var clientLeft = parent.offsetLeft + parent.clientLeft;
-          var clientTop = parent.offsetTop + parent.clientTop;
-
-          // Make area relative to parent's client area.
-          area = area.relativeFromTo(elem, parent).translate(-clientLeft, -clientTop);
-
-          var scrollLeft = withinBounds(parent.scrollLeft, area.right - parent.clientWidth, area.left, parent.clientWidth);
-          var scrollTop = withinBounds(parent.scrollTop, area.bottom - parent.clientHeight, area.top, parent.clientHeight);
-          if (options) {
-            (0, _amator2.default)(parent, {
-              scrollLeft: scrollLeft,
-              scrollTop: scrollTop
-            }, options);
-          } else {
-            parent.scrollLeft = scrollLeft;
-            parent.scrollTop = scrollTop;
-          }
-
-          // Determine actual scroll amount by reading back scroll properties.
-          area = area.translate(clientLeft - parent.scrollLeft, clientTop - parent.scrollTop);
-          elem = parent;
-        }
-      };
-
-      var _amator = require('amator');
-
-      var _amator2 = _interopRequireDefault(_amator);
-
-      function _interopRequireDefault(obj) {
-        return obj && obj.__esModule ? obj : { default: obj };
-      }
-    }, { "amator": 10 }], 25: [function (require, module, exports) {
+        }, function (e, t, n) {
+          (function (t) {
+            (function () {
+              var n, r, o, i, u, c;"undefined" != typeof performance && null !== performance && performance.now ? e.exports = function () {
+                return performance.now();
+              } : void 0 !== t && null !== t && t.hrtime ? (e.exports = function () {
+                return (n() - u) / 1e6;
+              }, r = t.hrtime, n = function n() {
+                var e;return e = r(), 1e9 * e[0] + e[1];
+              }, i = n(), c = 1e9 * t.uptime(), u = i - c) : Date.now ? (e.exports = function () {
+                return Date.now() - o;
+              }, o = Date.now()) : (e.exports = function () {
+                return new Date().getTime() - o;
+              }, o = new Date().getTime());
+            }).call(this);
+          }).call(t, n(6));
+        }, function (e, t) {
+          function n() {
+            throw new Error("setTimeout has not been defined");
+          }function r() {
+            throw new Error("clearTimeout has not been defined");
+          }function o(e) {
+            if (a === setTimeout) return setTimeout(e, 0);if ((a === n || !a) && setTimeout) return a = setTimeout, setTimeout(e, 0);try {
+              return a(e, 0);
+            } catch (t) {
+              try {
+                return a.call(null, e, 0);
+              } catch (t) {
+                return a.call(this, e, 0);
+              }
+            }
+          }function i(e) {
+            if (s === clearTimeout) return clearTimeout(e);if ((s === r || !s) && clearTimeout) return s = clearTimeout, clearTimeout(e);try {
+              return s(e);
+            } catch (t) {
+              try {
+                return s.call(null, e);
+              } catch (t) {
+                return s.call(this, e);
+              }
+            }
+          }function u() {
+            y && p && (y = !1, p.length ? m = p.concat(m) : h = -1, m.length && c());
+          }function c() {
+            if (!y) {
+              var e = o(u);y = !0;for (var t = m.length; t;) {
+                for (p = m, m = []; ++h < t;) {
+                  p && p[h].run();
+                }h = -1, t = m.length;
+              }p = null, y = !1, i(e);
+            }
+          }function f(e, t) {
+            this.fun = e, this.array = t;
+          }function l() {}var a,
+              s,
+              d = e.exports = {};!function () {
+            try {
+              a = "function" == typeof setTimeout ? setTimeout : n;
+            } catch (e) {
+              a = n;
+            }try {
+              s = "function" == typeof clearTimeout ? clearTimeout : r;
+            } catch (e) {
+              s = r;
+            }
+          }();var p,
+              m = [],
+              y = !1,
+              h = -1;d.nextTick = function (e) {
+            var t = new Array(arguments.length - 1);if (arguments.length > 1) for (var n = 1; n < arguments.length; n++) {
+              t[n - 1] = arguments[n];
+            }m.push(new f(e, t)), 1 !== m.length || y || o(c);
+          }, f.prototype.run = function () {
+            this.fun.apply(null, this.array);
+          }, d.title = "browser", d.browser = !0, d.env = {}, d.argv = [], d.version = "", d.versions = {}, d.on = l, d.addListener = l, d.once = l, d.off = l, d.removeListener = l, d.removeAllListeners = l, d.emit = l, d.binding = function (e) {
+            throw new Error("process.binding is not supported");
+          }, d.cwd = function () {
+            return "/";
+          }, d.chdir = function (e) {
+            throw new Error("process.chdir is not supported");
+          }, d.umask = function () {
+            return 0;
+          };
+        }, function (e, t, n) {
+          (function (t) {
+            for (var r = n(5), o = "undefined" == typeof window ? t : window, i = ["moz", "webkit"], u = "AnimationFrame", c = o["request" + u], f = o["cancel" + u] || o["cancelRequest" + u], l = 0; !c && l < i.length; l++) {
+              c = o[i[l] + "Request" + u], f = o[i[l] + "Cancel" + u] || o[i[l] + "CancelRequest" + u];
+            }if (!c || !f) {
+              var a = 0,
+                  s = 0,
+                  d = [];c = function c(e) {
+                if (0 === d.length) {
+                  var t = r(),
+                      n = Math.max(0, 1e3 / 60 - (t - a));a = n + t, setTimeout(function () {
+                    var e = d.slice(0);d.length = 0;for (var t = 0; t < e.length; t++) {
+                      if (!e[t].cancelled) try {
+                        e[t].callback(a);
+                      } catch (e) {
+                        setTimeout(function () {
+                          throw e;
+                        }, 0);
+                      }
+                    }
+                  }, Math.round(n));
+                }return d.push({ handle: ++s, callback: e, cancelled: !1 }), s;
+              }, f = function f(e) {
+                for (var t = 0; t < d.length; t++) {
+                  d[t].handle === e && (d[t].cancelled = !0);
+                }
+              };
+            }e.exports = function (e) {
+              return c.call(o, e);
+            }, e.exports.cancel = function () {
+              f.apply(o, arguments);
+            }, e.exports.polyfill = function () {
+              o.requestAnimationFrame = c, o.cancelAnimationFrame = f;
+            };
+          }).call(t, n(8));
+        }, function (e, t) {
+          var n;n = function () {
+            return this;
+          }();try {
+            n = n || Function("return this")() || (0, eval)("this");
+          } catch (e) {
+            "object" == (typeof window === "undefined" ? "undefined" : _typeof(window)) && (n = window);
+          }e.exports = n;
+        }]);
+      });
+    }, {}], 28: [function (require, module, exports) {
 
       exports = module.exports = trim;
 
@@ -3930,7 +4009,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.right = function (str) {
         return str.replace(/\s*$/, '');
       };
-    }, {}], 26: [function (require, module, exports) {
+    }, {}], 29: [function (require, module, exports) {
       if (typeof Object.create === 'function') {
         // implementation from standard node.js 'util' module
         module.exports = function inherits(ctor, superCtor) {
@@ -3954,11 +4033,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctor.prototype.constructor = ctor;
         };
       }
-    }, {}], 27: [function (require, module, exports) {
+    }, {}], 30: [function (require, module, exports) {
       module.exports = function isBuffer(arg) {
         return arg && (typeof arg === "undefined" ? "undefined" : _typeof(arg)) === 'object' && typeof arg.copy === 'function' && typeof arg.fill === 'function' && typeof arg.readUInt8 === 'function';
       };
-    }, {}], 28: [function (require, module, exports) {
+    }, {}], 31: [function (require, module, exports) {
       (function (process, global) {
         // Copyright Joyent, Inc. and other Node contributors.
         //
@@ -4505,5 +4584,5 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return Object.prototype.hasOwnProperty.call(obj, prop);
         }
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "./support/isBuffer": 27, "_process": 22, "inherits": 26 }] }, {}, [1])(1);
+    }, { "./support/isBuffer": 30, "_process": 25, "inherits": 29 }] }, {}, [1])(1);
 });

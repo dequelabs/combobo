@@ -1,41 +1,36 @@
 'use strict';
 
-/**
- * NOTE:
- * - https://www.w3.org/TR/2016/WD-wai-aria-practices-1.1-20160317/#combobox
- *    - "For each combobox pattern the button need not be in the tab order if there
- *    is an appropriate keystroke associated with the input element such that when
- *    focus is on the input, the keystroke triggers display of the associated drop
- *    down list."
- */
-
 const Classlist = require('classlist');
 const extend = require('extend-shallow');
 const Emitter = require('component-emitter');
 const LiveRegion = require('live-region');
-const rndid = require('./lib/rndid');
+const scrollToElement = require('scrollto-element');
+const inView = require('./lib/utils/is-scrolled-in-view');
+const viewportStatus = require('./lib/utils/viewport-status');
 const filters = require('./lib/filters');
-const keyvent = require('./lib/keyvent');
-const isWithin = require('./lib/is-within');
-const elHandler = require('./lib/element-handler');
-const scrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
+const keyvent = require('./lib/utils/keyvent');
+const isWithin = require('./lib/utils/is-within');
+const elHandler = require('./lib/utils/element-handler');
+const attrs = require('./lib/attributes');
+const wrapMatch = require('./lib/utils/wrap-match');
+const defaults = require('./lib/defaults');
 
-const defaults = {
-  input: '.combobox',
-  list: '.listbox',
-  options: '.option', // qualified within `list`
-  groups: null, // qualified within `list`
-  openClass: 'open',
-  activeClass: 'active',
-  selectedClass: 'selected',
-  useLiveRegion: true,
-  multiselect: false,
-  noResultsText: null,
-  selectionValue: (selecteds) => selecteds.map((s) => s.innerText.trim()).join(' - '),
-  optionValue: (option) => option.innerHTML,
-  announcement: (n) => `${n} options available`,
-  filter: 'contains' // 'starts-with', 'equals', or funk
-};
+/**
+ *       /////////////
+ *       // COMBOBO //
+ *       /////////////
+ *
+ *           ."`".
+ *       .-./ _=_ \.-.
+ *      {  (,(oYo),) }}
+ *      {{ |   "   |} }
+ *      { { \(---)/  }}
+ *      {{  }'-=-'{ } }
+ *      { { }._:_.{  }}
+ *      {{  } -:- { } }
+ *      {_{ }`===`{  _}
+ *     ((((\)     (/))))
+ */
 
 module.exports = class Combobo {
   constructor(config) {
@@ -61,32 +56,19 @@ module.exports = class Combobo {
       });
     }
 
+    attrs(this.input, this.list, this.cachedOpts);
+
     // initial state
     this.isOpen = false;
-    this.liveRegion = null;
     this.currentOption = null;
     this.selected = [];
     this.isHovering = false;
 
-    this.initAttrs();
-    this.initEvents();
-  }
-
-  initAttrs() {
-    this.input.setAttribute('role', 'combobox');
-    this.list.setAttribute('role', 'listbox');
-
-    // ensure list has an id for the input's aria-owns attribute
-    this.list.id = this.list.id || rndid();
-    this.input.setAttribute('aria-owns', this.list.id);
-    this.input.setAttribute('aria-autocomplete', 'list');
-    this.input.setAttribute('aria-expanded', 'false');
-
-    this.setOptionAttrs();
-
     if (this.config.useLiveRegion) {
       this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
     }
+
+    this.initEvents();
   }
 
   initEvents() {
@@ -118,13 +100,6 @@ module.exports = class Combobo {
 
   getOptIndex() {
     return this.currentOption && this.currentOpts.indexOf(this.currentOption);
-  }
-
-  setOptionAttrs() {
-    this.currentOpts.forEach((opt) => {
-      opt.setAttribute('role', 'option');
-      opt.id = opt.id || rndid();
-    });
   }
 
   optionEvents() {
@@ -159,6 +134,20 @@ module.exports = class Combobo {
     }
     this.isOpen = true;
     this.emit('list:open');
+    const status = viewportStatus(this.list);
+    if (!status.visible) {
+      const offset = status.position === 'bottom' ?
+        0 - (window.innerHeight - (this.input.clientHeight + this.list.clientHeight)) :
+        0;
+
+      scrollToElement({
+        element: this.input,
+        offset: offset,
+        bezier: [0.19, 1, 0.22, 1],
+        duration: 100
+      });
+    }
+
     return this;
   }
 
@@ -228,9 +217,9 @@ module.exports = class Combobo {
         this.filter().openList();
       }
 
-      //Handles if there are no results found
+      // Handles if there are no results found
       let noResults = this.list.querySelector('.no-results-text');
-      if (this.config.noResultsText && !this.currentOpts.length && !noResults) { // create the noResults element
+      if (this.config.noResultsText && !this.currentOpts.length && !noResults) {
         noResults = document.createElement('div');
         Classlist(noResults).add('no-results-text');
         noResults.innerHTML = this.config.noResultsText;
@@ -251,6 +240,7 @@ module.exports = class Combobo {
         g.element.style.display = '';
       });
     }
+
     this.currentOpts = this.cachedOpts; // reset the opts
     return this;
   }
@@ -268,11 +258,12 @@ module.exports = class Combobo {
     if (!befores.every((b) => this.currentOpts.indexOf(b) > -1) && !supress) {
       this.announceCount();
     }
+
     return this;
   }
 
   announceCount() {
-    if (this.config.announcement) {
+    if (this.config.announcement && this.liveRegion) {
       this.liveRegion.announce(
         this.config.announcement(this.currentOpts.length),
         500
@@ -283,15 +274,15 @@ module.exports = class Combobo {
   }
 
   updateOpts() {
+    const optVal = this.config.optionValue;
     this.cachedOpts.forEach((opt) => {
       // configure display of options based on filtering
       opt.style.display = this.currentOpts.indexOf(opt) === -1 ? 'none' : '';
-    });
 
-    // configure the innerHTML of each option based on what optionValues returns
-    this.currentOpts.forEach((actopt) => {
-      const newVal = this.config.optionValue(actopt);
-      actopt.innerHTML = newVal;
+      // configure the innerHTML of each option
+      opt.innerHTML = typeof optVal === 'string' ?
+        wrapMatch(opt, this.input, optVal) :
+        optVal(opt);
     });
 
     this.updateGroups();
@@ -351,6 +342,7 @@ module.exports = class Combobo {
       this.freshSelection = true;
       this.emit('selection', { text: this.input.value, option: currentOpt });
     }
+
     return this;
   }
 
@@ -359,7 +351,7 @@ module.exports = class Combobo {
       const optIndex = this.getOptIndex();
       return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1, fromKey);
     }
-    // NOTE: This prevents circularity
+
     if (!this.currentOpts[option]) {
       // end of the line so allow scroll up for visibility of potential group labels
       if (this.getOptIndex() === 0) { this.list.scrollTop = 0; }
@@ -371,10 +363,11 @@ module.exports = class Combobo {
     this.pseudoFocus();
     // Dectecting if element is inView and scroll to it.
     this.currentOpts.forEach((opt) => {
-      if (opt.classList.contains('active')) {
-        scrollIntoViewIfNeeded(opt, false);
+      if (opt.classList.contains('active') && !inView(this.list, opt)) {
+        scrollToElement(opt);
       }
     });
+
     return this;
   }
 
@@ -401,5 +394,16 @@ module.exports = class Combobo {
       this.currentOption = option;
       this.emit('change');
     }
+
+    return this;
   }
 };
+
+/**
+ * NOTE:
+ * - https://www.w3.org/TR/2016/WD-wai-aria-practices-1.1-20160317/#combobox
+ *    - "For each combobox pattern the button need not be in the tab order if there
+ *    is an appropriate keystroke associated with the input element such that when
+ *    focus is on the input, the keystroke triggers display of the associated drop
+ *    down list."
+ */
