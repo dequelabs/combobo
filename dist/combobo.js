@@ -2309,8 +2309,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function decodeCodePointsArray(codePoints) {
         var len = codePoints.length;
         if (len <= MAX_ARGUMENTS_LENGTH) {
-          return String.fromCharCode.apply(String, codePoints // avoid extra slice()
-          );
+          return String.fromCharCode.apply(String, codePoints); // avoid extra slice()
         }
 
         // Decode in chunks to avoid "call stack size exceeded".
@@ -2385,9 +2384,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         if (end < start) end = start;
 
-        var newBuf = this.subarray(start, end
+        var newBuf = this.subarray(start, end);
         // Return an augmented `Uint8Array` instance
-        );newBuf.__proto__ = Buffer.prototype;
+        newBuf.__proto__ = Buffer.prototype;
         return newBuf;
       };
 
@@ -2899,9 +2898,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       function base64clean(str) {
         // Node strips out invalid characters like \n and \t from the string, base64-js does not
-        str = str.trim().replace(INVALID_BASE64_RE, ''
+        str = str.trim().replace(INVALID_BASE64_RE, '');
         // Node converts strings with length < 2 to ''
-        );if (str.length < 2) return '';
+        if (str.length < 2) return '';
         // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
         while (str.length % 4 !== 0) {
           str = str + '=';
@@ -2922,10 +2921,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var bytes = [];
 
         for (var i = 0; i < length; ++i) {
-          codePoint = string.charCodeAt(i
+          codePoint = string.charCodeAt(i);
 
           // is surrogate component
-          );if (codePoint > 0xD7FF && codePoint < 0xE000) {
+          if (codePoint > 0xD7FF && codePoint < 0xE000) {
             // last char was a lead
             if (!leadSurrogate) {
               // no lead yet
