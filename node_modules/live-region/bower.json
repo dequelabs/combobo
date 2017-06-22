@@ -1,0 +1,24 @@
+{
+  "name": "live-region",
+  "description": "Accessible live region module",
+  "main": "index.js",
+  "authors": [
+    "Harris Schneiderman"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "acessibility",
+    "live",
+    "region",
+    "assistive",
+    "technology"
+  ],
+  "homepage": "https://github.com/schne324/live-region",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
