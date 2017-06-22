@@ -11,14 +11,15 @@ const filters = require('./lib/filters');
 const keyvent = require('./lib/utils/keyvent');
 const isWithin = require('./lib/utils/is-within');
 const elHandler = require('./lib/utils/element-handler');
+const getCurrentGroup = require('./lib/current-group');
 const attrs = require('./lib/attributes');
 const wrapMatch = require('./lib/utils/wrap-match');
 const defaults = require('./lib/defaults');
 
 /**
- *       /////////////
- *       // COMBOBO //
- *       /////////////
+ * /////////////////////////
+ * //////// COMBOBO ////////
+ * /////////////////////////
  *
  *           ."`".
  *       .-./ _=_ \.-.
@@ -38,16 +39,25 @@ module.exports = class Combobo {
 
     // merge user config with default config
     this.config = {};
+    const announcementConfig = {};
+    config.announcement = config.announcement || {};
+    extend(announcementConfig, defaults.announcement, config.announcement);
     extend(this.config, defaults, config);
+    this.config.announcement = announcementConfig;
 
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true, this.list);
+    // initial state
+    this.isOpen = false;
+    this.currentOption = null;
+    this.selected = [];
+    this.groups = [];
+    this.isHovering = false;
 
     // option groups
     if (this.config.groups) {
       const groupEls = elHandler(this.config.groups, true, this.list);
-      this.isGrouped = true;
       this.groups = groupEls.map((groupEl) => {
         return {
           element: groupEl,
@@ -58,11 +68,6 @@ module.exports = class Combobo {
 
     attrs(this.input, this.list, this.cachedOpts);
 
-    // initial state
-    this.isOpen = false;
-    this.currentOption = null;
-    this.selected = [];
-    this.isHovering = false;
 
     if (this.config.useLiveRegion) {
       this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
@@ -235,11 +240,9 @@ module.exports = class Combobo {
       opt.style.display = '';
     });
 
-    if (this.isGrouped) {
-      this.groups.forEach((g) => {
-        g.element.style.display = '';
-      });
-    }
+    this.groups.forEach((g) => {
+      g.element.style.display = '';
+    });
 
     this.currentOpts = this.cachedOpts; // reset the opts
     return this;
@@ -263,9 +266,9 @@ module.exports = class Combobo {
   }
 
   announceCount() {
-    if (this.config.announcement && this.liveRegion) {
+    if (this.config.announcement && this.config.announcement.count && this.liveRegion) {
       this.liveRegion.announce(
-        this.config.announcement(this.currentOpts.length),
+        this.config.announcement.count(this.currentOpts.length),
         500
       );
     }
@@ -290,12 +293,10 @@ module.exports = class Combobo {
   }
 
   updateGroups() {
-    if (this.isGrouped) {
-      this.groups.forEach((groupData) => {
-        const visibleOpts = groupData.options.filter((opt) => opt.style.display === '');
-        groupData.element.style.display = visibleOpts.length ? '' : 'none';
-      });
-    }
+    this.groups.forEach((groupData) => {
+      const visibleOpts = groupData.options.filter((opt) => opt.style.display === '');
+      groupData.element.style.display = visibleOpts.length ? '' : 'none';
+    });
     return this;
   }
 
@@ -352,15 +353,23 @@ module.exports = class Combobo {
       return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1, fromKey);
     }
 
+    const newOpt = this.currentOpts[option];
+    let groupChange = false;
+
     if (!this.currentOpts[option]) {
       // end of the line so allow scroll up for visibility of potential group labels
       if (this.getOptIndex() === 0) { this.list.scrollTop = 0; }
       return this;
+    } else if (this.groups.length) {
+      const newGroup = getCurrentGroup(this.groups, newOpt);
+      groupChange = newGroup && newGroup !== this.currentGroup;
+      this.currentGroup = newGroup;
     }
+
     // update current option
-    this.currentOption = this.currentOpts[option];
+    this.currentOption = newOpt;
     // show pseudo focus styles
-    this.pseudoFocus();
+    this.pseudoFocus(groupChange);
     // Dectecting if element is inView and scroll to it.
     this.currentOpts.forEach((opt) => {
       if (opt.classList.contains('active') && !inView(this.list, opt)) {
@@ -371,7 +380,7 @@ module.exports = class Combobo {
     return this;
   }
 
-  pseudoFocus() {
+  pseudoFocus(groupChanged) {
     const option = this.currentOption;
     const activeClass = this.config.activeClass;
     const prevId = this.input.getAttribute('data-active-option');
@@ -387,10 +396,15 @@ module.exports = class Combobo {
       if (activeClass) { Classlist(option).add(activeClass); }
 
       if (this.liveRegion) {
-        this.liveRegion.announce(this.currentOption.innerText, 500);
+        let msg = this.currentOption.innerText; // TODO: make this more configurable
+        msg = groupChanged && this.config.announcement && this.config.announcement.groupChange ?
+          `${this.config.announcement.groupChange(this.currentGroup.element)} ${msg}` :
+          msg;
+        this.liveRegion.announce(msg, 500);
       } else {
         this.input.setAttribute('aria-activedescendant', option.id);
       }
+
       this.currentOption = option;
       this.emit('change');
     }
