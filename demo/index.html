@@ -231,7 +231,7 @@
             groups: '.optgroup',
             activeClass: 'active',
             noResultsText: 'No results found.',
-            optionValue: (option) => {
+            optionValue: function (option) {
               var inputVal = box['single-with-groups'].input.value;
               return wrapNum(option.innerText, inputVal);
             }
@@ -241,13 +241,13 @@
             list: '.multiselect .listbox',
             activeClass: 'active',
             multiselect: true,
-            selectionValue: (selectedOptions) => {
+            selectionValue: function (selectedOptions) {
               return selectedOptions.length > 1 ?
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();
             },
             noResultsText: 'No results found.',
-            optionValue: (option) => {
+            optionValue: function (option) {
               var inputVal = box.multiselect.input.value;
               return wrapNum(option.innerText, inputVal)
             }
@@ -268,8 +268,8 @@
         Array.prototype.slice.call(
           document.querySelectorAll('.trigger')
         ).forEach(function (trigger) {
-          const instName = trigger.getAttribute('data-trigger');
-          const inst = box[instName];
+          var instName = trigger.getAttribute('data-trigger');
+          var inst = box[instName];
           trigger.addEventListener('click', function (e) {
             e.stopPropagation();
             console.log('clicked!?!?!');
