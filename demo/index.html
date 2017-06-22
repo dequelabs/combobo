@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body id="demo">
-    <h1>Combobo Box</h1>
+    <h1>Combobo</h1>
+    <h2>Accessible combobox module</h2>
     <pre role="img" aria-label="Combobo Gorilla">
  ."`".
  .-./ _=_ \.-.
@@ -52,7 +53,7 @@
         <div class="combo-wrap">
           <input type="text" class="combobox" id="combobox-single-with-groups">
           <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="single-with-groups"></i>
-          <div class="listbox">
+          <div class="listbox" aria-labelledby='combobox-single-with-groups'>
             <div class="optgroup" role="group" aria-labelledby='clothing'>
               <div class="optgroup-label" id='clothing'>Clothing</div>
               <div class="option">Shirts</div>
