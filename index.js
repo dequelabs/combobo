@@ -48,6 +48,7 @@ module.exports = class Combobo {
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true, this.list);
+
     // initial state
     this.isOpen = false;
     this.currentOption = null;
@@ -236,15 +237,10 @@ module.exports = class Combobo {
   }
 
   reset() {
-    this.cachedOpts.forEach((opt) => {
-      opt.style.display = '';
-    });
-
-    this.groups.forEach((g) => {
-      g.element.style.display = '';
-    });
-
-    this.currentOpts = this.cachedOpts; // reset the opts
+    this.cachedOpts.forEach((o) => o.style.display = '');
+    this.groups.forEach((g) => g.element.style.display = '');
+    // reset the opts
+    this.currentOpts = this.cachedOpts;
     return this;
   }
 
@@ -401,9 +397,12 @@ module.exports = class Combobo {
           `${this.config.announcement.groupChange(this.currentGroup.element)} ${msg}` :
           msg;
         this.liveRegion.announce(msg, 500);
-      } else {
         this.input.setAttribute('aria-activedescendant', option.id);
       }
+
+      // else {
+      //   this.input.setAttribute('aria-activedescendant', option.id);
+      // }
 
       this.currentOption = option;
       this.emit('change');

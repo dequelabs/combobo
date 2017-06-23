@@ -90,6 +90,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.input = elHandler(this.config.input);
           this.list = elHandler(this.config.list);
           this.cachedOpts = this.currentOpts = elHandler(this.config.options, true, this.list);
+
           // initial state
           this.isOpen = false;
           this.currentOption = null;
@@ -302,15 +303,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "reset",
           value: function reset() {
-            this.cachedOpts.forEach(function (opt) {
-              opt.style.display = '';
+            this.cachedOpts.forEach(function (o) {
+              return o.style.display = '';
             });
-
             this.groups.forEach(function (g) {
-              g.element.style.display = '';
+              return g.element.style.display = '';
             });
-
-            this.currentOpts = this.cachedOpts; // reset the opts
+            // reset the opts
+            this.currentOpts = this.cachedOpts;
             return this;
           }
         }, {
@@ -483,9 +483,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var msg = this.currentOption.innerText; // TODO: make this more configurable
                 msg = groupChanged && this.config.announcement && this.config.announcement.groupChange ? this.config.announcement.groupChange(this.currentGroup.element) + " " + msg : msg;
                 this.liveRegion.announce(msg, 500);
-              } else {
                 this.input.setAttribute('aria-activedescendant', option.id);
               }
+
+              // else {
+              //   this.input.setAttribute('aria-activedescendant', option.id);
+              // }
 
               this.currentOption = option;
               this.emit('change');
@@ -567,7 +570,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         announcement: {
           count: function count(n) {
             return n + " options available";
-          }
+          },
+          selected: 'Selected'
         },
         filter: 'contains' // 'starts-with', 'equals', or funk
       };
