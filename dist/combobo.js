@@ -39,7 +39,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       'use strict';
 
       var Classlist = require('classlist');
-      var extend = require('extend-shallow');
       var Emitter = require('component-emitter');
       var LiveRegion = require('live-region');
       var scrollToElement = require('scrollto-element');
@@ -49,14 +48,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var keyvent = require('./lib/utils/keyvent');
       var isWithin = require('./lib/utils/is-within');
       var elHandler = require('./lib/utils/element-handler');
+      var getCurrentGroup = require('./lib/current-group');
+      var noResultsHandler = require('./lib/no-results');
       var attrs = require('./lib/attributes');
       var wrapMatch = require('./lib/utils/wrap-match');
-      var defaults = require('./lib/defaults');
+      var configuration = require('./lib/config');
+      var announceActive = require('./lib/announce-active');
 
       /**
-       *       /////////////
-       *       // COMBOBO //
-       *       /////////////
+       * /////////////////////////
+       * //////// COMBOBO ////////
+       * /////////////////////////
        *
        *           ."`".
        *       .-./ _=_ \.-.
@@ -79,17 +81,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           config = config || {};
 
           // merge user config with default config
-          this.config = {};
-          extend(this.config, defaults, config);
-
+          this.config = configuration(config);
           this.input = elHandler(this.config.input);
           this.list = elHandler(this.config.list);
           this.cachedOpts = this.currentOpts = elHandler(this.config.options, true, this.list);
 
+          // initial state
+          this.isOpen = false;
+          this.currentOption = null;
+          this.selected = [];
+          this.groups = [];
+          this.isHovering = false;
+
           // option groups
           if (this.config.groups) {
             var groupEls = elHandler(this.config.groups, true, this.list);
-            this.isGrouped = true;
             this.groups = groupEls.map(function (groupEl) {
               return {
                 element: groupEl,
@@ -100,13 +106,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
           }
 
-          attrs(this.input, this.list, this.cachedOpts);
+          if (!this.input || !this.list) {
+            throw new Error('Unable to find required elements (list/input)');
+          }
 
-          // initial state
-          this.isOpen = false;
-          this.currentOption = null;
-          this.selected = [];
-          this.isHovering = false;
+          attrs(this.input, this.list, this.cachedOpts);
 
           if (this.config.useLiveRegion) {
             this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
@@ -214,7 +218,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (focus) {
               this.input.focus();
             }
-            // Sets the value back to what it was
+            // Set the value back to what it was
             if (!this.multiselect && this.selected.length) {
               this.input.value = this.config.selectionValue(this.selected);
             }
@@ -283,32 +287,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 _this4.filter().openList();
               }
 
-              // Handles if there are no results found
-              var noResults = _this4.list.querySelector('.no-results-text');
-              if (_this4.config.noResultsText && !_this4.currentOpts.length && !noResults) {
-                noResults = document.createElement('div');
-                Classlist(noResults).add('no-results-text');
-                noResults.innerHTML = _this4.config.noResultsText;
-                _this4.list.appendChild(noResults);
-              } else if (noResults && _this4.currentOpts.length) {
-                _this4.list.removeChild(noResults);
-              }
+              // handle empty results
+              noResultsHandler(_this4.list, _this4.currentOpts, _this4.config.noResultsText);
             });
           }
         }, {
           key: "reset",
           value: function reset() {
-            this.cachedOpts.forEach(function (opt) {
-              opt.style.display = '';
+            this.cachedOpts.forEach(function (o) {
+              return o.style.display = '';
             });
-
-            if (this.isGrouped) {
-              this.groups.forEach(function (g) {
-                g.element.style.display = '';
-              });
-            }
-
-            this.currentOpts = this.cachedOpts; // reset the opts
+            this.groups.forEach(function (g) {
+              return g.element.style.display = '';
+            });
+            // reset the opts
+            this.currentOpts = this.cachedOpts;
             return this;
           }
         }, {
@@ -334,8 +327,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "announceCount",
           value: function announceCount() {
-            if (this.config.announcement && this.liveRegion) {
-              this.liveRegion.announce(this.config.announcement(this.currentOpts.length), 500);
+            if (this.config.announcement && this.config.announcement.count && this.liveRegion) {
+              this.liveRegion.announce(this.config.announcement.count(this.currentOpts.length), 500);
             }
 
             return this;
@@ -360,19 +353,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "updateGroups",
           value: function updateGroups() {
-            if (this.isGrouped) {
-              this.groups.forEach(function (groupData) {
-                var visibleOpts = groupData.options.filter(function (opt) {
-                  return opt.style.display === '';
-                });
-                groupData.element.style.display = visibleOpts.length ? '' : 'none';
+            this.groups.forEach(function (groupData) {
+              var visibleOpts = groupData.options.filter(function (opt) {
+                return opt.style.display === '';
               });
-            }
+              groupData.element.style.display = visibleOpts.length ? '' : 'none';
+            });
             return this;
           }
         }, {
           key: "select",
           value: function select() {
+            var _this7 = this;
+
             var newSelected = false;
             var currentOpt = this.currentOption;
             if (!currentOpt) {
@@ -387,7 +380,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             // Multiselect option
             if (this.config.multiselect) {
               var idx = this.selected.indexOf(currentOpt);
-              //If option is in array and gets clicked, remove it
+              // If option is in array and gets clicked, remove it
               if (idx > -1) {
                 this.selected.splice(idx, 1);
               } else {
@@ -397,6 +390,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               // Single select stuff
               this.selected = [currentOpt];
             }
+
+            // manage aria-selected
+            this.cachedOpts.forEach(function (o) {
+              o.setAttribute('aria-selected', _this7.selected.indexOf(o) > -1 ? 'true' : 'false');
+            });
 
             // Taking care of adding / removing selected class
             if (Classlist(currentOpt).contains(this.config.selectedClass)) {
@@ -409,10 +407,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
             this.cachedInputValue = this.input.value;
-            this.filter(true);
-            this.reset();
-            this.input.select();
-            this.closeList();
+            this.filter(true).reset().closeList();
+            this.input.select(); // highlight the input's value
 
             if (newSelected) {
               this.freshSelection = true;
@@ -424,7 +420,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
           key: "goTo",
           value: function goTo(option, fromKey) {
-            var _this7 = this;
+            var _this8 = this;
 
             if (typeof option === 'string') {
               // 'prev' or 'next'
@@ -432,20 +428,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               return this.goTo(option === 'next' ? optIndex + 1 : optIndex - 1, fromKey);
             }
 
+            var newOpt = this.currentOpts[option];
+            var groupChange = false;
+
             if (!this.currentOpts[option]) {
               // end of the line so allow scroll up for visibility of potential group labels
               if (this.getOptIndex() === 0) {
                 this.list.scrollTop = 0;
               }
               return this;
+            } else if (this.groups.length) {
+              var newGroup = getCurrentGroup(this.groups, newOpt);
+              groupChange = newGroup && newGroup !== this.currentGroup;
+              this.currentGroup = newGroup;
             }
+
             // update current option
-            this.currentOption = this.currentOpts[option];
+            this.currentOption = newOpt;
             // show pseudo focus styles
-            this.pseudoFocus();
+            this.pseudoFocus(groupChange);
             // Dectecting if element is inView and scroll to it.
             this.currentOpts.forEach(function (opt) {
-              if (opt.classList.contains('active') && !inView(_this7.list, opt)) {
+              if (opt.classList.contains(_this8.config.activeClass) && !inView(_this8.list, opt)) {
                 scrollToElement(opt);
               }
             });
@@ -454,7 +458,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         }, {
           key: "pseudoFocus",
-          value: function pseudoFocus() {
+          value: function pseudoFocus(groupChanged) {
             var option = this.currentOption;
             var activeClass = this.config.activeClass;
             var prevId = this.input.getAttribute('data-active-option');
@@ -472,10 +476,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
 
               if (this.liveRegion) {
-                this.liveRegion.announce(this.currentOption.innerText, 500);
-              } else {
-                this.input.setAttribute('aria-activedescendant', option.id);
+                announceActive(option, this.config, this.liveRegion.announce.bind(this.liveRegion), groupChanged, this.currentGroup && this.currentGroup.element);
               }
+
+              this.input.setAttribute('aria-activedescendant', option.id);
               this.currentOption = option;
               this.emit('change');
             }
@@ -495,7 +499,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
        *    focus is on the input, the keystroke triggers display of the associated drop
        *    down list."
        */
-    }, { "./lib/attributes": 2, "./lib/defaults": 3, "./lib/filters": 4, "./lib/utils/element-handler": 5, "./lib/utils/is-scrolled-in-view": 6, "./lib/utils/is-within": 7, "./lib/utils/keyvent": 9, "./lib/utils/viewport-status": 12, "./lib/utils/wrap-match": 13, "classlist": 18, "component-emitter": 19, "extend-shallow": 21, "live-region": 24, "scrollto-element": 27 }], 2: [function (require, module, exports) {
+    }, { "./lib/announce-active": 2, "./lib/attributes": 3, "./lib/config": 4, "./lib/current-group": 5, "./lib/filters": 6, "./lib/no-results": 7, "./lib/utils/element-handler": 8, "./lib/utils/is-scrolled-in-view": 9, "./lib/utils/is-within": 10, "./lib/utils/keyvent": 12, "./lib/utils/viewport-status": 15, "./lib/utils/wrap-match": 16, "classlist": 21, "component-emitter": 22, "live-region": 27, "scrollto-element": 30 }], 2: [function (require, module, exports) {
+      'use strict';
+
+      /**
+       * Announces info about newly activated (NOT selected) option
+       * @param  {HTMLElement} option   the newly active option
+       * @param  {Object} config        Combobo configuration object
+       * @param  {function} announce    the live region announce function
+       * @param  {Boolean} groupChanged if activation entailed a group change (if applicable)
+       */
+
+      module.exports = function (option, config, announce, groupChanged, element) {
+        var isSelected = option.getAttribute('aria-selected') === 'true';
+        var selectedText = config.announcement.selected;
+        var msg = option.innerText; // TODO: make this more configurable
+
+        // add text about newly entered group (if applicable)
+        msg = groupChanged && config.announcement && config.announcement.groupChange ? config.announcement.groupChange(element) + " " + msg : msg;
+
+        // convey selected state to AT that don't support aria-activedescendant (if applicable)
+        msg = isSelected && selectedText ? msg + " " + selectedText : msg;
+
+        // announce info to AT
+        announce(msg, 500);
+      };
+    }, {}], 3: [function (require, module, exports) {
       'use strict';
 
       var rndid = require('./utils/rndid');
@@ -517,15 +546,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           opt.id = opt.id || rndid();
         });
       };
-    }, { "./utils/rndid": 10 }], 3: [function (require, module, exports) {
+    }, { "./utils/rndid": 13 }], 4: [function (require, module, exports) {
       'use strict';
+
+      var extend = require('extend-shallow');
 
       /**
        * The default config for Combobo
        * @type {Object}
        */
-
-      module.exports = {
+      var defaults = {
         input: '.combobox',
         list: '.listbox',
         options: '.option', // qualified within `list`
@@ -544,12 +574,43 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         optionValue: function optionValue(option) {
           return option.innerHTML;
         },
-        announcement: function announcement(n) {
-          return n + " options available";
+        announcement: {
+          count: function count(n) {
+            return n + " options available";
+          },
+          selected: 'Selected.'
         },
         filter: 'contains' // 'starts-with', 'equals', or funk
       };
-    }, {}], 4: [function (require, module, exports) {
+
+      /**
+       * Merges user's config with defaults
+       * @param  {Object} userConfig
+       * @return {Object}
+       */
+      module.exports = function (userConfig) {
+        var config = {};
+        var announcementConfig = {};
+        // setup for announcement
+        userConfig.announcement = userConfig.announcement || {};
+        // merge user's announcement object with the announcement defaults
+        extend(announcementConfig, defaults.announcement, userConfig.announcement);
+        // merge the others...
+        extend(config, defaults, userConfig);
+        config.announcement = announcementConfig;
+
+        return config;
+      };
+    }, { "extend-shallow": 24 }], 5: [function (require, module, exports) {
+      'use strict';
+
+      module.exports = function (groups, option) {
+        var matches = groups.filter(function (g) {
+          return g.options.indexOf(option) > -1;
+        });
+        return matches.length && matches[0];
+      };
+    }, {}], 6: [function (require, module, exports) {
       'use strict';
 
       var val = require('./value');
@@ -571,7 +632,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           });
         }
       };
-    }, { "./value": 14 }], 5: [function (require, module, exports) {
+    }, { "./value": 17 }], 7: [function (require, module, exports) {
+      'use strict';
+
+      var Classlist = require('classlist');
+
+      module.exports = function (list, currentOpts, noResultsText) {
+        var noResults = list.querySelector('.combobo-no-results');
+
+        if (noResultsText && !currentOpts.length && !noResults) {
+          noResults = document.createElement('div');
+          Classlist(noResults).add('combobo-no-results');
+          noResults.innerHTML = noResultsText;
+          list.appendChild(noResults);
+        } else if (noResults && currentOpts.length) {
+          list.removeChild(noResults);
+        }
+      };
+    }, { "classlist": 21 }], 8: [function (require, module, exports) {
       'use strict';
 
       var select = require('./select');
@@ -584,7 +662,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return l;
       };
-    }, { "./select": 11 }], 6: [function (require, module, exports) {
+    }, { "./select": 14 }], 9: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -604,7 +682,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return !isAbove && !isBelow;
       };
-    }, {}], 7: [function (require, module, exports) {
+    }, {}], 10: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (target, els, checkSelf) {
@@ -624,7 +702,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return false;
       };
-    }, {}], 8: [function (require, module, exports) {
+    }, {}], 11: [function (require, module, exports) {
       'use strict';
 
       module.exports = {
@@ -638,7 +716,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         39: 'right',
         40: 'down'
       };
-    }, {}], 9: [function (require, module, exports) {
+    }, {}], 12: [function (require, module, exports) {
       'use strict';
 
       var keymap = require('./keymap');
@@ -690,7 +768,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.press = function (el, config) {
         return exports.attach('keypress', el, config);
       };
-    }, { "./keymap": 8 }], 10: [function (require, module, exports) {
+    }, { "./keymap": 11 }], 13: [function (require, module, exports) {
       'use strict';
 
       var rndm = require('rndm');
@@ -706,7 +784,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return id;
       }
-    }, { "rndm": 26 }], 11: [function (require, module, exports) {
+    }, { "rndm": 29 }], 14: [function (require, module, exports) {
       'use strict';
 
       exports = module.exports = function (selector, context) {
@@ -718,7 +796,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         context = context || document;
         return Array.prototype.slice.call(context.querySelectorAll(selector));
       };
-    }, {}], 12: [function (require, module, exports) {
+    }, {}], 15: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -746,7 +824,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return data;
       };
-    }, {}], 13: [function (require, module, exports) {
+    }, {}], 16: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -763,8 +841,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var matchStart = optionText.toLowerCase().indexOf(inputText.toLowerCase());
         var matchLength = inputText.length;
 
-        accentClass = accentClass || 'underline';
-
         if (inputText && matchStart >= 0) {
           var before = optionText.substring(0, matchStart);
           var matchText = optionText.substr(matchStart, matchLength);
@@ -774,13 +850,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return optionText;
       };
-    }, {}], 14: [function (require, module, exports) {
+    }, {}], 17: [function (require, module, exports) {
       'use strict';
 
       module.exports = function (el) {
         return el.getAttribute('data-value') || el.innerText;
       };
-    }, {}], 15: [function (require, module, exports) {
+    }, {}], 18: [function (require, module, exports) {
       (function (global) {
         'use strict';
 
@@ -1252,7 +1328,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return keys;
         };
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "util/": 31 }], 16: [function (require, module, exports) {
+    }, { "util/": 34 }], 19: [function (require, module, exports) {
       'use strict';
 
       exports.byteLength = byteLength;
@@ -1367,7 +1443,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return parts.join('');
       }
-    }, {}], 17: [function (require, module, exports) {
+    }, {}], 20: [function (require, module, exports) {
       /*!
        * The buffer module from node.js, for the browser.
        *
@@ -2309,8 +2385,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function decodeCodePointsArray(codePoints) {
         var len = codePoints.length;
         if (len <= MAX_ARGUMENTS_LENGTH) {
-          return String.fromCharCode.apply(String, codePoints // avoid extra slice()
-          );
+          return String.fromCharCode.apply(String, codePoints); // avoid extra slice()
         }
 
         // Decode in chunks to avoid "call stack size exceeded".
@@ -2385,9 +2460,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         if (end < start) end = start;
 
-        var newBuf = this.subarray(start, end
+        var newBuf = this.subarray(start, end);
         // Return an augmented `Uint8Array` instance
-        );newBuf.__proto__ = Buffer.prototype;
+        newBuf.__proto__ = Buffer.prototype;
         return newBuf;
       };
 
@@ -2899,9 +2974,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       function base64clean(str) {
         // Node strips out invalid characters like \n and \t from the string, base64-js does not
-        str = str.trim().replace(INVALID_BASE64_RE, ''
+        str = str.trim().replace(INVALID_BASE64_RE, '');
         // Node converts strings with length < 2 to ''
-        );if (str.length < 2) return '';
+        if (str.length < 2) return '';
         // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
         while (str.length % 4 !== 0) {
           str = str + '=';
@@ -2922,10 +2997,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var bytes = [];
 
         for (var i = 0; i < length; ++i) {
-          codePoint = string.charCodeAt(i
+          codePoint = string.charCodeAt(i);
 
           // is surrogate component
-          );if (codePoint > 0xD7FF && codePoint < 0xE000) {
+          if (codePoint > 0xD7FF && codePoint < 0xE000) {
             // last char was a lead
             if (!leadSurrogate) {
               // no lead yet
@@ -3027,7 +3102,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function numberIsNaN(obj) {
         return obj !== obj; // eslint-disable-line no-self-compare
       }
-    }, { "base64-js": 16, "ieee754": 22 }], 18: [function (require, module, exports) {
+    }, { "base64-js": 19, "ieee754": 25 }], 21: [function (require, module, exports) {
       'use strict';
 
       module.exports = ClassList;
@@ -3140,7 +3215,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       ClassList.prototype.toString = function () {
         return arr.join.call(this, ' ');
       };
-    }, { "component-indexof": 20, "trim": 28 }], 19: [function (require, module, exports) {
+    }, { "component-indexof": 23, "trim": 31 }], 22: [function (require, module, exports) {
 
       /**
        * Expose `Emitter`.
@@ -3299,7 +3374,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       Emitter.prototype.hasListeners = function (event) {
         return !!this.listeners(event).length;
       };
-    }, {}], 20: [function (require, module, exports) {
+    }, {}], 23: [function (require, module, exports) {
       module.exports = function (arr, obj) {
         if (arr.indexOf) return arr.indexOf(obj);
         for (var i = 0; i < arr.length; ++i) {
@@ -3307,7 +3382,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         return -1;
       };
-    }, {}], 21: [function (require, module, exports) {
+    }, {}], 24: [function (require, module, exports) {
       'use strict';
 
       var isObject = require('is-extendable');
@@ -3343,7 +3418,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       function hasOwn(obj, key) {
         return Object.prototype.hasOwnProperty.call(obj, key);
       }
-    }, { "is-extendable": 23 }], 22: [function (require, module, exports) {
+    }, { "is-extendable": 26 }], 25: [function (require, module, exports) {
       exports.read = function (buffer, offset, isLE, mLen, nBytes) {
         var e, m;
         var eLen = nBytes * 8 - mLen - 1;
@@ -3428,7 +3503,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         buffer[offset + i - d] |= s * 128;
       };
-    }, {}], 23: [function (require, module, exports) {
+    }, {}], 26: [function (require, module, exports) {
       /*!
        * is-extendable <https://github.com/jonschlinkert/is-extendable>
        *
@@ -3441,7 +3516,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       module.exports = function isExtendable(val) {
         return typeof val !== 'undefined' && val !== null && ((typeof val === "undefined" ? "undefined" : _typeof(val)) === 'object' || typeof val === 'function');
       };
-    }, {}], 24: [function (require, module, exports) {
+    }, {}], 27: [function (require, module, exports) {
       'use strict';
 
       /**
@@ -3515,7 +3590,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (typeof module !== 'undefined') {
         module.exports = LiveRegion;
       }
-    }, {}], 25: [function (require, module, exports) {
+    }, {}], 28: [function (require, module, exports) {
       // shim for using process in browser
       var process = module.exports = {};
 
@@ -3701,7 +3776,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       process.umask = function () {
         return 0;
       };
-    }, {}], 26: [function (require, module, exports) {
+    }, {}], 29: [function (require, module, exports) {
       (function (Buffer) {
 
         var assert = require('assert');
@@ -3730,7 +3805,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           };
         }
       }).call(this, require("buffer").Buffer);
-    }, { "assert": 15, "buffer": 17 }], 27: [function (require, module, exports) {
+    }, { "assert": 18, "buffer": 20 }], 30: [function (require, module, exports) {
       !function (e, t) {
         "object" == (typeof exports === "undefined" ? "undefined" : _typeof(exports)) && "object" == (typeof module === "undefined" ? "undefined" : _typeof(module)) ? module.exports = t() : "function" == typeof define && define.amd ? define([], t) : "object" == (typeof exports === "undefined" ? "undefined" : _typeof(exports)) ? exports.scrolltoElement = t() : e.scrolltoElement = t();
       }(this, function () {
@@ -3994,7 +4069,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }e.exports = n;
         }]);
       });
-    }, {}], 28: [function (require, module, exports) {
+    }, {}], 31: [function (require, module, exports) {
 
       exports = module.exports = trim;
 
@@ -4009,7 +4084,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       exports.right = function (str) {
         return str.replace(/\s*$/, '');
       };
-    }, {}], 29: [function (require, module, exports) {
+    }, {}], 32: [function (require, module, exports) {
       if (typeof Object.create === 'function') {
         // implementation from standard node.js 'util' module
         module.exports = function inherits(ctor, superCtor) {
@@ -4033,11 +4108,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ctor.prototype.constructor = ctor;
         };
       }
-    }, {}], 30: [function (require, module, exports) {
+    }, {}], 33: [function (require, module, exports) {
       module.exports = function isBuffer(arg) {
         return arg && (typeof arg === "undefined" ? "undefined" : _typeof(arg)) === 'object' && typeof arg.copy === 'function' && typeof arg.fill === 'function' && typeof arg.readUInt8 === 'function';
       };
-    }, {}], 31: [function (require, module, exports) {
+    }, {}], 34: [function (require, module, exports) {
       (function (process, global) {
         // Copyright Joyent, Inc. and other Node contributors.
         //
@@ -4584,5 +4659,5 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return Object.prototype.hasOwnProperty.call(obj, prop);
         }
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    }, { "./support/isBuffer": 30, "_process": 25, "inherits": 29 }] }, {}, [1])(1);
+    }, { "./support/isBuffer": 33, "_process": 28, "inherits": 32 }] }, {}, [1])(1);
 });
