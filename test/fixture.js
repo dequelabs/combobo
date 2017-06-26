@@ -1,6 +1,6 @@
 'use strict';
 
-const cauldronCSS = require('../dist/css/pattern-library.min.css');
+const queryAll = require('../lib/utils/select').all;
 
 module.exports = class Fixture {
   constructor() {}
@@ -37,7 +37,7 @@ module.exports = class Fixture {
    */
 
   cleanUp() {
-    document.body.removeChild(this.style);
+    queryAll('[aria-live="assertive"]').forEach((el) => el.parentNode.removeChild(el));
     return this;
   }
 };

@@ -2,13 +2,13 @@
   "name": "combobo",
   "version": "0.0.2",
   "description": "Accessible combobox widget/plugin",
-  "main": "dist/combination-box.js",
+  "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "mochify ./test/**/*.js --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ] --plugin [ mochify-istanbul --report text --exclude '**/+(test|node_modules|dist)/**/*' ]",
-    "test:dev": "mochify ./test/**/*.js --watch --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ]"
+    "test": "mochify --recursive --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ] --plugin [ mochify-istanbul --report text --exclude '**/+(test|node_modules|dist)/**/*' ]",
+    "test:dev": "mochify --recursive --watch --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ]"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "extend-shallow": "^2.0.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
+    "gulp-gh-pages": "^0.5.4",
     "live-region": "^1.0.0",
     "mochify": "^3.3.0",
     "mochify-istanbul": "^2.4.2",

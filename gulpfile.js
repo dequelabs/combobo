@@ -4,6 +4,7 @@ const gulp = require('gulp');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const babel = require('gulp-babel');
+const ghPages = require('gulp-gh-pages');
 
 gulp.task('default', ['build']);
 gulp.task('build', ['babelify']);
@@ -28,3 +29,5 @@ gulp.task('babelify', ['browserify'], () => {
 gulp.task('watch', () => {
   gulp.watch(['./index.js', 'lib/**/*.js'], ['build']);
 });
+
+gulp.task('deploy', () => gulp.src('./**/*').pipe(ghPages()));
