@@ -8,7 +8,20 @@
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body id="demo">
-    <h1>Combobo Box</h1>
+    <h1>Combobo</h1>
+    <h2>Accessible combobox module</h2>
+    <pre role="img" aria-label="Combobo Gorilla">
+ ."`".
+ .-./ _=_ \.-.
+{  (,(oYo),) }}
+{{ |   "   |} }
+{ { \(---)/  }}
+{{  }'-=-'{ } }
+{ { }._:_.{  }}
+{{  } -:- { } }
+{_{ }`===`{  _}
+((((\)     (/))))
+    </pre>
     <section class="bands">
       <div class="wrp">
         <h2>Single select</h2>
@@ -40,93 +53,21 @@
         <div class="combo-wrap">
           <input type="text" class="combobox" id="combobox-single-with-groups">
           <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="single-with-groups"></i>
-          <div class="listbox">
-            <div class="optgroup">
-              <div class="optgroup-label">Clothing</div>
+          <div class="listbox" aria-labelledby='combobox-single-with-groups'>
+            <div class="optgroup" role="group" aria-labelledby='clothing'>
+              <div class="optgroup-label" id='clothing'>Clothing</div>
               <div class="option">Shirts</div>
               <div class="option">Shorts</div>
               <div class="option">Pants</div>
             </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Electronics</div>
+            <div class="optgroup" role="group" aria-labelledby="electronics">
+              <div class="optgroup-label" id="electronics">Electronics</div>
               <div class="option">TVs</div>
               <div class="option">Game consoles</div>
               <div class="option">Music equipment</div>
             </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Sporting Goods</div>
-              <div class="option">Fishing</div>
-              <div class="option">Kayaking</div>
-              <div class="option">Rock climbing</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Clothing</div>
-              <div class="option">Shirts</div>
-              <div class="option">Shorts</div>
-              <div class="option">Pants</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Electronics</div>
-              <div class="option">TVs</div>
-              <div class="option">Game consoles</div>
-              <div class="option">Music equipment</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Sporting Goods</div>
-              <div class="option">Fishing</div>
-              <div class="option">Kayaking</div>
-              <div class="option">Rock climbing</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Clothing</div>
-              <div class="option">Shirts</div>
-              <div class="option">Shorts</div>
-              <div class="option">Pants</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Electronics</div>
-              <div class="option">TVs</div>
-              <div class="option">Game consoles</div>
-              <div class="option">Music equipment</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Sporting Goods</div>
-              <div class="option">Fishing</div>
-              <div class="option">Kayaking</div>
-              <div class="option">Rock climbing</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Clothing</div>
-              <div class="option">Shirts</div>
-              <div class="option">Shorts</div>
-              <div class="option">Pants</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Electronics</div>
-              <div class="option">TVs</div>
-              <div class="option">Game consoles</div>
-              <div class="option">Music equipment</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Sporting Goods</div>
-              <div class="option">Fishing</div>
-              <div class="option">Kayaking</div>
-              <div class="option">Rock climbing</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Clothing</div>
-              <div class="option">Shirts</div>
-              <div class="option">Shorts</div>
-              <div class="option">Pants</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Electronics</div>
-              <div class="option">TVs</div>
-              <div class="option">Game consoles</div>
-              <div class="option">Music equipment</div>
-            </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Sporting Goods</div>
+            <div class="optgroup" role="group" aria-labelledby="sporting-goods">
+              <div class="optgroup-label" id="sporting-goods">Sporting Goods</div>
               <div class="option">Fishing</div>
               <div class="option">Kayaking</div>
               <div class="option">Rock climbing</div>
@@ -139,7 +80,7 @@
     <section class="multiselect">
       <div class="wrp">
         <h2>Multi select</h2>
-        <label for="combobox-multiselect">Choose Favorite Food</label>
+        <label for="combobox-multiselect">Choose Favorite Foods</label>
         <div class="combo-wrap">
           <input type="text" class="combobox" id="combobox-multiselect">
           <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="multiselect"></i>
@@ -168,15 +109,15 @@
           <input type="text" class="combobox" id="combobox-multiselect-with-groups">
           <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="multiselect-with-groups"></i>
           <div class="listbox">
-            <div class="optgroup">
-              <div class="optgroup-label">Color</div>
+            <div class="optgroup" role="group" aria-labelledby="color">
+              <div class="optgroup-label" id="color">Color</div>
               <div class="option">Red</div>
               <div class="option">Yellow</div>
               <div class="option">Green</div>
               <div class="option">Orange</div>
             </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Year</div>
+            <div class="optgroup" role="group" aria-labelledby="year">
+              <div class="optgroup-label" id="year">Year</div>
               <div class="option">2007</div>
               <div class="option">2001</div>
               <div class="option">1999</div>
@@ -184,19 +125,19 @@
               <div class="option">2016</div>
               <div class="option">2006</div>
             </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Make</div>
+            <div class="optgroup" role="group" aria-labelledby="make">
+              <div class="optgroup-label" id="make">Make</div>
               <div class="option">Ford</div>
               <div class="option">GM</div>
               <div class="option">Chrysler</div>
             </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Doors</div>
+            <div class="optgroup" role="group" aria-labelledby="doors">
+              <div class="optgroup-label" id="doors">Doors</div>
               <div class="option">2 Door</div>
               <div class="option">4 Door</div>
             </div>
-            <div class="optgroup">
-              <div class="optgroup-label">Transmission</div>
+            <div class="optgroup" role="group" aria-labelledby="transmission">
+              <div class="optgroup-label" id="transmission">Transmission</div>
               <div class="option">Automatic</div>
               <div class="option">Manual</div>
             </div>
@@ -231,9 +172,12 @@
             groups: '.optgroup',
             activeClass: 'active',
             noResultsText: 'No results found.',
-            optionValue: (option) => {
+            optionValue: function (option) {
               var inputVal = box['single-with-groups'].input.value;
               return wrapNum(option.innerText, inputVal);
+            },
+            announcement: {
+              groupChange: groupChangeHandler
             }
           }),
           'multiselect': new Combobo({
@@ -241,13 +185,13 @@
             list: '.multiselect .listbox',
             activeClass: 'active',
             multiselect: true,
-            selectionValue: (selectedOptions) => {
+            selectionValue: function (selectedOptions) {
               return selectedOptions.length > 1 ?
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();
             },
-            noResultsText: 'No results found.',
-            optionValue: (option) => {
+            noResultsText: 'Nothing to see here folks.',
+            optionValue: function (option) {
               var inputVal = box.multiselect.input.value;
               return wrapNum(option.innerText, inputVal)
             }
@@ -258,9 +202,23 @@
             activeClass: 'active',
             multiselect: true,
             groups: '.optgroup',
-            noResultsText: 'No results found.'
+            noResultsText: 'No results found.',
+            announcement: {
+              groupChange: groupChangeHandler
+            }
           })
         };
+
+        function groupChangeHandler(newGroup) {
+          var groupLabel = newGroup.querySelector('.optgroup-label').innerText;
+          var len = Array.prototype.slice.call(
+            newGroup.querySelectorAll('.option')
+          ).filter(function (opt) {
+            return opt.style.display !== 'none';
+          }).length;
+
+          return groupLabel + ' group entered, with ' + len + ' options.';
+        }
 
         window.box = box;
 
@@ -268,8 +226,8 @@
         Array.prototype.slice.call(
           document.querySelectorAll('.trigger')
         ).forEach(function (trigger) {
-          const instName = trigger.getAttribute('data-trigger');
-          const inst = box[instName];
+          var instName = trigger.getAttribute('data-trigger');
+          var inst = box[instName];
           trigger.addEventListener('click', function (e) {
             e.stopPropagation();
             console.log('clicked!?!?!');
