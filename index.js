@@ -88,6 +88,7 @@ module.exports = class Combobo {
 
     this.input.addEventListener('focus', () => {
       if (this.selected.length) {
+        // TODO: Do we really want to clear value in this situation?
         this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
       }
     });

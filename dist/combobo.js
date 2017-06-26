@@ -106,6 +106,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
           }
 
+          if (!this.input || !this.list) {
+            throw new Error('Unable to find required elements (list/input)');
+          }
+
           attrs(this.input, this.list, this.cachedOpts);
 
           if (this.config.useLiveRegion) {
@@ -214,7 +218,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (focus) {
               this.input.focus();
             }
-            // Sets the value back to what it was
+            // Set the value back to what it was
             if (!this.multiselect && this.selected.length) {
               this.input.value = this.config.selectionValue(this.selected);
             }
@@ -445,7 +449,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.pseudoFocus(groupChange);
             // Dectecting if element is inView and scroll to it.
             this.currentOpts.forEach(function (opt) {
-              if (opt.classList.contains('active') && !inView(_this8.list, opt)) {
+              if (opt.classList.contains(_this8.config.activeClass) && !inView(_this8.list, opt)) {
                 scrollToElement(opt);
               }
             });
@@ -472,7 +476,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               }
 
               if (this.liveRegion) {
-                announceActive(option, this.config, this.liveRegion.announce.bind(this.liveRegion), groupChanged, this.currentGroup.element);
+                announceActive(option, this.config, this.liveRegion.announce.bind(this.liveRegion), groupChanged, this.currentGroup && this.currentGroup.element);
               }
 
               this.input.setAttribute('aria-activedescendant', option.id);
@@ -635,6 +639,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       module.exports = function (list, currentOpts, noResultsText) {
         var noResults = list.querySelector('.combobo-no-results');
+
         if (noResultsText && !currentOpts.length && !noResults) {
           noResults = document.createElement('div');
           Classlist(noResults).add('combobo-no-results');
@@ -835,8 +840,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var optionText = optionEl.innerText;
         var matchStart = optionText.toLowerCase().indexOf(inputText.toLowerCase());
         var matchLength = inputText.length;
-
-        accentClass = accentClass || 'underline';
 
         if (inputText && matchStart >= 0) {
           var before = optionText.substring(0, matchStart);

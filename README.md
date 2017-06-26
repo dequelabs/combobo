@@ -43,15 +43,32 @@ const combobo = new Combobo();
   * Defaults to `active`
 * `selectedClass` (_Classname_): Class name that gets added when list item is selected
   * Defaults to `selectedClass`
-* `useLiveRegion` (_Boolean_): Determines whether or not to use Live Region (if `false`, `aria-activedescendant` will be used instead)
+* `useLiveRegion` (_Boolean_): Determines whether or not to use Live Region (due to spotty AT support, `aria-activedescendant` will be used also).  As of right now, it is recommended that you leave `useLiveRegion` on due to VoiceOver's lack of support for `aria-activedescendant`.
   * Defaults to `true`
 * `multiselect` (_Boolean_): Determines whether or not to enable multiselect features
   * Defaults to `false`
 * `noResultsText` (_String_): Sets text for when there are no matches
 * `selectionValue` (_Function_): A function that should return what the desired value of the input should be upon selection (this is especially useful for multiselect in that you can configure custom input values like `{3 Items Selected}`). An array of the selected options is passed as the one argument to the function.
 * `optionValue` (_Function|String_): A function that should return the desired markup of each option in the list (this allows for custom display of each option based on what is currently typed in the field) OR a string class that is to be added to the span that will be wrapped around the matched text in each option.
-* `announcement` (_Function_): Announcement of currently selected items in list. The function accepts 1 argumet which is the number of options selected.
-  * Defaults to `function (n) { return n + ' options available'; }`
+* `announcement` (_Object_): An object containing the following properties:
+  * `count` (_Function_): Announcement of currently selected items in list. The function accepts 1 argument which is the number of options selected.
+    * Defaults to `function (n) { return n + ' options available'; }`
+  * `selected` (_String_): The desired text to be used to inform AT that an option is selected (This is only applicable if useLiveRegion is `true`)
+    * Defaults to `"Selected."`
+  * `groupChange` (_Function_): The desired text to be announced when a group change occurs (as a result of arrow-key traversal of options).  This is obviously only applicable if `groups` are used (see above for info on `options.groups`)
+    * Example:
+    ```js
+      function groupChangeHandler(newGroup) {
+        var groupLabel = newGroup.querySelector('.optgroup-label').innerText;
+        var len = Array.prototype.slice.call(
+          newGroup.querySelectorAll('.option')
+        ).filter(function (opt) {
+          return opt.style.display !== 'none';
+        }).length;
+
+        return groupLabel + ' group entered, with ' + len + ' options.';
+      }
+    ```
 * `filter` (_String|Function_): String that sets how handle the filter or a function that returns the filtered options.
   * Defaults to `'contains'`
   * Other out-of-the-box options: `'starts-with'`, `'equals'`
@@ -72,7 +89,10 @@ var combobo = new Combobo({
   noResultsText: null,
   selectionValue: (selecteds) => selecteds.map((s) => s.innerText.trim()).join(' - '),
   optionValue: 'underline', // wrap the matched portion of the option (if applicable) in a span with class "underline"
-  announcement: (n) => `${n} options available`,
+  announcement: {
+    count: (n) => `${n} options available`,
+    selected: 'Selected.'
+  },
   filter: 'contains' // 'starts-with', 'equals', or funk
 });
 ```
@@ -83,7 +103,7 @@ Add an event listener with `.on`, remove event listener with `.off` (see example
 * `list:close`: Fires when the list is in a closed state.
 * `deselection`: Fires when a selected element is deselected.
 * `selection`: Fires when an item in the list is selected.
-* `change`: Fires after a selection is made.
+* `change`: Fires each time an option is made active (either through arrow key traversal or hover).
 
 ```js
 var combobo = new Combobo();
