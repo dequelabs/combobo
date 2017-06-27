@@ -141,6 +141,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 // TODO: Do we really want to clear value in this situation?
                 _this2.input.value = _this2.selected.length >= 2 ? '' : _this2.config.selectionValue(_this2.selected);
               }
+              _this2.input.select();
             });
 
             // listen for clicks outside of combobox
