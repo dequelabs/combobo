@@ -433,17 +433,67 @@ describe('Combobo', () => {
     });
   });
 
-  describe('reset', () => {
+  describe('clearFilters', () => {
     it('should unhide all options/groups', () => {
       simpleBox.cachedOpts.forEach((o) => o.style.display = 'none');
-      simpleBox.reset();
+      simpleBox.clearFilters();
       assert.equal(0, simpleBox.cachedOpts.filter((o) => o.style.display === 'none').length);
     });
 
     it('should update currentOpts', () => {
       simpleBox.currentOpts = [simpleBox.cachedOpts[0]];
-      simpleBox.reset();
+      simpleBox.clearFilters();
       assert.equal(simpleBox.currentOpts.length, simpleBox.cachedOpts.length);
+    });
+  });
+
+  describe('reset', () => {
+    beforeEach(() => {
+      simpleBox.goTo(1).select();
+    });
+
+    it('should clear the value of the input', () => {
+      assert.equal(simpleBox.input.value, simpleBox.cachedOpts[1].innerText);
+      simpleBox.reset();
+      assert.equal(simpleBox.input.value, '');
+    });
+
+    it('should remove aria-activedescendant from the input', () => {
+      assert.isTrue(!!simpleBox.input.getAttribute('aria-activedescendant'));
+      simpleBox.reset();
+      assert.isFalse(!!simpleBox.input.getAttribute('aria-activedescendant'));
+    });
+
+    it('should remove data-active-option from the input', () => {
+      assert.isTrue(!!simpleBox.input.getAttribute('data-active-option'));
+      simpleBox.reset();
+      assert.isFalse(!!simpleBox.input.getAttribute('data-active-option'));
+    });
+
+    it('should set currentOption to null', () => {
+      assert.isTrue(!!simpleBox.currentOption);
+      simpleBox.reset();
+      assert.isFalse(!!simpleBox.currentOption);
+    });
+
+    it('should set selected to an empty array', () => {
+      assert.equal(simpleBox.selected.length, 1);
+      simpleBox.reset();
+      assert.equal(simpleBox.selected.length, 0);
+    });
+
+    it('should remove the selectedClass from all options', () => {
+      const isSelected = el => Classlist(el).contains(simpleBox.config.selectedClass);
+      assert.equal(simpleBox.cachedOpts.filter(isSelected).length, 1);
+      simpleBox.reset();
+      assert.equal(simpleBox.cachedOpts.filter(isSelected).length, 0);
+    });
+
+    it('should set aria-selected to false on all options', () => {
+      const isSelected = el => el.getAttribute('aria-selected') === 'true';
+      assert.equal(simpleBox.cachedOpts.filter(isSelected).length, 1);
+      simpleBox.reset();
+      assert.equal(simpleBox.cachedOpts.filter(isSelected).length, 0);
     });
   });
 
