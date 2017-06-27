@@ -121,6 +121,7 @@ combobo
 * `goTo`: accepts 1 argument which is either a *String* ('prev' or 'next'), which as it sounds will navigate Combobo to the previous or next option, or the index (*Number*) of the option to be traversed to.  NOTE: This method does not select the option but rather highlights it as if the option is hovered or arrowed to.
 * `select`: selects the currently highlighted option
 * `getOptIndex`: returns the index (within the currently visible options) of the currently selected option.
+* `reset`: clears the filters and deselects any currently selected options.
 
 ### Example usage
 

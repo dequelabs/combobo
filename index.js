@@ -216,7 +216,7 @@ module.exports = class Combobo {
 
       // Handles if there is a fresh selection
       if (this.freshSelection) {
-        this.reset();
+        this.clearFilters();
         if (cachedVal && (cachedVal.trim() !== this.input.value.trim())) { // if the value has changed...
           this.filter().openList();
           this.freshSelection = false;
@@ -230,10 +230,10 @@ module.exports = class Combobo {
     });
   }
 
-  reset() {
+  clearFilters() {
     this.cachedOpts.forEach((o) => o.style.display = '');
     this.groups.forEach((g) => g.element.style.display = '');
-    // reset the opts
+    // show all opts
     this.currentOpts = this.cachedOpts;
     return this;
   }
@@ -329,7 +329,7 @@ module.exports = class Combobo {
 
     this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
     this.cachedInputValue = this.input.value;
-    this.filter(true).reset().closeList();
+    this.filter(true).clearFilters().closeList();
     this.input.select(); // highlight the input's value
 
     if (newSelected) {
@@ -337,6 +337,20 @@ module.exports = class Combobo {
       this.emit('selection', { text: this.input.value, option: currentOpt });
     }
 
+    return this;
+  }
+
+  reset() {
+    this.clearFilters();
+    this.input.value = '';
+    this.input.removeAttribute('aria-activedescendant');
+    this.input.removeAttribute('data-active-option');
+    this.currentOption = null;
+    this.selected = [];
+    this.cachedOpts.forEach((optEl) => {
+      Classlist(optEl).remove(this.config.selectedClass);
+      optEl.setAttribute('aria-selected', 'false');
+    });
     return this;
   }
 

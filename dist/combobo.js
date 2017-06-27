@@ -279,7 +279,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
               // Handles if there is a fresh selection
               if (_this4.freshSelection) {
-                _this4.reset();
+                _this4.clearFilters();
                 if (cachedVal && cachedVal.trim() !== _this4.input.value.trim()) {
                   // if the value has changed...
                   _this4.filter().openList();
@@ -294,15 +294,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
           }
         }, {
-          key: "reset",
-          value: function reset() {
+          key: "clearFilters",
+          value: function clearFilters() {
             this.cachedOpts.forEach(function (o) {
               return o.style.display = '';
             });
             this.groups.forEach(function (g) {
               return g.element.style.display = '';
             });
-            // reset the opts
+            // show all opts
             this.currentOpts = this.cachedOpts;
             return this;
           }
@@ -409,7 +409,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
             this.cachedInputValue = this.input.value;
-            this.filter(true).reset().closeList();
+            this.filter(true).clearFilters().closeList();
             this.input.select(); // highlight the input's value
 
             if (newSelected) {
@@ -420,9 +420,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             return this;
           }
         }, {
+          key: "reset",
+          value: function reset() {
+            var _this8 = this;
+
+            this.clearFilters();
+            this.input.value = '';
+            this.input.removeAttribute('aria-activedescendant');
+            this.input.removeAttribute('data-active-option');
+            this.currentOption = null;
+            this.selected = [];
+            this.cachedOpts.forEach(function (optEl) {
+              Classlist(optEl).remove(_this8.config.selectedClass);
+              optEl.setAttribute('aria-selected', 'false');
+            });
+            return this;
+          }
+        }, {
           key: "goTo",
           value: function goTo(option, fromKey) {
-            var _this8 = this;
+            var _this9 = this;
 
             if (typeof option === 'string') {
               // 'prev' or 'next'
@@ -451,7 +468,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.pseudoFocus(groupChange);
             // Dectecting if element is inView and scroll to it.
             this.currentOpts.forEach(function (opt) {
-              if (opt.classList.contains(_this8.config.activeClass) && !inView(_this8.list, opt)) {
+              if (opt.classList.contains(_this9.config.activeClass) && !inView(_this9.list, opt)) {
                 scrollToElement(opt);
               }
             });
@@ -1370,7 +1387,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       function toByteArray(b64) {
-        var i, j, l, tmp, placeHolders, arr;
+        var i, l, tmp, placeHolders, arr;
         var len = b64.length;
         placeHolders = placeHoldersCount(b64);
 
@@ -1381,7 +1398,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         var L = 0;
 
-        for (i = 0, j = 0; i < l; i += 4, j += 3) {
+        for (i = 0; i < l; i += 4) {
           tmp = revLookup[b64.charCodeAt(i)] << 18 | revLookup[b64.charCodeAt(i + 1)] << 12 | revLookup[b64.charCodeAt(i + 2)] << 6 | revLookup[b64.charCodeAt(i + 3)];
           arr[L++] = tmp >> 16 & 0xFF;
           arr[L++] = tmp >> 8 & 0xFF;
