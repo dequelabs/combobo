@@ -91,6 +91,7 @@ module.exports = class Combobo {
         // TODO: Do we really want to clear value in this situation?
         this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
       }
+      this.input.select();
     });
 
     // listen for clicks outside of combobox
