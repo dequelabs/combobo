@@ -432,6 +432,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.selected = [];
             this.cachedOpts.forEach(function (optEl) {
               Classlist(optEl).remove(_this8.config.selectedClass);
+              Classlist(optEl).remove(_this8.config.activeClass);
               optEl.setAttribute('aria-selected', 'false');
             });
             return this;
