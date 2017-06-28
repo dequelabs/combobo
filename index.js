@@ -343,6 +343,7 @@ module.exports = class Combobo {
   reset() {
     this.clearFilters();
     this.input.value = '';
+    this.updateOpts();
     this.input.removeAttribute('aria-activedescendant');
     this.input.removeAttribute('data-active-option');
     this.currentOption = null;

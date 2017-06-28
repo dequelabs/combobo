@@ -470,6 +470,16 @@ describe('Combobo', () => {
       assert.isFalse(!!simpleBox.input.getAttribute('data-active-option'));
     });
 
+    it('should remove active style from all options', () => {
+      const activeOpts = () => document.querySelectorAll('.' + simpleBox.config.activeClass, simpleBox.list);
+      simpleBox.openList();
+      fire(simpleBox.input, 'keydown', { which: 40 });
+      fire(simpleBox.input, 'keydown', { which: 13 });
+      assert.isTrue(activeOpts().length > 0);
+      simpleBox.reset();
+      assert.isFalse(activeOpts().length > 0);
+    });
+
     it('should set currentOption to null', () => {
       assert.isTrue(!!simpleBox.currentOption);
       simpleBox.reset();
