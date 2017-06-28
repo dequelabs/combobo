@@ -489,6 +489,15 @@ describe('Combobo', () => {
       assert.equal(simpleBox.cachedOpts.filter(isSelected).length, 0);
     });
 
+    it('should remove the activeClass from all options', () => {
+      const isActive = el => Classlist(el).contains(simpleBox.config.activeClass);
+      simpleBox.openList();
+      fire(simpleBox.input, 'keydown', { which: 40 });
+      assert.equal(simpleBox.cachedOpts.filter(isActive).length, 1);
+      simpleBox.reset();
+      assert.equal(simpleBox.cachedOpts.filter(isActive).length, 0);
+    });
+
     it('should set aria-selected to false on all options', () => {
       const isSelected = el => el.getAttribute('aria-selected') === 'true';
       assert.equal(simpleBox.cachedOpts.filter(isSelected).length, 1);

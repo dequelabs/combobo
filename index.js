@@ -349,6 +349,7 @@ module.exports = class Combobo {
     this.selected = [];
     this.cachedOpts.forEach((optEl) => {
       Classlist(optEl).remove(this.config.selectedClass);
+      Classlist(optEl).remove(this.config.activeClass);
       optEl.setAttribute('aria-selected', 'false');
     });
     return this;
