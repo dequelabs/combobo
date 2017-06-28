@@ -1,6 +1,6 @@
 {
   "name": "combobo",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Accessible combobox widget/plugin",
   "main": "index.js",
   "directories": {
