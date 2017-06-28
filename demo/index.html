@@ -146,30 +146,6 @@
       </div>
       <button type="button">Submit</button>
     </section>
-    <section class="aria-activedescendant">
-      <div class="wrp">
-        <h2>aria-activedescendant</h2>
-        <label for="aria-ad">Choose Favorite Food</label>
-        <div class="combo-wrap">
-          <input type="text" class="combobox" id="aria-ad">
-          <i aria-hidden="true" class="fa trigger fa-caret-down" data-trigger="aria-activedescendant"></i>
-          <div class="listbox">
-            <div class="option">Pizza</div>
-            <div class="option">Sushi</div>
-            <div class="option">Tacos</div>
-            <div class="option">Salmon</div>
-            <div class="option">Cheeseburger</div>
-            <div class="option">Bacon Cheeseburger</div>
-            <div class="option">Steak</div>
-            <div class="option">Fried Chicken</div>
-            <div class="option">Chicken Salad</div>
-            <div class="option">Tatar Tots</div>
-            <div class="option">French Fries</div>
-          </div>
-        </div>
-      </div>
-      <button type="button">Submit</button>
-    </section>
     <footer></footer>
     <script src="../dist/combobo.js" charset="utf-8"></script>
     <script>
@@ -214,7 +190,7 @@
                 '{ ' + selectedOptions.length +  ' selected }' :
                 selectedOptions[0].innerText.trim();
             },
-            noResultsText: 'No results found.',
+            noResultsText: 'Nothing to see here folks.',
             optionValue: function (option) {
               var inputVal = box.multiselect.input.value;
               return wrapNum(option.innerText, inputVal)
@@ -230,12 +206,6 @@
             announcement: {
               groupChange: groupChangeHandler
             }
-          }),
-          'aria-activedescendant': new Combobo({
-            input: '#aria-ad',
-            list: '.aria-activedescendant .listbox',
-            activeClass: 'active',
-            useLiveRegion: false
           })
         };
 

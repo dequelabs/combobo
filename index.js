@@ -1,7 +1,6 @@
 'use strict';
 
 const Classlist = require('classlist');
-const extend = require('extend-shallow');
 const Emitter = require('component-emitter');
 const LiveRegion = require('live-region');
 const scrollToElement = require('scrollto-element');
@@ -12,9 +11,11 @@ const keyvent = require('./lib/utils/keyvent');
 const isWithin = require('./lib/utils/is-within');
 const elHandler = require('./lib/utils/element-handler');
 const getCurrentGroup = require('./lib/current-group');
+const noResultsHandler = require('./lib/no-results');
 const attrs = require('./lib/attributes');
 const wrapMatch = require('./lib/utils/wrap-match');
-const defaults = require('./lib/defaults');
+const configuration = require('./lib/config');
+const announceActive = require('./lib/announce-active');
 
 /**
  * /////////////////////////
@@ -38,13 +39,7 @@ module.exports = class Combobo {
     config = config || {};
 
     // merge user config with default config
-    this.config = {};
-    const announcementConfig = {};
-    config.announcement = config.announcement || {};
-    extend(announcementConfig, defaults.announcement, config.announcement);
-    extend(this.config, defaults, config);
-    this.config.announcement = announcementConfig;
-
+    this.config = configuration(config);
     this.input = elHandler(this.config.input);
     this.list = elHandler(this.config.list);
     this.cachedOpts = this.currentOpts = elHandler((this.config.options), true, this.list);
@@ -67,8 +62,11 @@ module.exports = class Combobo {
       });
     }
 
-    attrs(this.input, this.list, this.cachedOpts);
+    if (!this.input || !this.list) {
+      throw new Error('Unable to find required elements (list/input)');
+    }
 
+    attrs(this.input, this.list, this.cachedOpts);
 
     if (this.config.useLiveRegion) {
       this.liveRegion = new LiveRegion({ ariaLive: 'assertive' });
@@ -90,8 +88,10 @@ module.exports = class Combobo {
 
     this.input.addEventListener('focus', () => {
       if (this.selected.length) {
+        // TODO: Do we really want to clear value in this situation?
         this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
       }
+      this.input.select();
     });
 
     // listen for clicks outside of combobox
@@ -162,7 +162,7 @@ module.exports = class Combobo {
     this.input.setAttribute('aria-expanded', 'false');
     this.isOpen = false;
     if (focus) { this.input.focus(); }
-    // Sets the value back to what it was
+    // Set the value back to what it was
     if (!this.multiselect && this.selected.length) {
       this.input.value = this.config.selectionValue(this.selected);
     }
@@ -177,7 +177,9 @@ module.exports = class Combobo {
       callback: (e, k) => {
         if (this.isOpen) {
           // if typing filtered out the pseudo-current option
-          if (this.currentOpts.indexOf(this.currentOption) === -1) { return this.goTo(0, true); }
+          if (this.currentOpts.indexOf(this.currentOption) === -1) {
+            return this.goTo(0, true);
+          }
           return this.goTo(k === 'down' ? 'next' : 'prev', true);
         }
         this.goTo(this.currentOption ? this.getOptIndex() : 0, true).openList();
@@ -214,7 +216,7 @@ module.exports = class Combobo {
 
       // Handles if there is a fresh selection
       if (this.freshSelection) {
-        this.reset();
+        this.clearFilters();
         if (cachedVal && (cachedVal.trim() !== this.input.value.trim())) { // if the value has changed...
           this.filter().openList();
           this.freshSelection = false;
@@ -223,23 +225,15 @@ module.exports = class Combobo {
         this.filter().openList();
       }
 
-      // Handles if there are no results found
-      let noResults = this.list.querySelector('.no-results-text');
-      if (this.config.noResultsText && !this.currentOpts.length && !noResults) {
-        noResults = document.createElement('div');
-        Classlist(noResults).add('no-results-text');
-        noResults.innerHTML = this.config.noResultsText;
-        this.list.appendChild(noResults);
-      } else if (noResults && this.currentOpts.length) {
-        this.list.removeChild(noResults);
-      }
+      // handle empty results
+      noResultsHandler(this.list, this.currentOpts, this.config.noResultsText);
     });
   }
 
-  reset() {
+  clearFilters() {
     this.cachedOpts.forEach((o) => o.style.display = '');
     this.groups.forEach((g) => g.element.style.display = '');
-    // reset the opts
+    // show all opts
     this.currentOpts = this.cachedOpts;
     return this;
   }
@@ -308,7 +302,7 @@ module.exports = class Combobo {
     // Multiselect option
     if (this.config.multiselect) {
       const idx = this.selected.indexOf(currentOpt);
-      //If option is in array and gets clicked, remove it
+      // If option is in array and gets clicked, remove it
       if (idx > -1) {
         this.selected.splice(idx, 1);
       } else {
@@ -318,6 +312,11 @@ module.exports = class Combobo {
       // Single select stuff
       this.selected = [currentOpt];
     }
+
+    // manage aria-selected
+    this.cachedOpts.forEach((o) => {
+      o.setAttribute('aria-selected', this.selected.indexOf(o) > -1 ? 'true' : 'false');
+    });
 
     // Taking care of adding / removing selected class
     if (Classlist(currentOpt).contains(this.config.selectedClass)) {
@@ -330,16 +329,29 @@ module.exports = class Combobo {
 
     this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
     this.cachedInputValue = this.input.value;
-    this.filter(true);
-    this.reset();
-    this.input.select();
-    this.closeList();
+    this.filter(true).clearFilters().closeList();
+    this.input.select(); // highlight the input's value
 
     if (newSelected) {
       this.freshSelection = true;
       this.emit('selection', { text: this.input.value, option: currentOpt });
     }
 
+    return this;
+  }
+
+  reset() {
+    this.clearFilters();
+    this.input.value = '';
+    this.input.removeAttribute('aria-activedescendant');
+    this.input.removeAttribute('data-active-option');
+    this.currentOption = null;
+    this.selected = [];
+    this.cachedOpts.forEach((optEl) => {
+      Classlist(optEl).remove(this.config.selectedClass);
+      Classlist(optEl).remove(this.config.activeClass);
+      optEl.setAttribute('aria-selected', 'false');
+    });
     return this;
   }
 
@@ -368,7 +380,7 @@ module.exports = class Combobo {
     this.pseudoFocus(groupChange);
     // Dectecting if element is inView and scroll to it.
     this.currentOpts.forEach((opt) => {
-      if (opt.classList.contains('active') && !inView(this.list, opt)) {
+      if (opt.classList.contains(this.config.activeClass) && !inView(this.list, opt)) {
         scrollToElement(opt);
       }
     });
@@ -392,18 +404,16 @@ module.exports = class Combobo {
       if (activeClass) { Classlist(option).add(activeClass); }
 
       if (this.liveRegion) {
-        let msg = this.currentOption.innerText; // TODO: make this more configurable
-        msg = groupChanged && this.config.announcement && this.config.announcement.groupChange ?
-          `${this.config.announcement.groupChange(this.currentGroup.element)} ${msg}` :
-          msg;
-        this.liveRegion.announce(msg, 500);
-        this.input.setAttribute('aria-activedescendant', option.id);
+        announceActive(
+          option,
+          this.config,
+          this.liveRegion.announce.bind(this.liveRegion),
+          groupChanged,
+          this.currentGroup && this.currentGroup.element
+        );
       }
 
-      // else {
-      //   this.input.setAttribute('aria-activedescendant', option.id);
-      // }
-
+      this.input.setAttribute('aria-activedescendant', option.id);
       this.currentOption = option;
       this.emit('change');
     }
