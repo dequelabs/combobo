@@ -136,3 +136,7 @@ combobo
 ```bash
 $ npm run test
 ```
+
+### Running only selected tests
+
+Utilize `it.only` or even `describe.only` in unison with `npm run test:dev`

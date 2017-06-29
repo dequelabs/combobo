@@ -1,21 +1,21 @@
 'use strict';
 
-const Classlist = require('classlist');
-const Emitter = require('component-emitter');
-const LiveRegion = require('live-region');
-const scrollToElement = require('scrollto-element');
-const inView = require('./lib/utils/is-scrolled-in-view');
-const viewportStatus = require('./lib/utils/viewport-status');
-const filters = require('./lib/filters');
-const keyvent = require('./lib/utils/keyvent');
-const isWithin = require('./lib/utils/is-within');
-const elHandler = require('./lib/utils/element-handler');
-const getCurrentGroup = require('./lib/current-group');
-const noResultsHandler = require('./lib/no-results');
-const attrs = require('./lib/attributes');
-const wrapMatch = require('./lib/utils/wrap-match');
-const configuration = require('./lib/config');
-const announceActive = require('./lib/announce-active');
+import Classlist from 'classlist';
+import Emitter from 'component-emitter';
+import LiveRegion from 'live-region';
+import scrollToElement from 'scrollto-element';
+import inView from './lib/utils/is-scrolled-in-view';
+import viewportStatus from './lib/utils/viewport-status';
+import filters from './lib/filters';
+import keyvent from './lib/utils/keyvent';
+import isWithin from './lib/utils/is-within';
+import elHandler from './lib/utils/element-handler';
+import getCurrentGroup from './lib/current-group';
+import noResultsHandler from './lib/no-results';
+import attrs from './lib/attributes';
+import wrapMatch from './lib/utils/wrap-match';
+import configuration from './lib/config';
+import announceActive from './lib/announce-active';
 
 /**
  * /////////////////////////
@@ -88,7 +88,6 @@ module.exports = class Combobo {
 
     this.input.addEventListener('focus', () => {
       if (this.selected.length) {
-        // TODO: Do we really want to clear value in this situation?
         this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
       }
       this.input.select();
@@ -182,21 +181,32 @@ module.exports = class Combobo {
           }
           return this.goTo(k === 'down' ? 'next' : 'prev', true);
         }
-        this.goTo(this.currentOption ? this.getOptIndex() : 0, true).openList();
+
+        const idx = this.selected.length
+          ? this.currentOpts.indexOf(this.selected[this.selected.length -1])
+          : 0
+
+        this
+          .goTo(idx, true)
+          .openList();
       },
       preventDefault: true
     }, {
       keys: ['enter'],
       callback: (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.select();
+        if (this.isOpen) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.select();
+        }
       }
     }, {
       keys: ['escape'],
       callback: (e) => {
-        e.stopPropagation();
-        this.closeList(true);
+        if (this.isOpen) {
+          e.stopPropagation();
+          this.closeList(true);
+        }
       }
     }, {
       keys: ['backspace'],
@@ -207,7 +217,8 @@ module.exports = class Combobo {
       }
     }]);
 
-    const ignores = [9, 13, 27];
+    // ignore tab, enter, escape and shift
+    const ignores = [9, 13, 27, 16];
     // filter keyup listener
     keyvent.up(this.input, (e) => {
       const filter = this.config.filter;
@@ -256,11 +267,10 @@ module.exports = class Combobo {
   }
 
   announceCount() {
-    if (this.config.announcement && this.config.announcement.count && this.liveRegion) {
-      this.liveRegion.announce(
-        this.config.announcement.count(this.currentOpts.length),
-        500
-      );
+    const count = this.config.announcement && this.config.announcement.count;
+
+    if (count && this.liveRegion) {
+      this.liveRegion.announce(count(this.currentOpts.length), 500);
     }
 
     return this;
@@ -321,6 +331,7 @@ module.exports = class Combobo {
     // Taking care of adding / removing selected class
     if (Classlist(currentOpt).contains(this.config.selectedClass)) {
       currentOpt.classList.remove(this.config.selectedClass);
+      this.freshSelection = true;
       this.emit('deselection', { text: this.input.value, option: currentOpt });
     } else {
       newSelected = true;
@@ -329,8 +340,12 @@ module.exports = class Combobo {
 
     this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
     this.cachedInputValue = this.input.value;
-    this.filter(true).clearFilters().closeList();
-    this.input.select(); // highlight the input's value
+    this.filter(true).clearFilters()
+
+    if (!this.config.multiselect) {
+      this.closeList();
+      this.input.select(); // highlight the input's value
+    }
 
     if (newSelected) {
       this.freshSelection = true;
