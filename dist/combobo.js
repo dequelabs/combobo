@@ -228,7 +228,7 @@ module.exports = function () {
     }
   }, {
     key: 'closeList',
-    value: function closeList(focus) {
+    value: function closeList(focus, selectText) {
       (0, _classlist2.default)(this.list).remove(this.config.openClass);
       this.input.setAttribute('aria-expanded', 'false');
       this.isOpen = false;
@@ -238,6 +238,10 @@ module.exports = function () {
       // Set the value back to what it was
       if (!this.multiselect && this.selected.length) {
         this.input.value = this.config.selectionValue(this.selected);
+      }
+
+      if (selectText) {
+        this.input.select();
       }
       this.emit('list:close');
       return this;
@@ -278,7 +282,7 @@ module.exports = function () {
         callback: function callback(e) {
           if (_this4.isOpen) {
             e.stopPropagation();
-            _this4.closeList(true);
+            _this4.closeList(true, true);
           }
         }
       }, {

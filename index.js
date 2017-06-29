@@ -156,7 +156,7 @@ module.exports = class Combobo {
     return this;
   }
 
-  closeList(focus) {
+  closeList(focus, selectText) {
     Classlist(this.list).remove(this.config.openClass);
     this.input.setAttribute('aria-expanded', 'false');
     this.isOpen = false;
@@ -165,6 +165,8 @@ module.exports = class Combobo {
     if (!this.multiselect && this.selected.length) {
       this.input.value = this.config.selectionValue(this.selected);
     }
+
+    if (selectText) { this.input.select(); }
     this.emit('list:close');
     return this;
   }
@@ -205,7 +207,7 @@ module.exports = class Combobo {
       callback: (e) => {
         if (this.isOpen) {
           e.stopPropagation();
-          this.closeList(true);
+          this.closeList(true, true);
         }
       }
     }, {
