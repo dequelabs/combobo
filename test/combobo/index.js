@@ -433,6 +433,95 @@ describe('Combobo', () => {
     });
   });
 
+  describe('select', () => {
+    it('should be chainable', () => {
+      assert.doesNotThrow(() => {
+        complexBox.goTo(0).select().closeList();
+      }, Error);
+    });
+
+    it('should set the aria-activedescendant attribute properly', () => {
+      simpleBox.goTo(1).select();
+      assert.equal(simpleBox.input.getAttribute('aria-activedescendant'), simpleBox.currentOpts[1].id);
+    });
+
+    it('should emit the selection event', (done) => {
+      simpleBox
+        .on('selection', () => done())
+        .goTo(0)
+        .select();
+    });
+
+    it('should properly set aria-selected', () => {
+      const opts = complexBox.cachedOpts;
+      const isSelected = opt => opt.getAttribute('aria-selected') === 'true';
+      complexBox.goTo(0).select().goTo(1).select();
+      assert.isTrue(isSelected(opts[0]));
+      assert.isTrue(isSelected(opts[1]));
+    });
+
+    describe('given single select', () => {
+      it('should remove the selectedClass from the previously selected option and add it to the new one', () => {
+        simpleBox.goTo(0).select().goTo(1).select().goTo(2).select();
+        const selecteds = simpleBox.list.querySelectorAll(`.${simpleBox.config.selectedClass}`);
+        assert.equal(selecteds.length, 1);
+      });
+
+      it('should clobber previous selections and set this.selected properly', () => {
+        simpleBox.goTo(0).select();
+        assert.equal(simpleBox.selected[0], simpleBox.currentOpts[0]);
+        simpleBox.goTo(1).select();
+        assert.equal(simpleBox.selected.length, 1);
+        assert.equal(simpleBox.selected[0], simpleBox.currentOpts[1]);
+      });
+
+      it('should close the list when a selection is made', () => {
+        simpleBox.openList();
+        assert.isTrue(simpleBox.isOpen);
+        simpleBox.goTo(0).select();
+        assert.isFalse(simpleBox.isOpen);
+      });
+    });
+
+    describe('given mulitselect', () => {
+      it('should toggle selectedClass properly', () => {
+        const opt = complexBox.cachedOpts[1];
+        const selectedClass = complexBox.config.selectedClass;
+        complexBox.goTo(1).select();
+        assert.isTrue(Classlist(opt).contains(selectedClass));
+        // toggle it off (deselection)
+        complexBox.goTo(1).select();
+        assert.isFalse(Classlist(opt).contains(selectedClass));
+      });
+
+      it('should properly emit the deselection event', (done) => {
+        complexBox
+          .goTo(1)
+          .select()
+          // don't pass args to done...
+          .on('deselection', () => done());
+
+        // toggle it off (deselection)
+        complexBox.goTo(1).select();
+      });
+
+      it('should take a deselection out of the array', () => {
+        const opts = complexBox.cachedOpts;
+        complexBox.goTo(1).select().goTo(0).select();
+        assert.equal(complexBox.selected[0], opts[1]);
+        assert.equal(complexBox.selected[1], opts[0]);
+        complexBox.goTo(0).select();
+        assert.equal(1, complexBox.selected.length);
+        assert.equal(complexBox.selected[0], opts[1]);
+      });
+
+      it('should NOT close the list when a selection is made', () => {
+        complexBox.openList().goTo(0).select();
+        assert.isTrue(complexBox.isOpen);
+      });
+    });
+  });
+
   describe('clearFilters', () => {
     it('should unhide all options/groups', () => {
       simpleBox.cachedOpts.forEach((o) => o.style.display = 'none');
@@ -468,6 +557,16 @@ describe('Combobo', () => {
       assert.isTrue(!!simpleBox.input.getAttribute('data-active-option'));
       simpleBox.reset();
       assert.isFalse(!!simpleBox.input.getAttribute('data-active-option'));
+    });
+
+    it('should remove active style from all options', () => {
+      const activeOpts = () => document.querySelectorAll('.' + simpleBox.config.activeClass, simpleBox.list);
+      simpleBox.openList();
+      fire(simpleBox.input, 'keydown', { which: 40 });
+      fire(simpleBox.input, 'keydown', { which: 13 });
+      assert.isTrue(activeOpts().length > 0);
+      simpleBox.reset();
+      assert.isFalse(activeOpts().length > 0);
     });
 
     it('should set currentOption to null', () => {
