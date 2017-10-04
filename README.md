@@ -34,9 +34,9 @@ const combobo = new Combobo();
   * Defaults to `.combobox`
 * `list` (_HTMLElement|String_): The selector for the list element or the list element reference.
   * Defaults to `.listbox`
-* `options` (_Array|String_): An array of the selector(s) for the option elements (qualified within the list) or the option element references.
+* `options` (_Array|String_): An array of HTMLElements or a string selector (to be qualified within the list element).
   * Defaults to `.option`
-* `groups` (_Array|String_): An array of element reference(s) that are qualified within `list`
+* `groups` (_Array|String_): An array of HTMLElements or a string selector (to be qualified within the list element)
 * `openClass` (_Classname_): Class name that gets added when list is open.
   * Defaults to `open`
 * `activeClass` (_Classname_): Class name that gets added when active is triggered
