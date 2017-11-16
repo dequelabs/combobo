@@ -303,12 +303,13 @@ module.exports = class Combobo {
   }
 
   select() {
+    let sameOpt = false;
     let newSelected = false;
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
 
-    if (!this.config.multiselect && this.selected.length) { // clean up previously selected
-      Classlist(this.selected[0]).remove(this.config.selectedClass)
+    if (!this.config.multiselect) {
+      sameOpt = this.selected.length && this.selected[0].id === currentOpt.id;
     }
 
     // Multiselect option
@@ -320,9 +321,11 @@ module.exports = class Combobo {
       } else {
         this.selected.push(currentOpt);
       }
-    } else {
+    } else if(!sameOpt) {
       // Single select stuff
       this.selected = [currentOpt];
+    } else {
+      this.selected = [];
     }
 
     // manage aria-selected
