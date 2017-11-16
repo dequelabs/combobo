@@ -301,9 +301,14 @@ module.exports = class Combobo {
   }
 
   select() {
+    let sameOpt = false;
     let newSelected = false;
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
+
+    if (!this.config.multiselect) {
+      sameOpt = this.selected.length && this.selected[0].id === currentOpt.id;
+    }
 
     // Multiselect option
     if (this.config.multiselect) {
@@ -314,9 +319,11 @@ module.exports = class Combobo {
       } else {
         this.selected.push(currentOpt);
       }
-    } else {
+    } else if(!sameOpt) {
       // Single select stuff
       this.selected = [currentOpt];
+    } else {
+      this.selected = [];
     }
 
     // manage aria-selected
