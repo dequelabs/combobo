@@ -305,10 +305,6 @@ module.exports = class Combobo {
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
 
-    if (!this.config.multiselect && this.selected.length) { // clean up previously selected
-      Classlist(this.selected[0]).remove(this.config.selectedClass)
-    }
-
     // Multiselect option
     if (this.config.multiselect) {
       const idx = this.selected.indexOf(currentOpt);
