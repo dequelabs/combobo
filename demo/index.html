@@ -230,8 +230,6 @@
           var inst = box[instName];
           trigger.addEventListener('click', function (e) {
             e.stopPropagation();
-            console.log('clicked!?!?!');
-            console.log(inst.isOpen);
             inst[inst.isOpen ? 'closeList' : 'openList']();
           });
         });

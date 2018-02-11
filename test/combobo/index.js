@@ -481,6 +481,16 @@ describe('Combobo', () => {
         simpleBox.goTo(0).select();
         assert.isFalse(simpleBox.isOpen);
       });
+
+      describe('given a truthy `allowEmpty` option', () => {
+        it('should clear the `selected` array', () => {
+          simpleBox.goTo(1).select();
+          assert.equal(simpleBox.selected.length, 1);
+          assert.equal(simpleBox.selected[0], simpleBox.currentOpts[1]);
+          simpleBox.select();
+          assert.equal(simpleBox.selected.length, 0);
+        });
+      });
     });
 
     describe('given mulitselect', () => {

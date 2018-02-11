@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Combobo = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Combobo = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -397,7 +397,6 @@ module.exports = function () {
     value: function select() {
       var _this7 = this;
 
-      var newSelected = false;
       var currentOpt = this.currentOption;
       if (!currentOpt) {
         return;
@@ -408,18 +407,19 @@ module.exports = function () {
         (0, _classlist2.default)(this.selected[0]).remove(this.config.selectedClass);
       }
 
+      var idx = this.selected.indexOf(currentOpt);
+      var wasSelected = idx > -1;
+
       // Multiselect option
       if (this.config.multiselect) {
-        var idx = this.selected.indexOf(currentOpt);
         // If option is in array and gets clicked, remove it
-        if (idx > -1) {
+        if (wasSelected) {
           this.selected.splice(idx, 1);
         } else {
           this.selected.push(currentOpt);
         }
       } else {
-        // Single select stuff
-        this.selected = [currentOpt];
+        this.selected = this.config.allowEmpty && wasSelected ? [] : [currentOpt];
       }
 
       // manage aria-selected
@@ -427,28 +427,25 @@ module.exports = function () {
         o.setAttribute('aria-selected', _this7.selected.indexOf(o) > -1 ? 'true' : 'false');
       });
 
-      // Taking care of adding / removing selected class
-      if ((0, _classlist2.default)(currentOpt).contains(this.config.selectedClass)) {
+      this.freshSelection = true;
+
+      if (wasSelected) {
         currentOpt.classList.remove(this.config.selectedClass);
-        this.freshSelection = true;
         this.emit('deselection', { text: this.input.value, option: currentOpt });
       } else {
-        newSelected = true;
         currentOpt.classList.add(this.config.selectedClass);
+        this.emit('selection', { text: this.input.value, option: currentOpt });
       }
 
       this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
       this.cachedInputValue = this.input.value;
       this.filter(true).clearFilters();
 
+      // close the list for single select
+      // (leave it open for multiselect)
       if (!this.config.multiselect) {
         this.closeList();
-        this.input.select(); // highlight the input's value
-      }
-
-      if (newSelected) {
-        this.freshSelection = true;
-        this.emit('selection', { text: this.input.value, option: currentOpt });
+        this.input.select();
       }
 
       return this;
@@ -630,6 +627,7 @@ var defaults = {
   activeClass: 'active',
   selectedClass: 'selected',
   useLiveRegion: true,
+  allowEmpty: true,
   multiselect: false,
   noResultsText: null,
   selectionValue: function selectionValue(selecteds) {
@@ -1486,22 +1484,22 @@ function placeHoldersCount (b64) {
 
 function byteLength (b64) {
   // base64 is 4/3 + up to two characters of the original data
-  return b64.length * 3 / 4 - placeHoldersCount(b64)
+  return (b64.length * 3 / 4) - placeHoldersCount(b64)
 }
 
 function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
+  var i, l, tmp, placeHolders, arr
   var len = b64.length
   placeHolders = placeHoldersCount(b64)
 
-  arr = new Arr(len * 3 / 4 - placeHolders)
+  arr = new Arr((len * 3 / 4) - placeHolders)
 
   // if there are placeholders, only get up to the last complete 4 chars
   l = placeHolders > 0 ? len - 4 : len
 
   var L = 0
 
-  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+  for (i = 0; i < l; i += 4) {
     tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
     arr[L++] = (tmp >> 16) & 0xFF
     arr[L++] = (tmp >> 8) & 0xFF
@@ -1570,7 +1568,7 @@ function fromByteArray (uint8) {
 /*!
  * The buffer module from node.js, for the browser.
  *
- * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @author   Feross Aboukhadijeh <https://feross.org>
  * @license  MIT
  */
 /* eslint-disable no-proto */
@@ -1673,7 +1671,7 @@ function from (value, encodingOrOffset, length) {
     throw new TypeError('"value" argument must not be a number')
   }
 
-  if (value instanceof ArrayBuffer) {
+  if (isArrayBuffer(value)) {
     return fromArrayBuffer(value, encodingOrOffset, length)
   }
 
@@ -1933,7 +1931,7 @@ function byteLength (string, encoding) {
   if (Buffer.isBuffer(string)) {
     return string.length
   }
-  if (isArrayBufferView(string) || string instanceof ArrayBuffer) {
+  if (isArrayBufferView(string) || isArrayBuffer(string)) {
     return string.byteLength
   }
   if (typeof string !== 'string') {
@@ -3263,6 +3261,14 @@ function blitBuffer (src, dst, offset, length) {
     dst[i + offset] = src[i]
   }
   return i
+}
+
+// ArrayBuffers from another context (i.e. an iframe) do not pass the `instanceof` check
+// but they should be treated as valid. See: https://github.com/feross/buffer/issues/166
+function isArrayBuffer (obj) {
+  return obj instanceof ArrayBuffer ||
+    (obj != null && obj.constructor != null && obj.constructor.name === 'ArrayBuffer' &&
+      typeof obj.byteLength === 'number')
 }
 
 // Node 0.10 supports `ArrayBuffer` but lacks `ArrayBuffer.isView`
