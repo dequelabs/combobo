@@ -35,7 +35,7 @@ describe('Combobo', () => {
   describe('config', () => {
     it('should call lib/config', () => {
       let called = false;
-      const Bobo = proxyquire('../../', {
+      const Bobo = proxyquire('../../index', {
         './lib/config': (config) => {
           called = true
           return configuration(config);
@@ -81,7 +81,7 @@ describe('Combobo', () => {
   describe('attrs', () => {
     it('should call lib/attributes', () => {
       let called = false;
-      const C = proxyquire('../../', {
+      const C = proxyquire('../../index', {
         './lib/attributes': () => called = true
       });
 
@@ -312,7 +312,7 @@ describe('Combobo', () => {
           describe('given a config with noResults set', () => {
             it('should call no lib/no-results', () => {
               let called = false;
-              const C = proxyquire('../../', {
+              const C = proxyquire('../../index', {
                 './lib/no-results': () => called = true
               });
 
@@ -371,7 +371,7 @@ describe('Combobo', () => {
     describe('given a list outside the viewport', () => {
       it('should call scrollToElement', () => {
         let called = false;
-        const C = proxyquire('../../', {
+        const C = proxyquire('../../index', {
           './lib/utils/viewport-status': () => ({ visible: false, position: 'top' }),
           'scrollto-element': () => called = true
         });
@@ -636,7 +636,7 @@ describe('Combobo', () => {
     describe('given a string (preset)', () => {
       it('should call the right preset', () => {
         let containsCalled = false;
-        const C = proxyquire('../../', {
+        const C = proxyquire('../../index', {
           './lib/filters': {
             'contains': (_, opts) => {
               containsCalled = true;
