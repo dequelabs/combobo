@@ -1,6 +1,6 @@
 # Combobo
 
-Combination Box built with accessibility in mind.
+Accessible combobox module
 
 ## Installation
 
@@ -11,7 +11,7 @@ $ npm install combobo
 ## Usage
 
 ### In the browser
-Just include `combobo.js`.
+Just include `combobo.js` (`window.Combobo` will be set)
 
 ```html
 <body>
@@ -22,10 +22,17 @@ Just include `combobo.js`.
 </body>
 ```
 
-### With browserify
+#### CDN (unpkg)
+
+```html
+<script src="https://unpkg.com/combobo"></script>
+```
+
+### With browserify/webpack/any bundler
 
 ```js
-const Combobo = require('combobo');
+import Combobo from 'combobo'; // or require('combobo')
+
 const combobo = new Combobo();
 ```
 
@@ -37,12 +44,14 @@ const combobo = new Combobo();
 * `options` (_Array|String_): An array of HTMLElements or a string selector (to be qualified within the list element).
   * Defaults to `.option`
 * `groups` (_Array|String_): An array of HTMLElements or a string selector (to be qualified within the list element)
-* `openClass` (_Classname_): Class name that gets added when list is open.
+* `openClass` (_String_): Class name that gets added when list is open.
   * Defaults to `open`
-* `activeClass` (_Classname_): Class name that gets added when active is triggered
+* `activeClass` (_String_): Class name that gets added when active is triggered
   * Defaults to `active`
-* `selectedClass` (_Classname_): Class name that gets added when list item is selected
+* `selectedClass` (_String_): Class name that gets added when list item is selected
   * Defaults to `selectedClass`
+* `allowEmpty` (_Boolean_): If completely clear selection should be allowed (if field is required, `false` is probably what you want).
+  * Defaults to `true`
 * `useLiveRegion` (_Boolean_): Determines whether or not to use Live Region (due to spotty AT support, `aria-activedescendant` will be used also).  As of right now, it is recommended that you leave `useLiveRegion` on due to VoiceOver's lack of support for `aria-activedescendant`.
   * Defaults to `true`
 * `multiselect` (_Boolean_): Determines whether or not to enable multiselect features
@@ -69,9 +78,8 @@ const combobo = new Combobo();
         return groupLabel + ' group entered, with ' + len + ' options.';
       }
     ```
-* `filter` (_String|Function_): String that sets how handle the filter or a function that returns the filtered options.
+* `filter` (_String|Function_): A filter-type string (`'contains'`, `'starts-with'`, or `'equals'`) or a function that returns a array of filtered options.
   * Defaults to `'contains'`
-  * Other out-of-the-box options: `'starts-with'`, `'equals'`
 
 ### Example Combobo call with options
 
@@ -131,12 +139,3 @@ combobo
   .goTo(combobo.getOptIndex() + 5)
   .select();
 ```
-
-## Running tests
-```bash
-$ npm run test
-```
-
-### Running only selected tests
-
-Utilize `it.only` or even `describe.only` in unison with `npm run test:dev`

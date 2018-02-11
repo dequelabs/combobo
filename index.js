@@ -303,7 +303,6 @@ module.exports = class Combobo {
   }
 
   select() {
-    let newSelected = false;
     const currentOpt = this.currentOption;
     if (!currentOpt) { return; }
 
@@ -311,18 +310,21 @@ module.exports = class Combobo {
       Classlist(this.selected[0]).remove(this.config.selectedClass)
     }
 
+    const idx = this.selected.indexOf(currentOpt);
+    const wasSelected = idx > -1;
+
     // Multiselect option
     if (this.config.multiselect) {
-      const idx = this.selected.indexOf(currentOpt);
       // If option is in array and gets clicked, remove it
-      if (idx > -1) {
+      if (wasSelected) {
         this.selected.splice(idx, 1);
       } else {
         this.selected.push(currentOpt);
       }
     } else {
-      // Single select stuff
-      this.selected = [currentOpt];
+      this.selected = this.config.allowEmpty && wasSelected
+        ? []
+        : [currentOpt]
     }
 
     // manage aria-selected
@@ -330,28 +332,26 @@ module.exports = class Combobo {
       o.setAttribute('aria-selected', this.selected.indexOf(o) > -1 ? 'true' : 'false');
     });
 
-    // Taking care of adding / removing selected class
-    if (Classlist(currentOpt).contains(this.config.selectedClass)) {
+    if (wasSelected) {
       currentOpt.classList.remove(this.config.selectedClass);
-      this.freshSelection = true;
       this.emit('deselection', { text: this.input.value, option: currentOpt });
     } else {
-      newSelected = true;
-      currentOpt.classList.add(this.config.selectedClass);
+      currentOpt.classList.add(this.config.selectedClass)
+      this.emit('selection', { text: this.input.value, option: currentOpt });
     }
 
-    this.input.value = this.selected.length ? this.config.selectionValue(this.selected) : '';
+    this.freshSelection = true;
+    this.input.value = this.selected.length
+      ? this.config.selectionValue(this.selected)
+      : '';
     this.cachedInputValue = this.input.value;
     this.filter(true).clearFilters()
 
+    // close the list for single select
+    // (leave it open for multiselect)
     if (!this.config.multiselect) {
       this.closeList();
-      this.input.select(); // highlight the input's value
-    }
-
-    if (newSelected) {
-      this.freshSelection = true;
-      this.emit('selection', { text: this.input.value, option: currentOpt });
+      this.input.select();
     }
 
     return this;
