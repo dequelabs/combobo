@@ -1,5 +1,7 @@
 # Combobo
 
+[![CircleCI](https://circleci.com/gh/schne324/combobo.svg?style=svg)](https://circleci.com/gh/schne324/combobo)
+
 Accessible combobox module
 
 ## Installation
