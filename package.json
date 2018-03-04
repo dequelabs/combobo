@@ -1,6 +1,6 @@
 {
   "name": "combobo",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "Accessible combobox widget/plugin",
   "main": "dist/combobo.js",
   "directories": {
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "webpack",
     "dev": "npm run build -- --watch",
-    "test": "mochify --recursive --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ] --plugin [ mochify-istanbul --report text --exclude '**/+(test|node_modules|dist)/**/*' ]",
+    "test": "mochify --recursive --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ]",
     "test:dev": "mochify --recursive --watch --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ]"
   },
   "repository": {
