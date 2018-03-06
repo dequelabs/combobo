@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "build": "webpack",
-    "dev": "npm run build -- --watch",
+    "build": "NODE_ENV=production webpack",
+    "dev": "webpack --watch",
     "test": "mochify --recursive --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ]",
     "test:dev": "mochify --recursive --watch --transform [ babelify --presets [ es2015 ] ] --transform [ stringify --extensions [ .html .css ] ] --plugin [ proxyquire-universal ]"
   },
@@ -43,6 +43,7 @@
     "scrollto-element": "^1.0.4",
     "simulant": "^0.2.2",
     "stringify": "^5.1.0",
+    "uglifyjs-webpack-plugin": "^1.2.2",
     "webpack": "^3.11.0"
   }
 }
