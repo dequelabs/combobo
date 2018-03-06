@@ -1,5 +1,6 @@
 'use strict';
 
+require('babel-polyfill');
 const assert = require('chai').assert;
 const proxyquire = require('proxyquire');
 const Classlist = require('classlist');
