@@ -82,6 +82,9 @@ const combobo = new Combobo();
     ```
 * `filter` (_String|Function_): A filter-type string (`'contains'`, `'starts-with'`, or `'equals'`) or a function that returns a array of filtered options.
   * Defaults to `'contains'`
+* `onPageFilter` (_Boolean_): To enable / disable filterng options on front end. If the developer wants to filter options from the server, then it should be false
+  * Defaults to `'true'`
+
 
 ### Example Combobo call with options
 
@@ -103,7 +106,8 @@ var combobo = new Combobo({
     count: (n) => `${n} options available`,
     selected: 'Selected.'
   },
-  filter: 'contains' // 'starts-with', 'equals', or funk
+  filter: 'contains' // 'starts-with', 'equals', or funk,
+  onPageFilter: 'true' // 'true' or 'false' default true
 });
 ```
 
@@ -132,6 +136,11 @@ combobo
 * `select`: selects the currently highlighted option
 * `getOptIndex`: returns the index (within the currently visible options) of the currently selected option.
 * `reset`: clears the filters and deselects any currently selected options.
+* `setOptions`: accepts 1 argument which is HTML code in *String* format. Adds one option to the existing dropdown list.
+* `setNoResultFound`: shows the *No results found* in dropdown if the matching options not available
+* `emptyDropdownList`: Empty the options in the dropdown list
+* `updateSelectedOptions`: Empty all the options and update with selected options in the list
+* `setCurrentOptions`: Sets the current Option from the current options list 
 
 ### Example usage
 
@@ -140,4 +149,8 @@ combobo
 combobo
   .goTo(combobo.getOptIndex() + 5)
   .select();
+
+// adds an option to the dropdown list
+combobo
+  .setOptions(`<li>Some Option</li>`);
 ```

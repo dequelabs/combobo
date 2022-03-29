@@ -50,6 +50,7 @@ module.exports = class Combobo {
     this.selected = [];
     this.groups = [];
     this.isHovering = false;
+    this.onPageFilter = this.config.onPageFilter;
 
     // option groups
     if (this.config.groups) {
@@ -109,24 +110,27 @@ module.exports = class Combobo {
 
   optionEvents() {
     this.cachedOpts.forEach((option) => {
-      option.addEventListener('click', () => {
-        this
-          .goTo(this.currentOpts.indexOf(option))
-          .select();
-      });
+      if(!option.classList.contains('binded')){ // To check wheather the option is already in the list
+        option.classList.add('binded');
+        option.addEventListener('click', () => {
+          this
+            .goTo(this.currentOpts.indexOf(option))
+            .select();
+        });
 
-      option.addEventListener('mouseover', () => {
-        // clean up
-        const prev = this.currentOption;
-        if (prev) { Classlist(prev).remove(this.config.activeClass); }
-        Classlist(option).add(this.config.activeClass);
-        this.isHovering = true;
-      });
+        option.addEventListener('mouseover', () => {
+          // clean up
+          const prev = this.currentOption;
+          if (prev) { Classlist(prev).remove(this.config.activeClass); }
+          Classlist(option).add(this.config.activeClass);
+          this.isHovering = true;
+        });
 
-      option.addEventListener('mouseout', () => {
-        Classlist(option).remove(this.config.activeClass);
-        this.isHovering = false;
-      });
+        option.addEventListener('mouseout', () => {
+          Classlist(option).remove(this.config.activeClass);
+          this.isHovering = false;
+        });
+      }
     });
   }
 
@@ -223,6 +227,10 @@ module.exports = class Combobo {
     const ignores = [9, 13, 27, 16];
     // filter keyup listener
     keyvent.up(this.input, (e) => {
+      // If onPageFilter is false, key up filter not required
+      if(!this.onPageFilter) {
+        return;
+      }
       const filter = this.config.filter;
       const cachedVal = this.cachedInputValue;
       if (ignores.indexOf(e.which) > -1 || !filter) { return; }
@@ -435,9 +443,54 @@ module.exports = class Combobo {
       this.currentOption = option;
       this.emit('change');
     }
-
     return this;
   }
+
+  
+  setOptions(option){ 
+    // The below code adds the  new option to current Dropdown list
+    this.config.list.append(option);
+    this.cachedOpts.push(option);
+    this.currentOpts.push(option);
+    return this;
+  }
+
+  setCurrentOptions() {
+    this.currentOption = this.currentOpts[0]; // Sets the current option index
+    return this;
+  }
+
+  updateSelectedOptions(){
+    const list = document.getElementById(this.config.list.id);
+    const selectedList = this.selected;
+    this.emptyDropdownList()
+
+    // The below code will remove all child elements in the dropdown list
+    while (list.hasChildNodes()) {
+        list.removeChild(list.firstChild);
+    }
+    // The below code will append the selected options to the dropdown list if any
+    if (selectedList.length > 0) {
+        selectedList.forEach(item => {
+            this.setOption(item);
+        });
+    }
+    return this;
+  }
+
+  
+  emptyDropdownList(){
+    // empty the cachedOpts and currentOpts of dropdown list
+    this.currentOpts = [];
+    this.cachedOpts = [];
+    return this;
+  }
+
+  setNoResultFound (){
+    // handle empty results whenever user perform search and if no relevant records found 
+    noResultsHandler(this.list, this.currentOpts, this.config.noResultsText);
+  }
+
 };
 
 /**
