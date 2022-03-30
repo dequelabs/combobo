@@ -82,7 +82,7 @@ const combobo = new Combobo();
     ```
 * `filter` (_String|Function_): A filter-type string (`'contains'`, `'starts-with'`, or `'equals'`) or a function that returns a array of filtered options.
   * Defaults to `'contains'`
-* `onPageFilter` (_Boolean_): To enable / disable filterng options on front end. If the developer wants to filter options from the server, then it should be false
+* `autoFilter` (_Boolean_): To enable / disable filterng options on front end. If the developer wants to filter options from the server, then it should be false
   * Defaults to `'true'`
 
 
@@ -107,7 +107,7 @@ var combobo = new Combobo({
     selected: 'Selected.'
   },
   filter: 'contains' // 'starts-with', 'equals', or funk,
-  onPageFilter: 'true' // 'true' or 'false' default true
+  autoFilter: true // 'true' or 'false' default true
 });
 ```
 

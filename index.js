@@ -50,7 +50,9 @@ module.exports = class Combobo {
     this.selected = [];
     this.groups = [];
     this.isHovering = false;
-    this.onPageFilter = this.config.onPageFilter;
+    this.autoFilter = this.config.autoFilter;
+    this.optionsWithEventHandlers = new Set();
+
 
     // option groups
     if (this.config.groups) {
@@ -110,26 +112,27 @@ module.exports = class Combobo {
 
   optionEvents() {
     this.cachedOpts.forEach((option) => {
-      if(!option.classList.contains('binded')){ // To check wheather the option is already in the list
-        option.classList.add('binded');
-        option.addEventListener('click', () => {
-          this
-            .goTo(this.currentOpts.indexOf(option))
-            .select();
-        });
+      // The event should not be added again for already selected options and existing options
+      if (!this.optionsWithEventHandlers.has(option.id) && !this.selected.includes(option)) {
+          option.addEventListener('click', () => {
+            this
+              .goTo(this.currentOpts.indexOf(option))
+              .select();
+          });
 
-        option.addEventListener('mouseover', () => {
-          // clean up
-          const prev = this.currentOption;
-          if (prev) { Classlist(prev).remove(this.config.activeClass); }
-          Classlist(option).add(this.config.activeClass);
-          this.isHovering = true;
-        });
+          option.addEventListener('mouseover', () => {
+            // clean up
+            const prev = this.currentOption;
+            if (prev) { Classlist(prev).remove(this.config.activeClass); }
+            Classlist(option).add(this.config.activeClass);
+            this.isHovering = true;
+          });
 
-        option.addEventListener('mouseout', () => {
-          Classlist(option).remove(this.config.activeClass);
-          this.isHovering = false;
-        });
+          option.addEventListener('mouseout', () => {
+            Classlist(option).remove(this.config.activeClass);
+            this.isHovering = false;
+          });
+          this.optionsWithEventHandlers.add(option.id);
       }
     });
   }
@@ -227,8 +230,8 @@ module.exports = class Combobo {
     const ignores = [9, 13, 27, 16];
     // filter keyup listener
     keyvent.up(this.input, (e) => {
-      // If onPageFilter is false, key up filter not required
-      if(!this.onPageFilter) {
+      // If autoFilter is false, key up filter not required
+      if(!this.autoFilter) {
         return;
       }
       const filter = this.config.filter;
@@ -483,6 +486,7 @@ module.exports = class Combobo {
     // empty the cachedOpts and currentOpts of dropdown list
     this.currentOpts = [];
     this.cachedOpts = [];
+    this.optionsWithEventHandlers.clear();
     return this;
   }
 
