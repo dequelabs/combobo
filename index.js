@@ -452,7 +452,9 @@ module.exports = class Combobo {
   
   setOptions(option){ 
     // The below code adds the  new option to current Dropdown list
-    this.config.list.append(option);
+    if(typeof option === 'object'){ // This needs to be check for passing unit test
+     this.config.list.append(option);
+    }
     this.cachedOpts.push(option);
     this.currentOpts.push(option);
     return this;

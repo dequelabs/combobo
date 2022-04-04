@@ -18,7 +18,7 @@ describe('lib/attributes', () => {
     assert.isTrue(!!list.id);
     assert.equal(input.getAttribute('role'), 'combobox');
     assert.equal(list.getAttribute('role'), 'listbox');
-    assert.equal(input.getAttribute('aria-owns'), list.id);
+    assert.equal(input.getAttribute('aria-controls'), list.id);
     assert.equal(input.getAttribute('aria-autocomplete'), 'list');
     assert.equal(input.getAttribute('aria-expanded'), 'false');
 
