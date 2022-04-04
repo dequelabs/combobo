@@ -27,5 +27,6 @@ describe('lib/config', () => {
     assert.equal(configuration.announcement.count, 7);
     assert.equal(configuration.announcement.selected, 'Selected.');
     assert.equal(configuration.noResultsText, 7);
+    assert.equal(configuration.autoFilter,true);
   });
 });

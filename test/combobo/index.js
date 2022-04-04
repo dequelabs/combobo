@@ -689,4 +689,45 @@ describe('Combobo', () => {
       });
     });
   });
+
+  describe('emptyDropdownList', () => {
+    it('should clear the dropdown list options', () => {
+      complexBox.emptyDropdownList();
+      assert.equal(0, complexBox.currentOpts.length);
+      assert.equal(0, complexBox.cachedOpts.length);
+    });
+  });
+
+  describe('setCurrentOption', () => {
+    it('should set the current option', () => {
+      assert.notEqual(complexBox.currentOption, complexBox.currentOpts[0]);
+      complexBox.setCurrentOptions();
+      assert.equal(complexBox.currentOption, complexBox.currentOpts[0]);
+    });
+  });
+
+  describe('setOptions', () => {
+    it('should add an option to the dropdown list', () => {
+      let options = simpleBox.cachedOpts.length;
+      assert.equal(options, simpleBox.cachedOpts.length);
+      simpleBox.setOptions(`<div class='option'>new Option</div>`);
+      assert.equal(options + 2, simpleBox.cachedOpts.length);
+    });
+  });
+
+  describe('updateSelectedOptions', () => {
+    it('should update selected Options if any', () => {
+      let selected = [];
+      let list = document.getElementById('simple-listbox');
+      simpleBox.currentOpts.forEach((option, index) => {
+        if (index < 2) {
+          selected.push(option);
+        }
+      })
+      while (list.hasChildNodes()) {
+        list.removeChild(list.firstChild);
+      }
+      assert.equal(2, selected.length);
+    });
+  });
 });
