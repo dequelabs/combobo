@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/schne324/combobo.git"
+    "url": "git+https://github.com/dequelabs/combobo.git"
   },
   "author": "Harris Schneiderman",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/schne324/combobo/issues"
+    "url": "https://github.com/dequelabs/combobo/issues"
   },
-  "homepage": "https://github.com/schne324/combobo#readme",
+  "homepage": "https://github.com/dequelabs/combobo#readme",
   "devDependencies": {
     "babel-loader": "^7.1.2",
     "babel-polyfill": "^6.26.0",
