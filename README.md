@@ -1,7 +1,5 @@
 # Combobo
 
-[![CircleCI](https://circleci.com/gh/schne324/combobo.svg?style=svg)](https://circleci.com/gh/schne324/combobo)
-
 Accessible combobox module
 
 ## Installation
@@ -140,7 +138,7 @@ combobo
 * `setNoResultFound`: shows the *No results found* in dropdown if the matching options not available
 * `emptyDropdownList`: Empty the options in the dropdown list
 * `updateSelectedOptions`: Empty all the options and update with selected options in the list
-* `setCurrentOptions`: Sets the current Option from the current options list 
+* `setCurrentOptions`: Sets the current Option from the current options list
 
 ### Example usage
 
