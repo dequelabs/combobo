@@ -477,7 +477,7 @@ module.exports = class Combobo {
     // The below code will append the selected options to the dropdown list if any
     if (selectedList.length > 0) {
         selectedList.forEach(item => {
-            this.setOption(item);
+            this.setOptions(item);
         });
     }
     return this;
