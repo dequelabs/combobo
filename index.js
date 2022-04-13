@@ -81,7 +81,7 @@ module.exports = class Combobo {
 
   initEvents() {
     Emitter(this);
-    if(!this.optionsWithKeyEventHandlers.has(this.input.id)){
+    if(!this.optionsWithKeyEventHandlers.has(this.input)){
       this.input.addEventListener('click', () => {
         this.openList().goTo(this.getOptIndex() || 0); // ensure its open
       });
@@ -182,10 +182,10 @@ module.exports = class Combobo {
 
   initKeys() {
     // keydown listener
-    if(this.optionsWithKeyEventHandlers.has(this.input.id)){
+    if(this.optionsWithKeyEventHandlers.has(this.input)){
       return;
     }else{
-      this.optionsWithKeyEventHandlers.add(this.input.id);
+      this.optionsWithKeyEventHandlers.add(this.input);
     }
     keyvent.down(this.input, [{
       keys: ['up', 'down'],
