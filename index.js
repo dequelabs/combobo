@@ -52,6 +52,7 @@ module.exports = class Combobo {
     this.isHovering = false;
     this.autoFilter = this.config.autoFilter;
     this.optionsWithEventHandlers = new Set();
+    this.optionsWithKeyEventHandlers = new Set();
 
 
     // option groups
@@ -80,27 +81,28 @@ module.exports = class Combobo {
 
   initEvents() {
     Emitter(this);
+    if(!this.optionsWithKeyEventHandlers.has(this.input.id)){
+      this.input.addEventListener('click', () => {
+        this.openList().goTo(this.getOptIndex() || 0); // ensure its open
+      });
 
-    this.input.addEventListener('click', () => {
-      this.openList().goTo(this.getOptIndex() || 0); // ensure its open
-    });
+      this.input.addEventListener('blur', () => {
+        if (!this.isHovering) { this.closeList(); }
+      });
 
-    this.input.addEventListener('blur', () => {
-      if (!this.isHovering) { this.closeList(); }
-    });
+      this.input.addEventListener('focus', () => {
+        if (this.selected.length) {
+          this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
+        }
+        this.input.select();
+      });
 
-    this.input.addEventListener('focus', () => {
-      if (this.selected.length) {
-        this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
-      }
-      this.input.select();
-    });
-
-    // listen for clicks outside of combobox
-    document.addEventListener('click', (e) => {
-      const isOrWithin = isWithin(e.target, [this.input, this.list], true);
-      if (!isOrWithin && this.isOpen) { this.closeList(); }
-    });
+      // listen for clicks outside of combobox
+      document.addEventListener('click', (e) => {
+        const isOrWithin = isWithin(e.target, [this.input, this.list], true);
+        if (!isOrWithin && this.isOpen) { this.closeList(); }
+      });
+    }
 
     this.optionEvents();
     this.initKeys();
@@ -180,6 +182,11 @@ module.exports = class Combobo {
 
   initKeys() {
     // keydown listener
+    if(this.optionsWithKeyEventHandlers.has(this.input.id)){
+      return;
+    }else{
+      this.optionsWithKeyEventHandlers.add(this.input.id);
+    }
     keyvent.down(this.input, [{
       keys: ['up', 'down'],
       callback: (e, k) => {
@@ -470,7 +477,7 @@ module.exports = class Combobo {
   updateSelectedOptions(){
     const list = document.getElementById(this.config.list.id);
     const selectedList = this.selected;
-    this.emptyDropdownList()
+    this.emptyDropdownList();
 
     // The below code will remove all child elements in the dropdown list
     while (list.hasChildNodes()) {
