@@ -456,7 +456,9 @@ module.exports = class Combobo {
      this.config.list.append(option);
     }
     this.cachedOpts.push(option);
+    if(this.currentOpts.indexOf(option) === -1){
     this.currentOpts.push(option);
+    }
     return this;
   }
 
