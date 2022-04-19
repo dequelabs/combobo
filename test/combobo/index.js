@@ -712,6 +712,7 @@ describe('Combobo', () => {
       assert.equal(options, simpleBox.cachedOpts.length);
       simpleBox.setOptions(`<div class='option'>new Option</div>`);
       assert.equal(options + 1, simpleBox.cachedOpts.length);
+      assert.equal(options + 1, simpleBox.currentOpts.length);
     });
   });
 
