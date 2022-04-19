@@ -81,7 +81,7 @@ module.exports = class Combobo {
 
   initEvents() {
     Emitter(this);
-    if(!this.optionsWithKeyEventHandlers.has(this.input)){
+    if (!this.optionsWithKeyEventHandlers.has(this.input)) {
       this.input.addEventListener('click', () => {
         this.openList().goTo(this.getOptIndex() || 0); // ensure its open
       });
@@ -116,25 +116,25 @@ module.exports = class Combobo {
     this.cachedOpts.forEach((option) => {
       // The event should not be added again for already selected options and existing options
       if (!this.optionsWithEventHandlers.has(option.id) && !this.selected.includes(option)) {
-          option.addEventListener('click', () => {
-            this
-              .goTo(this.currentOpts.indexOf(option))
-              .select();
-          });
+        option.addEventListener('click', () => {
+          this
+            .goTo(this.currentOpts.indexOf(option))
+            .select();
+        });
 
-          option.addEventListener('mouseover', () => {
-            // clean up
-            const prev = this.currentOption;
-            if (prev) { Classlist(prev).remove(this.config.activeClass); }
-            Classlist(option).add(this.config.activeClass);
-            this.isHovering = true;
-          });
+        option.addEventListener('mouseover', () => {
+          // clean up
+          const prev = this.currentOption;
+          if (prev) { Classlist(prev).remove(this.config.activeClass); }
+          Classlist(option).add(this.config.activeClass);
+          this.isHovering = true;
+        });
 
-          option.addEventListener('mouseout', () => {
-            Classlist(option).remove(this.config.activeClass);
-            this.isHovering = false;
-          });
-          this.optionsWithEventHandlers.add(option.id);
+        option.addEventListener('mouseout', () => {
+          Classlist(option).remove(this.config.activeClass);
+          this.isHovering = false;
+        });
+        this.optionsWithEventHandlers.add(option.id);
       }
     });
   }
@@ -182,9 +182,9 @@ module.exports = class Combobo {
 
   initKeys() {
     // keydown listener
-    if(this.optionsWithKeyEventHandlers.has(this.input)){
+    if (this.optionsWithKeyEventHandlers.has(this.input)) {
       return;
-    }else{
+    } else {
       this.optionsWithKeyEventHandlers.add(this.input);
     }
     keyvent.down(this.input, [{
@@ -199,7 +199,7 @@ module.exports = class Combobo {
         }
 
         const idx = this.selected.length
-          ? this.currentOpts.indexOf(this.selected[this.selected.length -1])
+          ? this.currentOpts.indexOf(this.selected[this.selected.length - 1])
           : 0
 
         this
@@ -238,7 +238,7 @@ module.exports = class Combobo {
     // filter keyup listener
     keyvent.up(this.input, (e) => {
       // If autoFilter is false, key up filter not required
-      if(!this.autoFilter) {
+      if (!this.autoFilter) {
         return;
       }
       const filter = this.config.filter;
@@ -456,15 +456,15 @@ module.exports = class Combobo {
     return this;
   }
 
-  
-  setOptions(option){ 
+
+  setOptions(option) {
     // The below code adds the  new option to current Dropdown list
-    if(typeof option === 'object'){ // This needs to be check for passing unit test
-     this.config.list.append(option);
+    if (typeof option === 'object') { // This needs to be check for passing unit test
+      this.config.list.append(option);
     }
     this.cachedOpts.push(option);
-    if(this.currentOpts.indexOf(option) === -1){
-    this.currentOpts.push(option);
+    if (this.currentOpts.indexOf(option) === -1) {
+      this.currentOpts.push(option);
     }
     return this;
   }
@@ -474,26 +474,26 @@ module.exports = class Combobo {
     return this;
   }
 
-  updateSelectedOptions(){
+  updateSelectedOptions() {
     const list = document.getElementById(this.config.list.id);
     const selectedList = this.selected;
     this.emptyDropdownList();
 
     // The below code will remove all child elements in the dropdown list
     while (list.hasChildNodes()) {
-        list.removeChild(list.firstChild);
+      list.removeChild(list.firstChild);
     }
     // The below code will append the selected options to the dropdown list if any
     if (selectedList.length > 0) {
-        selectedList.forEach(item => {
-            this.setOptions(item);
-        });
+      selectedList.forEach(item => {
+        this.setOptions(item);
+      });
     }
     return this;
   }
 
-  
-  emptyDropdownList(){
+
+  emptyDropdownList() {
     // empty the cachedOpts and currentOpts of dropdown list
     this.currentOpts = [];
     this.cachedOpts = [];
@@ -501,7 +501,7 @@ module.exports = class Combobo {
     return this;
   }
 
-  setNoResultFound (){
+  setNoResultFound() {
     // handle empty results whenever user perform search and if no relevant records found 
     noResultsHandler(this.list, this.currentOpts, this.config.noResultsText);
   }
