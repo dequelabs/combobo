@@ -91,9 +91,6 @@ module.exports = class Combobo {
       });
 
       this.input.addEventListener('focus', () => {
-        if (this.selected.length) {
-          this.input.value = this.selected.length >= 2 ? '' : this.config.selectionValue(this.selected);
-        }
         this.input.select();
       });
 
@@ -172,7 +169,7 @@ module.exports = class Combobo {
     if (focus) { this.input.focus(); }
     // Set the value back to what it was
     if (!this.multiselect && this.selected.length) {
-      this.input.value = this.config.selectionValue(this.selected);
+      this.input.value = this.selected.map(item => item.innerText).join(', ');
     }
 
     if (selectText) { this.input.select(); }
@@ -214,9 +211,20 @@ module.exports = class Combobo {
           e.preventDefault();
           e.stopPropagation();
           this.select();
+         
         }
       }
     }, {
+      keys: ['space'],
+      callback: (e) => {
+        if (this.isOpen) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.select();
+         
+        }
+      }
+    },{
       keys: ['escape'],
       callback: (e) => {
         if (this.isOpen) {
@@ -359,9 +367,7 @@ module.exports = class Combobo {
     }
 
     this.freshSelection = true;
-    this.input.value = this.selected.length
-      ? this.config.selectionValue(this.selected)
-      : '';
+    this.input.value = this.selected.length ? this.selected.map(item => item.innerText).join(', '): '';
     this.cachedInputValue = this.input.value;
     this.filter(true).clearFilters()
 
