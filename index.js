@@ -91,7 +91,6 @@ module.exports = class Combobo {
       });
 
       this.input.addEventListener('focus', () => {
-        
         this.input.select();
       });
 
